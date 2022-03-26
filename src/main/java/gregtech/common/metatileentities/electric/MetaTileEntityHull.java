@@ -1,5 +1,8 @@
 package gregtech.common.metatileentities.electric;
 
+import appeng.api.util.AECableType;
+import appeng.api.util.AEPartLocation;
+import appeng.me.helpers.AENetworkProxy;
 import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
@@ -7,6 +10,7 @@ import codechicken.lib.vec.Matrix4;
 import gregtech.api.GTValues;
 import gregtech.api.capability.impl.EnergyContainerHandler;
 import gregtech.api.gui.ModularUI;
+import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.TieredMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.client.renderer.texture.Textures;
@@ -19,10 +23,15 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
+import static net.minecraftforge.fml.common.Optional.*;
+
 public class MetaTileEntityHull extends TieredMetaTileEntity {
+
+    private AENetworkProxy proxy;
 
     public MetaTileEntityHull(ResourceLocation metaTileEntityId, int tier) {
         super(metaTileEntityId, tier);
@@ -68,5 +77,23 @@ public class MetaTileEntityHull extends TieredMetaTileEntity {
         tooltip.add(I18n.format("gregtech.universal.tooltip.voltage_in", energyContainer.getInputVoltage(), tierName));
         tooltip.add(I18n.format("gregtech.universal.tooltip.voltage_out", energyContainer.getOutputVoltage(), tierName));
         tooltip.add(I18n.format("gregtech.universal.tooltip.energy_storage_capacity", energyContainer.getEnergyCapacity()));
+    }
+
+    @Nonnull
+    @Override
+    @Method(modid = GTValues.MODID_APPENG)
+    public AECableType getCableConnectionType(@Nonnull AEPartLocation part) {
+        return AECableType.SMART;
+    }
+
+    @Nullable
+    @Override
+    @Method(modid = GTValues.MODID_APPENG)
+    public AENetworkProxy getProxy() {
+        if (proxy == null && getHolder() instanceof MetaTileEntityHolder) {
+            proxy = new AENetworkProxy((MetaTileEntityHolder) getHolder(), "proxy", getStackForm(), true);
+            proxy.onReady();
+        }
+        return proxy;
     }
 }

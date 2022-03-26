@@ -251,6 +251,9 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
             } else {
                 metaTileEntity.setFrontFacing(placer.getHorizontalFacing().getOpposite());
             }
+            if (metaTileEntity.getProxy() != null) {
+                metaTileEntity.getProxy().setOwner((EntityPlayer) placer);
+            }
         }
     }
 

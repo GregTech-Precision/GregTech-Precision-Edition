@@ -1,5 +1,8 @@
 package gregtech.api.metatileentity;
 
+import appeng.api.util.AECableType;
+import appeng.api.util.AEPartLocation;
+import appeng.me.helpers.AENetworkProxy;
 import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.raytracer.IndexedCuboid6;
 import codechicken.lib.render.CCRenderState;
@@ -9,6 +12,7 @@ import codechicken.lib.texture.TextureUtils;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.google.common.base.Preconditions;
+import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.capability.GregtechTileCapabilities;
@@ -59,11 +63,13 @@ import net.minecraftforge.items.ItemStackHandler;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static net.minecraftforge.fml.common.Optional.*;
 import static gregtech.api.capability.GregtechDataCodes.*;
 
 public abstract class MetaTileEntity implements ICoverable, IVoidable {
@@ -516,6 +522,8 @@ public abstract class MetaTileEntity implements ICoverable, IVoidable {
     public boolean shouldRenderBackSide() {
         return !isOpaqueCube();
     }
+
+    public void onFirstTick() {};
 
     public void onLoad() {
         this.cachedComparatorValue = getActualComparatorValue();
@@ -1343,5 +1351,21 @@ public abstract class MetaTileEntity implements ICoverable, IVoidable {
     @Override
     public boolean canVoidRecipeFluidOutputs() {
         return false;
+    }
+
+    @Nonnull
+    @Method(modid = GTValues.MODID_APPENG)
+    public AECableType getCableConnectionType(@Nonnull AEPartLocation part) {
+        return AECableType.NONE;
+    }
+
+    @Nullable
+    @Method(modid = GTValues.MODID_APPENG)
+    public AENetworkProxy getProxy() {
+        return null;
+    }
+
+    @Method(modid = GTValues.MODID_APPENG)
+    public void gridChanged() {
     }
 }
