@@ -49,6 +49,12 @@ public class Recipe {
     private final List<FluidStack> fluidInputs;
     private final List<FluidStack> fluidOutputs;
 
+    /**
+     * Output by time
+     */
+    private final HashMap<Integer, HashSet<ItemStack>> timedOutputs;
+    private final HashMap<Integer, HashSet<FluidStack>> timedFluidOutputs;
+
     private final int duration;
 
     /**
@@ -83,6 +89,32 @@ public class Recipe {
         this.chancedOutputs = new ArrayList<>(chancedOutputs);
         this.fluidInputs = ImmutableList.copyOf(fluidInputs);
         this.fluidOutputs = ImmutableList.copyOf(fluidOutputs);
+        this.timedOutputs = null;
+        this.timedFluidOutputs = null;
+        this.duration = duration;
+        this.EUt = EUt;
+        this.hidden = hidden;
+        this.isCTRecipe = isCTRecipe;
+
+        //sort not consumables inputs to the end
+        this.inputs.sort((ing1, ing2) -> Boolean.compare(ing1.isNonConsumable(), ing2.isNonConsumable()));
+        this.hashCode = makeHashCode();
+    }
+
+    public Recipe(List<CountableIngredient> inputs, List<ItemStack> outputs, List<ChanceEntry> chancedOutputs,
+                  List<FluidStack> fluidInputs, List<FluidStack> fluidOutputs, HashMap<Integer,
+            HashSet<ItemStack>> timedOutputs, HashMap<Integer, HashSet<FluidStack>> timedFluidOutputs,
+                  int duration, int EUt, boolean hidden, boolean isCTRecipe) {
+        this.recipePropertyStorage = new RecipePropertyStorage();
+        this.inputs = NonNullList.create();
+        this.inputs.addAll(inputs);
+        this.outputs = NonNullList.create();
+        this.outputs.addAll(outputs);
+        this.chancedOutputs = new ArrayList<>(chancedOutputs);
+        this.fluidInputs = ImmutableList.copyOf(fluidInputs);
+        this.fluidOutputs = ImmutableList.copyOf(fluidOutputs);
+        this.timedOutputs = timedOutputs;
+        this.timedFluidOutputs = timedFluidOutputs;
         this.duration = duration;
         this.EUt = EUt;
         this.hidden = hidden;
@@ -96,7 +128,7 @@ public class Recipe {
     public Recipe copy() {
 
         // Create a new Recipe object
-        Recipe newRecipe =  new Recipe(this.inputs, this.outputs, this.chancedOutputs, this.fluidInputs, this.fluidOutputs, this.duration, this.EUt, this.hidden, this.isCTRecipe);
+        Recipe newRecipe =  new Recipe(this.inputs, this.outputs, this.chancedOutputs, this.fluidInputs, this.fluidOutputs, this.timedOutputs, this.timedFluidOutputs, this.duration, this.EUt, this.hidden, this.isCTRecipe);
 
         // Apply Properties from the original recipe onto the new one
         if(this.recipePropertyStorage.getSize() > 0) {
@@ -386,6 +418,14 @@ public class Recipe {
         return this.recipePropertyStorage.getRecipeProperties().containsAll(otherRecipe.recipePropertyStorage.getRecipeProperties());
     }
 
+    public boolean hasTimedOutputs() {
+        return timedOutputs != null && !timedOutputs.isEmpty();
+    }
+
+    public boolean hasTimedFluidOutputs(){
+        return timedFluidOutputs != null && !timedFluidOutputs.isEmpty();
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -394,6 +434,8 @@ public class Recipe {
                 .append("chancedOutputs", chancedOutputs)
                 .append("fluidInputs", fluidInputs)
                 .append("fluidOutputs", fluidOutputs)
+                .append("timedOutputs", timedOutputs)
+                .append("timedFluidOutputs", timedFluidOutputs)
                 .append("duration", duration)
                 .append("EUt", EUt)
                 .append("hidden", hidden)
@@ -411,6 +453,14 @@ public class Recipe {
 
     public NonNullList<ItemStack> getOutputs() {
         return outputs;
+    }
+
+    public HashMap<Integer, HashSet<ItemStack>> getTimedOutputs() {
+        return timedOutputs;
+    }
+
+    public HashMap<Integer, HashSet<FluidStack>> getTimedFluidOutputs() {
+        return timedFluidOutputs;
     }
 
     // All Recipes this method is called for should be already trimmed, if required
