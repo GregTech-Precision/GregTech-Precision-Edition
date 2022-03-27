@@ -29,6 +29,8 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable, IParallelableRecipeLogic {
@@ -54,6 +56,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected int recipeEUt;
     protected List<FluidStack> fluidOutputs;
     protected NonNullList<ItemStack> itemOutputs;
+    protected HashMap<Integer, HashSet<ItemStack>> timedOutputs;
+    protected HashMap<Integer, HashSet<FluidStack>> timedFluidOutputs;
 
     protected boolean isActive;
     protected boolean workingEnabled = true;
@@ -216,6 +220,14 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected void updateRecipeProgress() {
         if (canRecipeProgress && drawEnergy(recipeEUt, true)) {
             drawEnergy(recipeEUt, false);
+
+            //try to push timed output
+            if(timedOutputs != null)
+                timedOutput(progressTime);
+
+            if(timedFluidOutputs != null)
+                timedFluidOutput(progressTime);
+
             //as recipe starts with progress on 1 this has to be > only not => to compensate for it
             if (++progressTime > maxProgressTime) {
                 completeRecipe();
@@ -236,6 +248,16 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                 }
             }
         }
+    }
+
+    protected void timedOutput(int time){
+        if (timedOutputs.containsKey(time))
+            GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, new ArrayList<>(timedOutputs.get(time)));
+    }
+
+    protected void timedFluidOutput(int time){
+        if (timedFluidOutputs.containsKey(time))
+            GTTransferUtils.addFluidsToFluidHandler(getOutputTank(), false, new ArrayList<>(timedFluidOutputs.get(time)));
     }
 
     /**
@@ -632,6 +654,24 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         this.fluidOutputs = GTUtility.copyFluidList(recipe.getAllFluidOutputs(metaTileEntity.getFluidOutputLimit()));
         this.itemOutputs = GTUtility.copyStackList(recipe.getResultItemOutputs(GTUtility.getTierByVoltage(recipeEUt), getRecipeMap()));
 
+        if(recipe.hasTimedOutputs()){
+            this.timedOutputs = new HashMap<>();
+            recipe.getTimedOutputs().entrySet().forEach(it -> {
+                int time = Math.max(1, (int) (((double) it.getKey()) / ((double) recipe.getDuration()) * ((double) getMaxProgress())));
+                if (this.timedOutputs.containsKey(time)) this.timedOutputs.get(time).addAll(it.getValue());
+                else this.timedOutputs.put(time, it.getValue());
+            });
+        }
+
+        if(recipe.hasTimedFluidOutputs()){
+            this.timedFluidOutputs = new HashMap<>();
+            recipe.getTimedFluidOutputs().entrySet().forEach(it -> {
+                int time = Math.max(1, (int) (((double) it.getKey()) / ((double) recipe.getDuration()) * ((double) getMaxProgress())));
+                if (this.timedFluidOutputs.containsKey(time)) this.timedFluidOutputs.get(time).addAll(it.getValue());
+                else this.timedFluidOutputs.put(time, it.getValue());
+            });
+        }
+
         if (this.wasActiveAndNeedsUpdate) {
             this.wasActiveAndNeedsUpdate = false;
         } else {
@@ -650,6 +690,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         this.recipeEUt = 0;
         this.fluidOutputs = null;
         this.itemOutputs = null;
+        this.timedOutputs = null;
+        this.timedFluidOutputs = null;
         this.hasNotEnoughEnergy = false;
         this.wasActiveAndNeedsUpdate = true;
         this.parallelRecipesPerformed = 0;
