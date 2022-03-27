@@ -714,26 +714,6 @@ public class RecipeMaps {
     /**
      * Example:
      * <pre>
-     *      RecipeMap.PYROLYSE_RECIPES.recipeBuilder()
-     *     			.inputs(new ItemStack(Blocks.LOG, 16))
-     *     			.circuitMeta(2)
-     *     			.fluidInputs(Materials.Nitrogen.getGas(1000))
-     *     			.outputs(new ItemStack(Items.COAL, 20, 1))
-     *     			.fluidOutputs(Materials.Creosote.getFluid(4000))
-     *     			.duration(320)
-     *     			.EUt(96)
-     *     			.buildAndRegister();
-     * </pre>
-     */
-
-    @ZenProperty
-    public static final RecipeMap<IntCircuitRecipeBuilder> PYROLYSE_RECIPES = new RecipeMap<>("pyrolyse_oven", 2, 2, 0, 1, 0, 1, 0, 1, new IntCircuitRecipeBuilder(), false)
-            .setSound(GTSounds.FIRE);
-
-
-    /**
-     * Example:
-     * <pre>
      *     RecipeMap.SIFTER_RECIPES.recipeBuilder()
      *     			.inputs(new ItemStack(Blocks.SAND))
      *     			.chancedOutput(OreDictUnifier.get(OrePrefix.gemExquisite, Materials.Ruby, 1L), 300)

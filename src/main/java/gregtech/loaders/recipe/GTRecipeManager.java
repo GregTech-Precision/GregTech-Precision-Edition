@@ -21,7 +21,6 @@ public class GTRecipeManager {
     public static void loadLatest() {
         DecompositionRecipeHandler.runRecipeGeneration();
         RecyclingRecipes.init();
-        WoodMachineRecipes.init();
     }
 
     public static void postLoad() {
