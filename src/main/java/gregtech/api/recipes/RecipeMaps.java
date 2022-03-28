@@ -44,6 +44,17 @@ public class RecipeMaps {
             .setSound(GTSounds.ASSEMBLER);
 
     @ZenProperty
+    public static final RecipeMap<IntCircuitRecipeBuilder> COMPONENT_ASSEMBLER= new RecipeMap<>("component_assembler", 1, 6,1,1,0,0,0,0, new IntCircuitRecipeBuilder(), false)
+            .setSlotOverlay(false, false, GuiTextures.CIRCUIT_OVERLAY)
+            .setProgressBar(GuiTextures.PROGRESS_BAR_CIRCUIT, MoveType.HORIZONTAL)
+            .setSound(GTSounds.ASSEMBLER);
+
+    @ZenProperty
+    public static final RecipeMap<IntCircuitRecipeBuilder> WIRE_ASSEMBLER = new RecipeMap<>("wire_assembler", 1,6,1,1,0,1,0,0, new IntCircuitRecipeBuilder(), false)
+            .setProgressBar(GuiTextures.PROGRESS_BAR_WIREMILL, MoveType.HORIZONTAL)
+            .setSound(GTSounds.ASSEMBLER);
+
+    @ZenProperty
     public static final RecipeMapAssemblyLine<SimpleRecipeBuilder> ASSEMBLY_LINE_RECIPES = (RecipeMapAssemblyLine<SimpleRecipeBuilder>) new RecipeMapAssemblyLine<>("assembly_line", 4, 16, 1, 1, 0, 4, 0, 0, new SimpleRecipeBuilder(), false)
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, MoveType.HORIZONTAL)
             .setSound(GTSounds.ASSEMBLER);

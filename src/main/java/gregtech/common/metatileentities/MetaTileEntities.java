@@ -89,6 +89,9 @@ public class MetaTileEntities {
     public static final SimpleMachineMetaTileEntity[] THERMAL_CENTRIFUGE = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
     public static final SimpleMachineMetaTileEntity[] WIREMILL = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
     public static final SimpleMachineMetaTileEntity[] CIRCUIT_ASSEMBLER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final SimpleMachineMetaTileEntity[] COMPONENT_ASSEMBLER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final SimpleMachineMetaTileEntity[] WIRE_ASSEMBLER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
+
     // TODO Replication system
     //public static final SimpleMachineMetaTileEntity[] MASS_FABRICATOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
     //public static final SimpleMachineMetaTileEntity[] REPLICATOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
@@ -420,6 +423,10 @@ public class MetaTileEntities {
         }
 
         // Some space here for more SimpleMachines
+
+        registerSimpleMetaTileEntity(COMPONENT_ASSEMBLER, 678, "component_assembler", RecipeMaps.COMPONENT_ASSEMBLER, Textures.ASSEMBLER_OVERLAY, true);
+
+        registerSimpleMetaTileEntity(WIRE_ASSEMBLER, 693, "wire_assembler", RecipeMaps.WIRE_ASSEMBLER, Textures.ASSEMBLER_OVERLAY, true);
 
         // Space left for these just in case
 
