@@ -530,6 +530,7 @@ public final class MetaItems {
     public static ToolMetaItem<?>.MetaToolValueItem WRENCH_HV;
     public static ToolMetaItem<?>.MetaToolValueItem BUZZSAW;
     public static ToolMetaItem<?>.MetaToolValueItem SCREWDRIVER_LV;
+    public static ToolMetaItem<?>.MetaToolValueItem LAPTOP;
 
     public static MetaItem<?>.MetaValueItem ENERGY_MODULE;
     public static MetaItem<?>.MetaValueItem ENERGY_CLUSTER;
