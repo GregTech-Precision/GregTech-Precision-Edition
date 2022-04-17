@@ -62,6 +62,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import precisioncore.api.utils.PrecisionChatUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

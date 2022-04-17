@@ -40,7 +40,6 @@ public class GregtechCapabilities {
     @CapabilityInject(IHammerItem.class)
     public static Capability<IHammerItem> CAPABILITY_HAMMER = null;
 
-
     @CapabilityInject(IFuelable.class)
     public static Capability<IFuelable> CAPABILITY_FUELABLE = null;
 

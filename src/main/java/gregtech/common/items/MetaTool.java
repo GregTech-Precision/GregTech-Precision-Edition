@@ -211,6 +211,7 @@ public class MetaTool extends ToolMetaItem<ToolMetaItem<?>.MetaToolValueItem> {
         LAPTOP = addItem(33, "tool.laptop").setToolStats(new ToolLaptop())
                 .addOreDict(ToolDictNames.craftingToolLaptop)
                 .addComponents(new LaptopBehavior())
+                .addComponents(new LaptopItemStat())
                 .addComponents(ElectricStats.createElectricItem(100000L, 1L));
     }
 

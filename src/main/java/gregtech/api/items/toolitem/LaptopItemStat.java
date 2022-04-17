@@ -12,7 +12,7 @@ public class LaptopItemStat implements IItemCapabilityProvider {
 
     @Override
     public ICapabilityProvider createProvider(ItemStack itemStack) {
-        return new LaptopItemStat().createProvider(itemStack);
+        return new CapabilityProvider(itemStack);
     }
 
     private static class CapabilityProvider extends AbstractToolItemCapabilityProvider<ILaptopItem> implements ILaptopItem {

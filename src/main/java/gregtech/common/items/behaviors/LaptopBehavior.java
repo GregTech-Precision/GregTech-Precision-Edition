@@ -1,5 +1,6 @@
 package gregtech.common.items.behaviors;
 
+import gregtech.api.GTValues;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.Widget;
@@ -9,6 +10,8 @@ import gregtech.api.gui.widgets.SimpleTextWidget;
 import gregtech.api.items.gui.ItemUIFactory;
 import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
+import gregtech.api.util.GTUtility;
+import gregtech.common.tools.DamageValues;
 import precisioncore.api.capability.IAddresable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -30,23 +33,49 @@ public class LaptopBehavior extends AbstractUsableBehaviour implements ItemUIFac
         super(10000);
     }
 
+//    @Override
+//    public ActionResult<ItemStack> onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+//        ItemStack itemStack = player.getHeldItem(hand);
+//        TileEntity blockClicked = world.getTileEntity(pos);
+//        if (blockClicked instanceof MetaTileEntityHolder) {
+//            MetaTileEntityHolder holder = ((MetaTileEntityHolder) blockClicked);
+//            if (holder.getMetaTileEntity() instanceof IAddresable) {
+//                this.player = player;
+//                this.holder = holder;
+//                if(!world.isRemote) {
+//                    PlayerInventoryHolder inventoryHolder = new PlayerInventoryHolder(player, hand);
+//                    inventoryHolder.openUI();
+//                    return ActionResult.newResult(EnumActionResult.SUCCESS, player.getHeldItem(hand));
+//                }
+//            }
+//        }
+//        itemStack.damageItem(1, player);
+//        return ActionResult.newResult(EnumActionResult.PASS, player.getHeldItem(hand));
+//    }
+
     @Override
-    public ActionResult<ItemStack> onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        ItemStack itemStack = player.getHeldItem(hand);
-        TileEntity blockClicked = world.getTileEntity(pos);
-        if (blockClicked instanceof MetaTileEntityHolder) {
-            MetaTileEntityHolder holder = ((MetaTileEntityHolder) blockClicked);
-            if (holder.getMetaTileEntity() instanceof IAddresable) {
-                this.player = player;
-                this.holder = holder;
-                if(!world.isRemote) {
+    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
+        if(!world.isRemote && !world.isAirBlock(pos)) {
+
+            ItemStack itemStack = player.getHeldItem(hand);
+            if(!GTUtility.doDamageItem(itemStack, DamageValues.DAMAGE_FOR_LAPTOP, true))
+                return EnumActionResult.FAIL;
+
+            TileEntity blockClicked = world.getTileEntity(pos);
+
+            if (blockClicked instanceof MetaTileEntityHolder) {
+                MetaTileEntityHolder holder = ((MetaTileEntityHolder) blockClicked);
+                if (holder.getMetaTileEntity() instanceof IAddresable) {
+                    GTUtility.doDamageItem(itemStack, DamageValues.DAMAGE_FOR_LAPTOP, false);
+                    this.player = player;
+                    this.holder = holder;
                     PlayerInventoryHolder inventoryHolder = new PlayerInventoryHolder(player, hand);
                     inventoryHolder.openUI();
+                    return EnumActionResult.SUCCESS;
                 }
             }
         }
-        itemStack.damageItem(1, player);
-        return ActionResult.newResult(EnumActionResult.SUCCESS, player.getHeldItem(hand));
+        return EnumActionResult.PASS;
     }
 
     private void changeFrequency(int change){
@@ -69,7 +98,7 @@ public class LaptopBehavior extends AbstractUsableBehaviour implements ItemUIFac
     }
 
     private void openListener(){
-        frequency = ((IAddresable) ((MetaTileEntityHolder) holder).getMetaTileEntity()).getFrequency();
+        frequency = ((IAddresable) holder.getMetaTileEntity()).getFrequency();
     }
 
     private void closeListener(){
