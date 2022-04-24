@@ -8,7 +8,6 @@ import gregtech.api.capability.tool.IWrenchItem;
 import gregtech.api.cover.ICoverable;
 import gregtech.api.metatileentity.multiblock.IMaintenance;
 import gregtech.api.terminal.hardware.HardwareProvider;
-import gregtech.api.worldgen.generator.GTWorldGenCapability;
 import gregtech.common.metatileentities.converter.ConverterTrait;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.util.EnumFacing;
@@ -56,8 +55,5 @@ public class SimpleCapabilityManager {
         registerCapabilityWithNoDefault(ICutterItem.class);
         registerCapabilityWithNoDefault(IScrewdriverItem.class);
         registerCapabilityWithNoDefault(ISoftHammerItem.class);
-
-        //internal capabilities
-        CapabilityManager.INSTANCE.register(GTWorldGenCapability.class, GTWorldGenCapability.STORAGE, GTWorldGenCapability.FACTORY);
     }
 }

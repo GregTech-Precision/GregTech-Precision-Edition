@@ -16,7 +16,6 @@ import gregtech.api.recipes.ingredients.IntCircuitIngredient;
 import gregtech.api.recipes.machines.RecipeMapFurnace;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.properties.PropertyKey;
-import gregtech.api.worldgen.config.OreDepositDefinition;
 import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.gui.widget.craftingstation.CraftingSlotWidget;
@@ -83,7 +82,7 @@ public class GTJeiPlugin implements IModPlugin {
             }
         }
         registry.addRecipeCategories(new OreByProductCategory(registry.getJeiHelpers().getGuiHelper()));
-        registry.addRecipeCategories(new GTOreCategory(registry.getJeiHelpers().getGuiHelper()));
+        //registry.addRecipeCategories(new GTOreCategory(registry.getJeiHelpers().getGuiHelper()));
         registry.addRecipeCategories(new MaterialTreeCategory(registry.getJeiHelpers().getGuiHelper()));
     }
 
@@ -181,14 +180,14 @@ public class GTJeiPlugin implements IModPlugin {
         registry.addRecipes(materialTreeList, GTValues.MODID + ":" + "material_tree");
 
         //Ore Veins
-        List<OreDepositDefinition> oreVeins = WorldGenRegistry.getOreDeposits();
-        List<GTOreInfo> oreInfoList = new CopyOnWriteArrayList<>();
-        for (OreDepositDefinition vein : oreVeins) {
-            oreInfoList.add(new GTOreInfo(vein));
-        }
+//        List<DepositDefinition> oreVeins = WorldGenRegistry.getOreDeposits();
+//        List<GTOreInfo> oreInfoList = new CopyOnWriteArrayList<>();
+//        for (DepositDefinition vein : oreVeins) {
+//            oreInfoList.add(new GTOreInfo(vein));
+//        }
 
         String oreSpawnID = GTValues.MODID + ":" + "ore_spawn_location";
-        registry.addRecipes(oreInfoList, oreSpawnID);
+        //registry.addRecipes(oreInfoList, oreSpawnID);
         registry.addRecipeCatalyst(MetaItems.PROSPECTOR_LV.getStackForm(), oreSpawnID);
         registry.addRecipeCatalyst(MetaItems.PROSPECTOR_HV.getStackForm(), oreSpawnID);
         registry.addRecipeCatalyst(MetaItems.PROSPECTOR_LUV.getStackForm(), oreSpawnID);

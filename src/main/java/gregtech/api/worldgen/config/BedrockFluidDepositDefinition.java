@@ -26,8 +26,8 @@ public class BedrockFluidDepositDefinition implements IWorldgenDefinition {
 
     private Fluid storedFluid; // the fluid which the vein contains
 
-    private Function<Biome, Integer> biomeWeightModifier = OreDepositDefinition.NO_BIOME_INFLUENCE; // weighting of biomes
-    private Predicate<WorldProvider> dimensionFilter = OreDepositDefinition.PREDICATE_SURFACE_WORLD; // filtering of dimensions
+    private Function<Biome, Integer> biomeWeightModifier = biome -> 0; // weighting of biomes
+    private Predicate<WorldProvider> dimensionFilter = WorldProvider::isSurfaceWorld; // filtering of dimensions
 
     public BedrockFluidDepositDefinition(String depositName) {
         this.depositName = depositName;
