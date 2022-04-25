@@ -11,24 +11,23 @@ import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.sound.GTSounds;
+import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.material.Material;
+import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
 import gregtech.common.ConfigHolder;
 import gregtech.common.pipelike.fluidpipe.tile.TileEntityFluidPipe;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.SoundCategory;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.*;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -265,6 +264,18 @@ public class TricorderBehavior implements IItemBehaviour {
         } else {
             list.add(new TextComponentTranslation("behavior.tricorder.bedrock_fluid.nothing"));
         }
+
+
+        Material material = OreDictUnifier.get(OrePrefix.crushed, BedrockOreVeinHandler.getOreInChunk(world, pos.getX() / 16, pos.getZ() / 16));
+        if (material != null ) {
+            ItemStack is = ore.getItem
+            list.add(new TextComponentTranslation(is.getDisplayName()));
+            list.add(new TextComponentTranslation(is.getTranslationKey()));
+            player.inventory.addItemStackToInventory(is);
+        } else {
+            list.add(new TextComponentString("Null Ore Vein"));
+        }
+        //bedrock ores
 
         // pollution
 //            if (GT_Pollution.hasPollution(currentChunk)) {

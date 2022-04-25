@@ -4,5 +4,5 @@
   "_comment2": "Modpack authors make sure this file is included in your modpack if you have customized ore generation",
   "_comment3": "The below versions are used for when GT must forcefully override existing vein configurations, and should not be used by packs.",
   "fluidVersion": 2,
-  "veinVersion": 1
+  "veinVersion": 2
 }
