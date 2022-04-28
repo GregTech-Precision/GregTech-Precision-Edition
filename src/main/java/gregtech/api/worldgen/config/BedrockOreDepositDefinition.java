@@ -1,28 +1,21 @@
 package gregtech.api.worldgen.config;
 
-import appeng.recipes.ores.OreDictionaryHandler;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
-import gregtech.api.items.OreDictNames;
-import gregtech.api.items.metaitem.MetaOreDictItem;
-import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
-import gregtech.api.unification.material.Materials;
-import gregtech.api.unification.material.properties.PropertyKey;
-import gregtech.api.unification.ore.OrePrefix;
-import gregtech.api.util.GTLog;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
+import javafx.util.Pair;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
-import net.minecraftforge.advancements.critereon.OredictItemPredicate;
-import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -38,7 +31,10 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
     private int depletionChance; // the chance [0, 100] that the vein will deplete by 1
     private int depletedYield; // yield after the vein is depleted
 
-    private Material storedOres; // the Ore which the vein contains
+    private int maxOresWeight;
+    private Material zeroOre;
+    private final List<Material> storedOres = new ArrayList<>(); // the Ore which the vein contains
+    private final ConcurrentHashMap<Material, Integer> oreWeights = new ConcurrentHashMap<>();
 
     private Function<Biome, Integer> biomeWeightModifier = biome -> 0; // weighting of biomes
     private Predicate<WorldProvider> dimensionFilter = WorldProvider::isSurfaceWorld; // filtering of dimensions
@@ -59,13 +55,26 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         // the chance [0, 100] that the vein will deplete by depletionAmount
         this.depletionChance = Math.max(0, Math.min(100, configRoot.get("depletion").getAsJsonObject().get("chance").getAsInt()));
 
-        // the Ore which the vein contains
-        Material material = getMaterialByName(configRoot.get("ore").getAsString());
-            if(material != null){
-                this.storedOres = material;
-        } else {
-            GTLog.logger.error("Bedrock Ore Vein {} cannot have a null Ore!", this.depositName, new RuntimeException());
-            return false;
+        // Zero Layer Ore
+        if(configRoot.has("zeroLayerOre"))
+            this.zeroOre = getMaterialByName(configRoot.get("zeroLayerOre").getAsString());
+
+        // Second Layer Ores
+        if(configRoot.has("ores")) {
+            JsonArray array = configRoot.getAsJsonArray("ores");
+            if (array != null && array.size() > 0) {
+                array.forEach(ore -> {
+                    JsonObject obj = ore.getAsJsonObject();
+                    Material newOre = getMaterialByName(obj.get("ore").getAsString());
+                    this.storedOres.add(newOre);
+                    int weight = 1;
+                    if(obj.has("weight")){
+                        weight = obj.get("weight").getAsInt();
+                    }
+                    maxOresWeight += weight;
+                    this.oreWeights.put(newOre, weight);
+                });
+            }
         }
 
         // vein name for JEI display
@@ -98,7 +107,6 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
             throw new IllegalArgumentException("Material with name " + name + " not found!");
         return material;
     }
-
 
     //This is the file name
     @Override
@@ -143,8 +151,33 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         return depletedYield;
     }
 
-    public Material getStoredOre() {
+    public Material getZeroOre(){
+        return zeroOre;
+    }
+
+    public List<Material> getStoredOres() {
         return storedOres;
+    }
+
+    public Material getNextOre(){
+        for(Material ore : storedOres){
+            if(GTValues.RNG.nextInt(maxOresWeight) <= getOreWeight(ore)){
+                return ore;
+            }
+        }
+        return zeroOre;
+    }
+
+    public Map<Material, Integer> getOreWeights(){
+        return oreWeights;
+    }
+
+    public int getOreWeight(Material ore){
+        return oreWeights.getOrDefault(ore, 1);
+    }
+
+    public int getMaxOresWeight(){
+        return maxOresWeight;
     }
 
     public Function<Biome, Integer> getBiomeWeightModifier() {
@@ -171,7 +204,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
             return false;
         if (this.depletionChance != objDeposit.getDepletionChance())
             return false;
-        if (!this.storedOres.equals(objDeposit.getStoredOre()))
+        if (!this.storedOres.equals(objDeposit.storedOres))
             return false;
         if ((this.assignedName == null && objDeposit.getAssignedName() != null) ||
                 (this.assignedName != null && objDeposit.getAssignedName() == null) ||

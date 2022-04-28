@@ -4,6 +4,7 @@ import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.*;
 import gregtech.api.capability.impl.FluidTankList;
+import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -266,12 +267,13 @@ public class TricorderBehavior implements IItemBehaviour {
         }
 
 
-        Material material = OreDictUnifier.get(OrePrefix.crushed, BedrockOreVeinHandler.getOreInChunk(world, pos.getX() / 16, pos.getZ() / 16));
-        if (material != null ) {
-            ItemStack is = ore.getItem
-            list.add(new TextComponentTranslation(is.getDisplayName()));
-            list.add(new TextComponentTranslation(is.getTranslationKey()));
-            player.inventory.addItemStackToInventory(is);
+        List<Material> ores = BedrockOreVeinHandler.getOreInChunk(world, pos.getX() / 16, pos.getZ() / 16);
+        if(ores != null && !ores.isEmpty()){
+            for(Material ore : ores) {
+                ItemStack is = OreDictUnifier.get(OrePrefix.crushed, ore, 1);
+                list.add(new TextComponentTranslation(is.getDisplayName()));
+            }
+            list.add(new TextComponentString("Vein size: " + BedrockOreVeinHandler.getOperationsRemaining(world, pos.getX() / 16, pos.getZ() / 16)));
         } else {
             list.add(new TextComponentString("Null Ore Vein"));
         }

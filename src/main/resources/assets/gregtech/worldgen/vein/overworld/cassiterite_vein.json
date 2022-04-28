@@ -1,0 +1,23 @@
+{
+  "weight": 80,
+  "name": "Overworld Salt Water Deposit",
+  "yield": {
+    "min": 50,
+    "max": 100
+  },
+  "depletion": {
+    "amount": 1,
+    "chance": 100,
+    "depleted_yield": 15
+  },
+  "ores": [
+    {
+      "ore": "tin",
+      "weight": 10
+    },
+    {
+      "ore":"cassiterite",
+      "weight": 90
+    }
+  ]
+}

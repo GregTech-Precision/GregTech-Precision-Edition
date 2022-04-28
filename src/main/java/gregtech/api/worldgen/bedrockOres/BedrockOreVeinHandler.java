@@ -8,10 +8,7 @@ import gregtech.api.util.GTLog;
 import gregtech.api.util.XSTR;
 import gregtech.api.worldgen.bedrockFluids.ChunkPosDimension;
 import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
@@ -31,7 +28,7 @@ public class BedrockOreVeinHandler {
 
     public static final int VEIN_CHUNK_SIZE = 4; // veins are 4x4 chunk squares
 
-    public static final int MAXIMUM_VEIN_OPERATIONS = 100_000;
+    public static final int MAXIMUM_VEIN_OPERATIONS = 200_000;
 
     /**
      * Gets the OreVeinWorldInfo object associated with the given chunk
@@ -192,10 +189,10 @@ public class BedrockOreVeinHandler {
      * @return Ore in given chunk
      */
     @Nullable
-    public static Material getOreInChunk(World world, int chunkX, int chunkZ) {
+    public static List<Material> getOreInChunk(World world, int chunkX, int chunkZ) {
         OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ);
         if (info == null || info.getDefinition() == null) return null;
-        return info.getDefinition().getStoredOre();
+        return info.getDefinition().getStoredOres();
     }
 
     /**
@@ -230,13 +227,13 @@ public class BedrockOreVeinHandler {
 
     public static class OreVeinWorldEntry {
         private BedrockOreDepositDefinition vein;
-        private int OreYield;
+        private int oreYield;
         private int operationsRemaining;
 
-        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int OreYield, int operationsRemaining) {
+        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int oreYield, int maxOperations) {
             this.vein = vein;
-            this.OreYield = OreYield;
-            this.operationsRemaining = operationsRemaining;
+            this.oreYield = oreYield;
+            this.operationsRemaining = Math.min(50, GTValues.RNG.nextInt(maxOperations));
         }
 
         private OreVeinWorldEntry() {
@@ -247,7 +244,7 @@ public class BedrockOreVeinHandler {
         }
 
         public int getOreYield() {
-            return this.OreYield;
+            return this.oreYield;
         }
 
         public int getOperationsRemaining() {
@@ -265,7 +262,7 @@ public class BedrockOreVeinHandler {
 
         public NBTTagCompound writeToNBT() {
             NBTTagCompound tag = new NBTTagCompound();
-            tag.setInteger("OreYield", OreYield);
+            tag.setInteger("oreYield", oreYield);
             tag.setInteger("oreOperationsRemaining", operationsRemaining);
             if (vein != null) {
                 tag.setString("oreVein", vein.getDepositName());
@@ -276,7 +273,7 @@ public class BedrockOreVeinHandler {
         @Nonnull
         public static OreVeinWorldEntry readFromNBT(@Nonnull NBTTagCompound tag) {
             OreVeinWorldEntry info = new OreVeinWorldEntry();
-            info.OreYield = tag.getInteger("OreYield");
+            info.oreYield = tag.getInteger("oreYield");
             info.operationsRemaining = tag.getInteger("oreOperationsRemaining");
 
             if (tag.hasKey("oreVein")) {

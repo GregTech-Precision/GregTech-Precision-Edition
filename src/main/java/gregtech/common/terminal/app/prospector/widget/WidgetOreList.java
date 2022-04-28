@@ -2,6 +2,7 @@ package gregtech.common.terminal.app.prospector.widget;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import gregtech.api.GregTechAPI;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.IRenderContext;
 import gregtech.api.gui.Widget;
@@ -10,6 +11,8 @@ import gregtech.api.gui.widgets.*;
 import gregtech.api.terminal.gui.widgets.DraggableScrollableWidgetGroup;
 import gregtech.api.terminal.os.TerminalTheme;
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.material.Material;
+import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.MaterialStack;
 import gregtech.api.util.Position;
 import net.minecraft.client.renderer.GlStateManager;
@@ -67,7 +70,8 @@ public class WidgetOreList extends DraggableScrollableWidgetGroup {
         if (ores.containsKey(orePrefix)) {
             return;
         }
-        ItemStack itemStack = OreDictUnifier.get(orePrefix);
+        Material material = GregTechAPI.MATERIAL_REGISTRY.getObject(orePrefix);
+        ItemStack itemStack = OreDictUnifier.get(OrePrefix.crushed, material);
         if (itemStack == null || itemStack.isEmpty()) return;
         ores.put(orePrefix, itemStack.getDisplayName());
         MaterialStack materialStack = OreDictUnifier.getMaterial(OreDictUnifier.get(orePrefix));

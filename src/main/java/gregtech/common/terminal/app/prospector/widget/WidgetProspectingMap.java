@@ -8,6 +8,7 @@ import gregtech.api.util.GTUtility;
 import gregtech.api.util.Position;
 import gregtech.api.util.Size;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
 import gregtech.common.terminal.app.prospector.ProspectingTexture;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.Gui;
@@ -103,16 +104,12 @@ public class WidgetProspectingMap extends Widget {
 
             switch (mode) {
                 case ORE_PROSPECTING_MODE:
-                    for (int x = 0; x < 16; x++) {
-                        for (int z = 0; z < 16; z++) {
-                            int ySize = chunk.getHeightValue(x, z);
-                            for (int y = 1; y < ySize; y++) {
-                                Block block = chunk.getBlockState(x, y, z).getBlock();
-                                if (GTUtility.isOre(block)) {
-                                    packet.addBlock(x, y, z, OreDictUnifier.getOreDictionaryNames(new ItemStack(block)).stream().findFirst().get());
-                                }
-                            }
-                        }
+                    BedrockOreVeinHandler.OreVeinWorldEntry oreStack = BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z);
+                    if (oreStack != null && oreStack.getDefinition() != null) {
+                        packet.addBlock(0, 3, 0, GTUtility.formatNumbers(100.0 * BedrockOreVeinHandler.getOperationsRemaining(world, chunk.x, chunk.z)
+                                / BedrockOreVeinHandler.MAXIMUM_VEIN_OPERATIONS));
+                        packet.addBlock(0, 2, 0, "" + BedrockOreVeinHandler.getOreYield(world, chunk.x, chunk.z));
+                        packet.addBlock(0, 1, 0, BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z).getDefinition().getAssignedName());
                     }
                     break;
                 case FLUID_PROSPECTING_MODE:
