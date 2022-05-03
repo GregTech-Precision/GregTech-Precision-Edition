@@ -29,6 +29,8 @@ public class BedrockOreVeinHandler {
     public static final int VEIN_CHUNK_SIZE = 4; // veins are 4x4 chunk squares
 
     public static final int MAXIMUM_VEIN_OPERATIONS = 200_000;
+    public static final int MAXIMUM_SMALL_VEIN_OPERATIONS = 10_000;
+    public static final int MINIMUM_OPERATIONS = 50;
 
     /**
      * Gets the OreVeinWorldInfo object associated with the given chunk
@@ -75,7 +77,7 @@ public class BedrockOreVeinHandler {
                 maximumYield = Math.min(maximumYield, definition.getMaximumYield());
             }
 
-            worldEntry = new OreVeinWorldEntry(definition, maximumYield, MAXIMUM_VEIN_OPERATIONS);
+            worldEntry = new OreVeinWorldEntry(definition, maximumYield);
             veinCache.put(coords, worldEntry);
         }
         return worldEntry;
@@ -195,6 +197,12 @@ public class BedrockOreVeinHandler {
         return info.getDefinition().getStoredOres();
     }
 
+    public static boolean isSmallVein(World world, int chunkX, int chunkY){
+        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkY);
+        if(info == null || info.getDefinition() == null) return false;
+        return info.getDefinition().isSmallVein();
+    }
+
     /**
      * Depletes Ore from a given chunk
      *
@@ -230,10 +238,10 @@ public class BedrockOreVeinHandler {
         private int oreYield;
         private int operationsRemaining;
 
-        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int oreYield, int maxOperations) {
+        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int oreYield) {
             this.vein = vein;
             this.oreYield = oreYield;
-            this.operationsRemaining = Math.min(50, GTValues.RNG.nextInt(maxOperations));
+            this.operationsRemaining = getMaxVeinOperations();
         }
 
         private OreVeinWorldEntry() {
@@ -249,6 +257,10 @@ public class BedrockOreVeinHandler {
 
         public int getOperationsRemaining() {
             return this.operationsRemaining;
+        }
+
+        public int getMaxVeinOperations(){
+            return vein.isSmallVein() ? MAXIMUM_SMALL_VEIN_OPERATIONS : MAXIMUM_VEIN_OPERATIONS;
         }
 
         @SuppressWarnings("unused")

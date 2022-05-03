@@ -6,6 +6,7 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityOreDrill;
 import net.minecraft.item.ItemStack;
@@ -83,7 +84,7 @@ public class OreDrillLogic {
         progressTime = 0;
 
         int amount = getOreToProduce()/100;
-        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, onlyZeroLayer ? vein.getDefinition().getZeroOre() : vein.getDefinition().getNextOre(), amount);
+        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), amount);
 
         if (metaTileEntity.fillInventory(ore, true)) {
             metaTileEntity.fillInventory(ore, false);
@@ -100,6 +101,10 @@ public class OreDrillLogic {
     }
 
     private boolean acquireNewOre() {
+        if(onlyZeroLayer && !BedrockOreVeinHandler.isSmallVein(metaTileEntity.getWorld(), getChunkX(), getChunkZ())) {
+            vein = null;
+            return false;
+        }
         this.vein = BedrockOreVeinHandler.getOreVeinWorldEntry(metaTileEntity.getWorld(), getChunkX(), getChunkZ());
         return this.vein != null;
     }
@@ -117,7 +122,7 @@ public class OreDrillLogic {
         int regularYield = BedrockOreVeinHandler.getOreYield(metaTileEntity.getWorld(), getChunkX(), getChunkZ());
         int remainingOperations = BedrockOreVeinHandler.getOperationsRemaining(metaTileEntity.getWorld(), getChunkX(), getChunkZ());
 
-        int produced = Math.max(depletedYield, regularYield * remainingOperations / BedrockOreVeinHandler.MAXIMUM_VEIN_OPERATIONS);
+        int produced = Math.max(depletedYield, regularYield * remainingOperations / BedrockOreVeinHandler.getOreVeinWorldEntry(metaTileEntity.getWorld(), getChunkX(), getChunkZ()).getMaxVeinOperations());
 
         return produced;
     }
@@ -143,7 +148,7 @@ public class OreDrillLogic {
             this.hasNotEnoughEnergy = false;
         }
 
-        if (metaTileEntity.fillInventory(OreDictUnifier.get(OrePrefix.crushed, onlyZeroLayer ? vein.getDefinition().getNextOre() : vein.getDefinition().getZeroOre()), true)) {
+        if (metaTileEntity.fillInventory(OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), getOreToProduce()), true)) {
             this.isInventoryFull = false;
             return true;
         }

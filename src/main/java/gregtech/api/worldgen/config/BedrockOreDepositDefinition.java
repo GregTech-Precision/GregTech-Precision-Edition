@@ -31,10 +31,10 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
     private int depletionChance; // the chance [0, 100] that the vein will deplete by 1
     private int depletedYield; // yield after the vein is depleted
 
-    private int maxOresWeight;
-    private Material zeroOre;
+    private boolean smallVein = false;
     private final List<Material> storedOres = new ArrayList<>(); // the Ore which the vein contains
     private final ConcurrentHashMap<Material, Integer> oreWeights = new ConcurrentHashMap<>();
+    private int maxOresWeight;
 
     private Function<Biome, Integer> biomeWeightModifier = biome -> 0; // weighting of biomes
     private Predicate<WorldProvider> dimensionFilter = WorldProvider::isSurfaceWorld; // filtering of dimensions
@@ -55,9 +55,10 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         // the chance [0, 100] that the vein will deplete by depletionAmount
         this.depletionChance = Math.max(0, Math.min(100, configRoot.get("depletion").getAsJsonObject().get("chance").getAsInt()));
 
-        // Zero Layer Ore
-        if(configRoot.has("zeroLayerOre"))
-            this.zeroOre = getMaterialByName(configRoot.get("zeroLayerOre").getAsString());
+        // Zero Layer Vein
+       if(configRoot.has("small")){
+           this.smallVein = configRoot.get("small").getAsBoolean();
+       }
 
         // Second Layer Ores
         if(configRoot.has("ores")) {
@@ -151,10 +152,6 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         return depletedYield;
     }
 
-    public Material getZeroOre(){
-        return zeroOre;
-    }
-
     public List<Material> getStoredOres() {
         return storedOres;
     }
@@ -165,19 +162,15 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
                 return ore;
             }
         }
-        return zeroOre;
+        return storedOres.get(0);
     }
 
-    public Map<Material, Integer> getOreWeights(){
-        return oreWeights;
+    public boolean isSmallVein(){
+        return smallVein;
     }
 
     public int getOreWeight(Material ore){
         return oreWeights.getOrDefault(ore, 1);
-    }
-
-    public int getMaxOresWeight(){
-        return maxOresWeight;
     }
 
     public Function<Biome, Integer> getBiomeWeightModifier() {
@@ -203,6 +196,8 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         if (this.depletionAmount != objDeposit.getDepletionAmount())
             return false;
         if (this.depletionChance != objDeposit.getDepletionChance())
+            return false;
+        if(this.smallVein != objDeposit.smallVein)
             return false;
         if (!this.storedOres.equals(objDeposit.storedOres))
             return false;

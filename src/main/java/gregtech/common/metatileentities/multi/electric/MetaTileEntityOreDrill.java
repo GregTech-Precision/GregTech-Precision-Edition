@@ -44,6 +44,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
@@ -72,11 +73,13 @@ public class MetaTileEntityOreDrill extends MultiblockWithDisplayBase implements
 
     protected void initializeAbilities() {
         this.inputFluidInventory = new FluidTankList(true, getAbilities(MultiblockAbility.IMPORT_FLUIDS));
+        this.exportItems = getAbilities(MultiblockAbility.EXPORT_ITEMS).get(0);
         this.energyContainer = new EnergyContainerList(getAbilities(MultiblockAbility.INPUT_ENERGY));
     }
 
     private void resetTileAbilities() {
         this.inputFluidInventory = new FluidTankList(true);
+        this.exportItems = new ItemStackHandler(0);
         this.energyContainer = new EnergyContainerList(Lists.newArrayList());
     }
 
