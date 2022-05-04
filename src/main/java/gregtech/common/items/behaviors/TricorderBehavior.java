@@ -274,6 +274,7 @@ public class TricorderBehavior implements IItemBehaviour {
                 list.add(new TextComponentTranslation(is.getDisplayName()));
             }
             list.add(new TextComponentString("Vein size: " + BedrockOreVeinHandler.getOperationsRemaining(world, pos.getX() / 16, pos.getZ() / 16)));
+            list.add(new TextComponentString("Vein layer: " + (BedrockOreVeinHandler.getOreVeinWorldEntry(world, pos.getX() / 16, pos.getZ() / 16).getDefinition().getLayer())));
         } else {
             list.add(new TextComponentString("Null Ore Vein"));
         }

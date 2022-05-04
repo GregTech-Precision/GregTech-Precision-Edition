@@ -1,5 +1,6 @@
 package gregtech.common.metatileentities.multi.electric;
 
+import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
@@ -8,21 +9,18 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.IMultipleTankHandler;
-import gregtech.api.capability.IWorkable;
 import gregtech.api.capability.impl.EnergyContainerList;
 import gregtech.api.capability.impl.FluidDrillLogic;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
-import gregtech.api.capability.impl.miner.OreDrillLogic;
-import gregtech.api.metatileentity.ITieredMetaTileEntity;
+import gregtech.api.capability.impl.miner.AbstractMinerLogic;
+import gregtech.api.capability.impl.miner.BasicMinerLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
-import gregtech.api.metatileentity.multiblock.MultiblockWithDisplayBase;
 import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
-import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
@@ -32,10 +30,12 @@ import gregtech.common.blocks.BlockMetalCasing;
 import gregtech.common.blocks.MetaBlocks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
@@ -43,112 +43,71 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
-public class MetaTileEntityOreDrill extends MultiblockWithDisplayBase implements ITieredMetaTileEntity, IWorkable {
+public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
 
-    private final OreDrillLogic minerLogic;
-    private final int tier;
+    protected final AbstractMinerLogic minerLogic;
 
     protected IMultipleTankHandler inputFluidInventory;
+    protected IItemHandlerModifiable outputItemInventory;
     protected IEnergyContainer energyContainer;
 
-    public MetaTileEntityOreDrill(ResourceLocation metaTileEntityId, int tier) {
+
+    public MetaTileEntityBasicMiner(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId);
-        this.minerLogic = new OreDrillLogic(this, true);
-        this.tier = tier;
+        this.minerLogic = new BasicMinerLogic(this);
     }
 
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
-        return new MetaTileEntityOreDrill(metaTileEntityId, tier);
+        return new MetaTileEntityBasicMiner(metaTileEntityId);
     }
 
+    @Override
     protected void initializeAbilities() {
         this.inputFluidInventory = new FluidTankList(true, getAbilities(MultiblockAbility.IMPORT_FLUIDS));
-        this.exportItems = getAbilities(MultiblockAbility.EXPORT_ITEMS).get(0);
+        this.outputItemInventory = new ItemHandlerList(getAbilities(MultiblockAbility.EXPORT_ITEMS));
         this.energyContainer = new EnergyContainerList(getAbilities(MultiblockAbility.INPUT_ENERGY));
     }
 
-    private void resetTileAbilities() {
+    @Override
+    protected void resetTileAbilities() {
         this.inputFluidInventory = new FluidTankList(true);
-        this.exportItems = new ItemStackHandler(0);
+        this.outputItemInventory = new ItemHandlerList(Lists.newArrayList());
         this.energyContainer = new EnergyContainerList(Lists.newArrayList());
-    }
-
-    @Override
-    protected void formStructure(PatternMatchContext context) {
-        super.formStructure(context);
-        initializeAbilities();
-    }
-
-    @Override
-    public void invalidateStructure() {
-        super.invalidateStructure();
-        resetTileAbilities();
-    }
-
-    @Override
-    protected void updateFormedValid() {
-        this.minerLogic.performDrilling();
-        if (!getWorld().isRemote && this.minerLogic.wasActiveAndNeedsUpdate()) {
-            this.minerLogic.setWasActiveAndNeedsUpdate(false);
-            this.minerLogic.setActive(false);
-        }
     }
 
     @Override
     protected BlockPattern createStructurePattern() {
         return FactoryBlockPattern.start()
-                .aisle("XXX", "#F#", "#F#", "#F#", "###", "###", "###")
-                .aisle("XXX", "FCF", "FCF", "FCF", "#F#", "#F#", "#F#")
-                .aisle("XSX", "#F#", "#F#", "#F#", "###", "###", "###")
+                .aisle("#F#F#", "#F#F#", "#F#F#", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####")
+                .aisle("F###F", "F###F", "FCCCF", "#F#F#", "#F#F#", "#FCF#", "##F##", "##F##", "##F##", "#####", "#####", "#####")
+                .aisle("#####", "#####", "#CDC#", "#####", "#####", "#CCC#", "#FCF#", "#FCF#", "#FCF#", "##F##", "##F##", "##F##")
+                .aisle("F###F", "F###F", "FCCCF", "#F#F#", "#F#F#", "#FCF#", "##F##", "##F##", "##F##", "#####", "#####", "#####")
+                .aisle("#F#F#", "#F#F#", "#FSF#", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####")
                 .where('S', selfPredicate())
-                .where('X', states(getCasingState()).setMinGlobalLimited(3)
+                .where('M', states(getCasingState())
                         .or(abilities(MultiblockAbility.INPUT_ENERGY).setMinGlobalLimited(1).setMaxGlobalLimited(3))
                         .or(abilities(MultiblockAbility.EXPORT_ITEMS).setMaxGlobalLimited(1)))
                 .where('C', states(getCasingState()))
-                .where('F', states(getFrameState()))
+                .where('F', states(MetaBlocks.FRAMES.get(Materials.Steel).getBlock(Materials.Steel)))
+                .where('D', any()) //drill hatch
                 .where('#', any())
                 .build();
     }
 
     private IBlockState getCasingState() {
-        if (tier == GTValues.MV)
-            return MetaBlocks.METAL_CASING.getState(BlockMetalCasing.MetalCasingType.STEEL_SOLID);
-        if (tier == GTValues.HV)
-            return MetaBlocks.METAL_CASING.getState(BlockMetalCasing.MetalCasingType.TITANIUM_STABLE);
-        if (tier == GTValues.EV)
-            return MetaBlocks.METAL_CASING.getState(BlockMetalCasing.MetalCasingType.TUNGSTENSTEEL_ROBUST);
         return MetaBlocks.METAL_CASING.getState(BlockMetalCasing.MetalCasingType.STEEL_SOLID);
-    }
-
-    @Nonnull
-    private IBlockState getFrameState() {
-        if (tier == GTValues.MV)
-            return MetaBlocks.FRAMES.get(Materials.Steel).getBlock(Materials.Steel);
-        if (tier == GTValues.HV)
-            return MetaBlocks.FRAMES.get(Materials.Titanium).getBlock(Materials.Titanium);
-        if (tier == GTValues.EV)
-            return MetaBlocks.FRAMES.get(Materials.TungstenSteel).getBlock(Materials.TungstenSteel);
-        return MetaBlocks.FRAMES.get(Materials.Steel).getBlock(Materials.Steel);
     }
 
     @Override
     public ICubeRenderer getBaseTexture(IMultiblockPart sourcePart) {
-        if (tier == GTValues.MV)
-            return Textures.SOLID_STEEL_CASING;
-        if (tier == GTValues.HV)
-            return Textures.STABLE_TITANIUM_CASING;
-        if (tier == GTValues.EV)
-            return Textures.ROBUST_TUNGSTENSTEEL_CASING;
         return Textures.SOLID_STEEL_CASING;
     }
 
@@ -187,35 +146,7 @@ public class MetaTileEntityOreDrill extends MultiblockWithDisplayBase implements
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, boolean advanced) {
         super.addInformation(stack, player, tooltip, advanced);
         tooltip.add(I18n.format("gregtech.machine.fluid_drilling_rig.description"));
-        tooltip.add(I18n.format("gregtech.machine.fluid_drilling_rig.production", getRigMultiplier()));
-        tooltip.add(I18n.format("gregtech.machine.fluid_drilling_rig.depletion", GTUtility.formatNumbers(100.0 / getDepletionChance())));
-        tooltip.add(I18n.format("gregtech.machine.fluid_drilling_rig.energy", GTValues.VNF[tier], GTValues.VNF[tier + 1]));
         tooltip.add(I18n.format("gregtech.machine.fluid_drilling_rig.overclock"));
-    }
-
-    @Override
-    public int getTier() {
-        return this.tier;
-    }
-
-    public int getRigMultiplier() {
-        if (this.tier == GTValues.MV)
-            return 1;
-        if (this.tier == GTValues.HV)
-            return 16;
-        if (this.tier == GTValues.EV)
-            return 64;
-        return 1;
-    }
-
-    public int getDepletionChance() {
-        if (this.tier == GTValues.MV)
-            return 1;
-        if (this.tier == GTValues.HV)
-            return 2;
-        if (this.tier == GTValues.EV)
-            return 8;
-        return 1;
     }
 
     @Nonnull
@@ -240,13 +171,19 @@ public class MetaTileEntityOreDrill extends MultiblockWithDisplayBase implements
         this.minerLogic.setWorkingEnabled(isActivationAllowed);
     }
 
+    @Override
+    public boolean onScrewdriverClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing, CuboidRayTraceResult hitResult) {
+        this.layer++;
+        if(layer > 1) layer = 0;
+        return super.onScrewdriverClick(playerIn, hand, facing, hitResult);
+    }
+
     public boolean fillInventory(ItemStack stack, boolean simulate) {
-        return GTTransferUtils.addItemsToItemHandler(getAbilities(MultiblockAbility.EXPORT_ITEMS).get(0), simulate, Collections.singletonList(stack));
+        return GTTransferUtils.addItemsToItemHandler(outputItemInventory, simulate, Collections.singletonList(stack));
     }
 
     public int getEnergyTier() {
-        int minVoltage = Math.max(this.tier, GTUtility.getTierByVoltage(energyContainer.getInputVoltage()));
-        return Math.min(minVoltage, this.tier + 1);
+        return GTUtility.getTierByVoltage(energyContainer.getInputVoltage());
     }
 
     public long getEnergyInputPerSecond() {
@@ -266,7 +203,7 @@ public class MetaTileEntityOreDrill extends MultiblockWithDisplayBase implements
 
     @Override
     public boolean hasMaintenanceMechanics() {
-        return false;
+        return true;
     }
 
     @Override

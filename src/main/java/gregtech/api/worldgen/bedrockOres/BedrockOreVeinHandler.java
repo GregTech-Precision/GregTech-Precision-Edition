@@ -30,7 +30,6 @@ public class BedrockOreVeinHandler {
 
     public static final int MAXIMUM_VEIN_OPERATIONS = 200_000;
     public static final int MAXIMUM_SMALL_VEIN_OPERATIONS = 10_000;
-    public static final int MINIMUM_OPERATIONS = 50;
 
     /**
      * Gets the OreVeinWorldInfo object associated with the given chunk
@@ -197,10 +196,10 @@ public class BedrockOreVeinHandler {
         return info.getDefinition().getStoredOres();
     }
 
-    public static boolean isSmallVein(World world, int chunkX, int chunkY){
+    public static int getVeinLayer(World world, int chunkX, int chunkY){
         OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkY);
-        if(info == null || info.getDefinition() == null) return false;
-        return info.getDefinition().isSmallVein();
+        if(info == null || info.getDefinition() == null) return -1;
+        return info.getDefinition().getLayer();
     }
 
     /**
@@ -260,7 +259,13 @@ public class BedrockOreVeinHandler {
         }
 
         public int getMaxVeinOperations(){
-            return vein.isSmallVein() ? MAXIMUM_SMALL_VEIN_OPERATIONS : MAXIMUM_VEIN_OPERATIONS;
+            switch (this.vein.getLayer()){
+                case 0:
+                    return MAXIMUM_SMALL_VEIN_OPERATIONS;
+                case 1:
+                    return MAXIMUM_VEIN_OPERATIONS;
+            }
+            return MAXIMUM_VEIN_OPERATIONS;
         }
 
         @SuppressWarnings("unused")

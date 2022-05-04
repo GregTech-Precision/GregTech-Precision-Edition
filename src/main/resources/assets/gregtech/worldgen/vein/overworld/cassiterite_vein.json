@@ -13,11 +13,11 @@
   "ores": [
     {
       "ore": "tin",
-      "weight": 10
+      "weight": 90
     },
     {
       "ore":"cassiterite",
-      "weight": 90
+      "weight": 60
     }
   ]
 }

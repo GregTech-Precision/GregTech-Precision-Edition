@@ -6,38 +6,36 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
-import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import gregtech.common.ConfigHolder;
-import gregtech.common.metatileentities.multi.electric.MetaTileEntityOreDrill;
+import gregtech.common.metatileentities.multi.electric.MetaTileEntityMiner;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 
 import javax.annotation.Nonnull;
 
-public class OreDrillLogic {
+public abstract class AbstractMinerLogic {
 
-    public static final int MAX_PROGRESS = 20;
+    public static final int MAX_PROGRESS = 200;
 
-    private int progressTime = 0;
+    protected int progressTime = 0;
 
-    private final MetaTileEntityOreDrill metaTileEntity;
+    protected final MetaTileEntityMiner metaTileEntity;
 
-    private boolean onlyZeroLayer;
-    private boolean isActive;
-    private boolean isWorkingEnabled = true;
-    private boolean wasActiveAndNeedsUpdate;
-    private boolean isDone = false;
+    protected boolean isActive;
+    protected boolean isWorkingEnabled = true;
+    protected boolean wasActiveAndNeedsUpdate;
+    protected boolean isDone = false;
     protected boolean isInventoryFull;
 
-    private boolean hasNotEnoughEnergy;
+    protected BedrockOreVeinHandler.OreVeinWorldEntry vein = null;
 
-    private BedrockOreVeinHandler.OreVeinWorldEntry vein;
-
-    public OreDrillLogic(MetaTileEntityOreDrill metaTileEntity, boolean onlyZeroLayer) {
+    public AbstractMinerLogic(MetaTileEntityMiner metaTileEntity) {
         this.metaTileEntity = metaTileEntity;
-        this.vein = null;
-        this.onlyZeroLayer = onlyZeroLayer;
+    }
+
+    protected MetaTileEntityMiner getMetaTileEntity(){
+        return metaTileEntity;
     }
 
     /**
@@ -45,7 +43,7 @@ public class OreDrillLogic {
      * Call this method every tick in update
      */
     public void performDrilling() {
-        if (metaTileEntity.getWorld().isRemote) return;
+        if (getMetaTileEntity().getWorld().isRemote) return;
 
         // if we have no Ore, try to get a new one
         if (vein == null)
@@ -83,12 +81,11 @@ public class OreDrillLogic {
             return;
         progressTime = 0;
 
-        int amount = getOreToProduce()/100;
-        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), amount);
+        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 4);
 
-        if (metaTileEntity.fillInventory(ore, true)) {
-            metaTileEntity.fillInventory(ore, false);
-            depleteVein();
+        if (getMetaTileEntity().fillInventory(ore, true)) {
+            getMetaTileEntity().fillInventory(ore, false);
+            BedrockOreVeinHandler.depleteVein(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), 0, false);
         } else {
             isInventoryFull = true;
             setActive(false);
@@ -96,69 +93,21 @@ public class OreDrillLogic {
         }
     }
 
-    protected boolean consumeEnergy(boolean simulate) {
-        return metaTileEntity.drainEnergy(simulate);
-    }
-
-    private boolean acquireNewOre() {
-        if(onlyZeroLayer && !BedrockOreVeinHandler.isSmallVein(metaTileEntity.getWorld(), getChunkX(), getChunkZ())) {
-            vein = null;
-            return false;
-        }
-        this.vein = BedrockOreVeinHandler.getOreVeinWorldEntry(metaTileEntity.getWorld(), getChunkX(), getChunkZ());
-        return this.vein != null;
-    }
-
-    protected void depleteVein() {
-        int chance = metaTileEntity.getDepletionChance();
-
-        // chance to deplete based on the rig
-        if (chance == 1 || GTValues.RNG.nextInt(chance) == 0)
-            BedrockOreVeinHandler.depleteVein(metaTileEntity.getWorld(), getChunkX(), getChunkZ(), 0, false);
-    }
-
-    private int getOreToProduce() {
-        int depletedYield = BedrockOreVeinHandler.getDepletedOreYield(metaTileEntity.getWorld(), getChunkX(), getChunkZ());
-        int regularYield = BedrockOreVeinHandler.getOreYield(metaTileEntity.getWorld(), getChunkX(), getChunkZ());
-        int remainingOperations = BedrockOreVeinHandler.getOperationsRemaining(metaTileEntity.getWorld(), getChunkX(), getChunkZ());
-
-        int produced = Math.max(depletedYield, regularYield * remainingOperations / BedrockOreVeinHandler.getOreVeinWorldEntry(metaTileEntity.getWorld(), getChunkX(), getChunkZ()).getMaxVeinOperations());
-
-        return produced;
-    }
+    abstract protected boolean consumeEnergy(boolean simulate);
 
     /**
      *
      * @return true if the rig is able to drain, else false
      */
-    protected boolean checkCanDrain() {
-        if (!consumeEnergy(true)) {
-            if (progressTime >= 2) {
-                if (ConfigHolder.machines.recipeProgressLowEnergy)
-                    this.progressTime = 1;
-                else
-                    this.progressTime = Math.max(1, progressTime - 2);
+    abstract protected boolean checkCanDrain();
 
-                hasNotEnoughEnergy = true;
-            }
+    private boolean acquireNewOre() {
+        if(BedrockOreVeinHandler.getVeinLayer(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ()) != getMetaTileEntity().getLayer()) {
+            vein = null;
             return false;
         }
-
-        if (this.hasNotEnoughEnergy && metaTileEntity.getEnergyInputPerSecond() > 19L * GTValues.VA[metaTileEntity.getEnergyTier()]) {
-            this.hasNotEnoughEnergy = false;
-        }
-
-        if (metaTileEntity.fillInventory(OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), getOreToProduce()), true)) {
-            this.isInventoryFull = false;
-            return true;
-        }
-        this.isInventoryFull = true;
-
-        if (isActive()) {
-            setActive(false);
-            setWasActiveAndNeedsUpdate(true);
-        }
-        return false;
+        this.vein = BedrockOreVeinHandler.getOreVeinWorldEntry(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ());
+        return this.vein != null;
     }
 
     private int getChunkX() {
@@ -184,9 +133,9 @@ public class OreDrillLogic {
     public void setActive(boolean active) {
         if (this.isActive != active) {
             this.isActive = active;
-            this.metaTileEntity.markDirty();
-            if (metaTileEntity.getWorld() != null && !metaTileEntity.getWorld().isRemote) {
-                this.metaTileEntity.writeCustomData(GregtechDataCodes.WORKABLE_ACTIVE, buf -> buf.writeBoolean(active));
+            getMetaTileEntity().markDirty();
+            if (getMetaTileEntity().getWorld() != null && !metaTileEntity.getWorld().isRemote) {
+                getMetaTileEntity().writeCustomData(GregtechDataCodes.WORKABLE_ACTIVE, buf -> buf.writeBoolean(active));
             }
         }
     }
@@ -198,9 +147,9 @@ public class OreDrillLogic {
     public void setWorkingEnabled(boolean isWorkingEnabled) {
         if (this.isWorkingEnabled != isWorkingEnabled) {
             this.isWorkingEnabled = isWorkingEnabled;
-            metaTileEntity.markDirty();
-            if (metaTileEntity.getWorld() != null && !metaTileEntity.getWorld().isRemote) {
-                this.metaTileEntity.writeCustomData(GregtechDataCodes.WORKING_ENABLED, buf -> buf.writeBoolean(isWorkingEnabled));
+            getMetaTileEntity().markDirty();
+            if (getMetaTileEntity().getWorld() != null && !metaTileEntity.getWorld().isRemote) {
+                getMetaTileEntity().writeCustomData(GregtechDataCodes.WORKING_ENABLED, buf -> buf.writeBoolean(isWorkingEnabled));
             }
         }
     }
@@ -218,7 +167,7 @@ public class OreDrillLogic {
      * @return whether the rig is currently working
      */
     public boolean isWorking() {
-        return isActive && !hasNotEnoughEnergy && isWorkingEnabled;
+        return isActive && isWorkingEnabled;
     }
 
     /**
@@ -299,10 +248,10 @@ public class OreDrillLogic {
     public void receiveCustomData(int dataId, PacketBuffer buf) {
         if (dataId == GregtechDataCodes.WORKABLE_ACTIVE) {
             this.isActive = buf.readBoolean();
-            metaTileEntity.scheduleRenderUpdate();
+            getMetaTileEntity().scheduleRenderUpdate();
         } else if (dataId == GregtechDataCodes.WORKING_ENABLED) {
             this.isWorkingEnabled = buf.readBoolean();
-            metaTileEntity.scheduleRenderUpdate();
+            getMetaTileEntity().scheduleRenderUpdate();
         }
     }
 

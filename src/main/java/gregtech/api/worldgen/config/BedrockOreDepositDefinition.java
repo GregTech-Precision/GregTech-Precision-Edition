@@ -4,17 +4,19 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
+import gregtech.api.fluids.MetaFluids;
 import gregtech.api.unification.material.Material;
+import gregtech.api.unification.material.Materials;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
-import javafx.util.Pair;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -31,10 +33,11 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
     private int depletionChance; // the chance [0, 100] that the vein will deplete by 1
     private int depletedYield; // yield after the vein is depleted
 
-    private boolean smallVein = false;
     private final List<Material> storedOres = new ArrayList<>(); // the Ore which the vein contains
     private final ConcurrentHashMap<Material, Integer> oreWeights = new ConcurrentHashMap<>();
     private int maxOresWeight;
+    private int layer = 0;
+    private Fluid specialFluid;
 
     private Function<Biome, Integer> biomeWeightModifier = biome -> 0; // weighting of biomes
     private Predicate<WorldProvider> dimensionFilter = WorldProvider::isSurfaceWorld; // filtering of dimensions
@@ -56,9 +59,17 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         this.depletionChance = Math.max(0, Math.min(100, configRoot.get("depletion").getAsJsonObject().get("chance").getAsInt()));
 
         // Zero Layer Vein
-       if(configRoot.has("small")){
-           this.smallVein = configRoot.get("small").getAsBoolean();
+       if(configRoot.has("layer")){
+           this.layer = configRoot.get("small").getAsInt();
        }
+
+       if(configRoot.has("special_fluid")){
+           this.specialFluid = getFluidByName(configRoot.get("special_fluid").getAsString());
+       } else {
+           this.specialFluid = getFluidByName("lubricant");
+       }
+
+
 
         // Second Layer Ores
         if(configRoot.has("ores")) {
@@ -107,6 +118,13 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         if (material == null)
             throw new IllegalArgumentException("Material with name " + name + " not found!");
         return material;
+    }
+
+    public static Fluid getFluidByName(String name) {
+        Fluid fluid = FluidRegistry.getFluid(name);
+        if (fluid == null)
+            throw new IllegalArgumentException("Fluid with name " + name + " not found!");
+        return fluid;
     }
 
     //This is the file name
@@ -165,8 +183,8 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         return storedOres.get(0);
     }
 
-    public boolean isSmallVein(){
-        return smallVein;
+    public int getLayer(){
+        return layer;
     }
 
     public int getOreWeight(Material ore){
@@ -197,7 +215,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
             return false;
         if (this.depletionChance != objDeposit.getDepletionChance())
             return false;
-        if(this.smallVein != objDeposit.smallVein)
+        if(this.layer != objDeposit.layer)
             return false;
         if (!this.storedOres.equals(objDeposit.storedOres))
             return false;
