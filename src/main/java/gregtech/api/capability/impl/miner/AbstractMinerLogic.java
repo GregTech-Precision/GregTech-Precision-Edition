@@ -3,6 +3,7 @@ package gregtech.api.capability.impl.miner;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
@@ -81,7 +82,7 @@ public abstract class AbstractMinerLogic {
             return;
         progressTime = 0;
 
-        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 4);
+        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 1 + getDrillEfficiency());
 
         if (getMetaTileEntity().fillInventory(ore, true)) {
             getMetaTileEntity().fillInventory(ore, false);
@@ -108,6 +109,10 @@ public abstract class AbstractMinerLogic {
         }
         this.vein = BedrockOreVeinHandler.getOreVeinWorldEntry(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ());
         return this.vein != null;
+    }
+
+    protected int getDrillEfficiency(){
+        return getMetaTileEntity().getAbilities(MultiblockAbility.DRILL_HANDLER).get(0).getDrillEfficiency();
     }
 
     private int getChunkX() {

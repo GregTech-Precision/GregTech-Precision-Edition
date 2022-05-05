@@ -47,7 +47,7 @@ public class BasicMinerLogic extends AbstractMinerLogic {
             this.hasNotEnoughEnergy = false;
         }
 
-        if (getMetaTileEntity().fillInventory(OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 4), true)) {
+        if (getMetaTileEntity().fillInventory(OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 1+getDrillEfficiency()), true)) {
             this.isInventoryFull = false;
             return true;
         }

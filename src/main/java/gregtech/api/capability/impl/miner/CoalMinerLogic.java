@@ -13,7 +13,7 @@ public class CoalMinerLogic extends AbstractMinerLogic {
 
     private int fuelAmount = 0;
 
-    public CoalMinerLogic(MetaTileEntityMiner metaTileEntity) {
+    public CoalMinerLogic(MetaTileEntityCoalMiner metaTileEntity) {
         super(metaTileEntity);
     }
 
@@ -24,23 +24,7 @@ public class CoalMinerLogic extends AbstractMinerLogic {
 
     @Override
     protected boolean consumeEnergy(boolean simulate) {
-        if(fuelAmount == 0) {
-            ItemStack fuel = getMetaTileEntity().getImportItems().getStackInSlot(0);
-            int burnTime = fuel.getItem().getItemBurnTime(fuel);
-            if(burnTime > 0){
-                if(simulate) return true;
-                fuelAmount = burnTime;
-                fuel.setCount(fuel.getCount()-1);
-                return true;
-            }
-        } else {
-            if (simulate) {
-                return fuelAmount - 1 > 0;
-            } else {
-                return fuelAmount-- > 0;
-            }
-        }
-        return false;
+        return getMetaTileEntity().drainEnergy(simulate);
     }
 
     protected boolean checkCanDrain() {
@@ -54,7 +38,7 @@ public class CoalMinerLogic extends AbstractMinerLogic {
             return false;
         }
 
-        if (getMetaTileEntity().fillInventory(OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 4), true)) {
+        if (getMetaTileEntity().fillInventory(OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 1+getDrillEfficiency()), true)) {
             this.isInventoryFull = false;
             return true;
         }

@@ -21,6 +21,7 @@ import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
+import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
@@ -52,12 +53,9 @@ import java.util.List;
 
 public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
 
-    protected final AbstractMinerLogic minerLogic;
-
     protected IMultipleTankHandler inputFluidInventory;
     protected IItemHandlerModifiable outputItemInventory;
     protected IEnergyContainer energyContainer;
-
 
     public MetaTileEntityBasicMiner(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId);
@@ -69,14 +67,12 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
         return new MetaTileEntityBasicMiner(metaTileEntityId);
     }
 
-    @Override
     protected void initializeAbilities() {
         this.inputFluidInventory = new FluidTankList(true, getAbilities(MultiblockAbility.IMPORT_FLUIDS));
         this.outputItemInventory = new ItemHandlerList(getAbilities(MultiblockAbility.EXPORT_ITEMS));
         this.energyContainer = new EnergyContainerList(getAbilities(MultiblockAbility.INPUT_ENERGY));
     }
 
-    @Override
     protected void resetTileAbilities() {
         this.inputFluidInventory = new FluidTankList(true);
         this.outputItemInventory = new ItemHandlerList(Lists.newArrayList());
@@ -84,20 +80,33 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     }
 
     @Override
+    protected void formStructure(PatternMatchContext context) {
+        super.formStructure(context);
+        initializeAbilities();
+    }
+
+    @Override
+    public void invalidateStructure() {
+        super.invalidateStructure();
+        resetTileAbilities();
+    }
+
+    @Override
     protected BlockPattern createStructurePattern() {
         return FactoryBlockPattern.start()
                 .aisle("#F#F#", "#F#F#", "#F#F#", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####")
-                .aisle("F###F", "F###F", "FCCCF", "#F#F#", "#F#F#", "#FCF#", "##F##", "##F##", "##F##", "#####", "#####", "#####")
-                .aisle("#####", "#####", "#CDC#", "#####", "#####", "#CCC#", "#FCF#", "#FCF#", "#FCF#", "##F##", "##F##", "##F##")
-                .aisle("F###F", "F###F", "FCCCF", "#F#F#", "#F#F#", "#FCF#", "##F##", "##F##", "##F##", "#####", "#####", "#####")
-                .aisle("#F#F#", "#F#F#", "#FSF#", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####")
+                .aisle("F###F", "F###F", "FMMMF", "#F#F#", "#F#F#", "#FCF#", "##F##", "##F##", "##F##", "#####", "#####", "#####")
+                .aisle("#####", "#####", "#MDM#", "#####", "#####", "#CCC#", "#FCF#", "#FCF#", "#FCF#", "##F##", "##F##", "##F##")
+                .aisle("F###F", "F###F", "FMSMF", "#F#F#", "#F#F#", "#FCF#", "##F##", "##F##", "##F##", "#####", "#####", "#####")
+                .aisle("#F#F#", "#F#F#", "#F#F#", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####")
                 .where('S', selfPredicate())
                 .where('M', states(getCasingState())
                         .or(abilities(MultiblockAbility.INPUT_ENERGY).setMinGlobalLimited(1).setMaxGlobalLimited(3))
-                        .or(abilities(MultiblockAbility.EXPORT_ITEMS).setMaxGlobalLimited(1)))
+                        .or(abilities(MultiblockAbility.EXPORT_ITEMS).setMaxGlobalLimited(1))
+                        .or(autoAbilities(true, false)))
                 .where('C', states(getCasingState()))
                 .where('F', states(MetaBlocks.FRAMES.get(Materials.Steel).getBlock(Materials.Steel)))
-                .where('D', any()) //drill hatch
+                .where('D', abilities(MultiblockAbility.DRILL_HANDLER))
                 .where('#', any())
                 .build();
     }

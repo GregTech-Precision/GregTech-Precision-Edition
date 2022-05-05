@@ -118,6 +118,8 @@ public class MetaTileEntities {
     public static final MetaTileEntityEnergyHatch[] ENERGY_OUTPUT_HATCH_16A = new MetaTileEntityEnergyHatch[5]; // IV, LuV, ZPM, UV, UHV
     public static final MetaTileEntityRotorHolder[] ROTOR_HOLDER = new MetaTileEntityRotorHolder[6]; //HV, EV, IV, LuV, ZPM, UV
     public static final MetaTileEntityMufflerHatch[] MUFFLER_HATCH = new MetaTileEntityMufflerHatch[GTValues.UV]; // LV-UV
+
+    public static MetaTileEntityDrillHeadHolder DRILL_HOLDER;
     public static final MetaTileEntityFusionReactor[] FUSION_REACTOR = new MetaTileEntityFusionReactor[3];
     public static final MetaTileEntityQuantumChest[] QUANTUM_CHEST = new MetaTileEntityQuantumChest[10];
     public static final MetaTileEntityQuantumTank[] QUANTUM_TANK = new MetaTileEntityQuantumTank[10];
@@ -162,6 +164,7 @@ public class MetaTileEntities {
     public static MetaTileEntityMaintenanceHatch MAINTENANCE_HATCH;
     public static MetaTileEntityMaintenanceHatch CONFIGURABLE_MAINTENANCE_HATCH;
     public static MetaTileEntityAutoMaintenanceHatch AUTO_MAINTENANCE_HATCH;
+
     //MULTIBLOCKS SECTION
     public static MetaTileEntityPrimitiveBlastFurnace PRIMITIVE_BLAST_FURNACE;
     public static MetaTileEntityCokeOven COKE_OVEN;
@@ -426,10 +429,14 @@ public class MetaTileEntities {
 
         // Space left for these just in case
 
-        // Chunk Miner, IDs 920-934
+        // Chunk Miner, IDs 920-922
 
         COAL_ORE_DRILLING_RIG = registerMetaTileEntity(920, new MetaTileEntityCoalMiner(gregtechId("drill.coal")));
         BASIC_ORE_DRILLING_RIG = registerMetaTileEntity(921, new MetaTileEntityBasicMiner(gregtechId("drill.basic")));
+
+        // Drill Head Hatch = 923
+
+        DRILL_HOLDER = registerMetaTileEntity(923, new MetaTileEntityDrillHeadHolder(gregtechId("drill_holder")));
 
         // Diesel Generator, IDs 935-949
         COMBUSTION_GENERATOR[0] = registerMetaTileEntity(935, new SimpleGeneratorMetaTileEntity(gregtechId("combustion_generator.lv"), RecipeMaps.COMBUSTION_GENERATOR_FUELS, Textures.COMBUSTION_GENERATOR_OVERLAY, 1, GTUtility.genericGeneratorTankSizeFunction));

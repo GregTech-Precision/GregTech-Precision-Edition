@@ -4,6 +4,7 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
 import com.google.common.collect.Lists;
+import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IWorkable;
 import gregtech.api.capability.impl.FluidDrillLogic;
@@ -37,22 +38,6 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
 
     public MetaTileEntityMiner(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId);
-    }
-
-    protected abstract void initializeAbilities();
-
-    protected abstract void resetTileAbilities();
-
-    @Override
-    protected void formStructure(PatternMatchContext context) {
-        super.formStructure(context);
-        initializeAbilities();
-    }
-
-    @Override
-    public void invalidateStructure() {
-        super.invalidateStructure();
-        resetTileAbilities();
     }
 
     @Override
