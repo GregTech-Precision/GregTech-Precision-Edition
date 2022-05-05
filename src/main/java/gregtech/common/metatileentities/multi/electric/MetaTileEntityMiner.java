@@ -35,19 +35,13 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
     protected AbstractMinerLogic minerLogic;
     protected int layer = 0;
 
-    protected IItemHandlerModifiable outputItemInventory;
-
     public MetaTileEntityMiner(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId);
     }
 
-    protected void initializeAbilities() {
-        this.outputItemInventory = new ItemHandlerList(getAbilities(MultiblockAbility.EXPORT_ITEMS));
-    }
+    protected abstract void initializeAbilities();
 
-    protected void resetTileAbilities() {
-        this.outputItemInventory = new ItemHandlerList(Lists.newArrayList());
-    }
+    protected abstract void resetTileAbilities();
 
     @Override
     protected void formStructure(PatternMatchContext context) {
@@ -81,18 +75,6 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
         tooltip.add(I18n.format("gregtech.machine.fluid_drilling_rig.overclock"));
     }
 
-    @Nonnull
-    @Override
-    protected ICubeRenderer getFrontOverlay() {
-        return Textures.FLUID_RIG_OVERLAY;
-    }
-
-    @Override
-    public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
-        super.renderMetaTileEntity(renderState, translation, pipeline);
-        this.getFrontOverlay().renderOrientedState(renderState, translation, pipeline, getFrontFacing(), this.minerLogic.isActive(), this.minerLogic.isWorkingEnabled());
-    }
-
     @Override
     public boolean isWorkingEnabled() {
         return this.minerLogic.isWorkingEnabled();
@@ -104,7 +86,7 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
     }
 
     public boolean fillInventory(ItemStack stack, boolean simulate) {
-        return GTTransferUtils.addItemsToItemHandler(outputItemInventory, simulate, Collections.singletonList(stack));
+        return GTTransferUtils.addItemsToItemHandler(exportItems, simulate, Collections.singletonList(stack));
     }
 
     @Override
@@ -144,7 +126,7 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
 
     @Override
     public int getMaxProgress() {
-        return FluidDrillLogic.MAX_PROGRESS;
+        return minerLogic.MAX_PROGRESS;
     }
 
     @Override

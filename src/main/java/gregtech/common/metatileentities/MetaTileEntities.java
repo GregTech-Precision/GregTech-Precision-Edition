@@ -190,7 +190,7 @@ public class MetaTileEntities {
     public static MetaTileEntityFluidDrill BASIC_FLUID_DRILLING_RIG;
     public static MetaTileEntityFluidDrill FLUID_DRILLING_RIG;
     public static MetaTileEntityFluidDrill ADVANCED_FLUID_DRILLING_RIG;
-    public static MetaTileEntityBasicMiner COAL_ORE_DRILLING_RIG;
+    public static MetaTileEntityCoalMiner COAL_ORE_DRILLING_RIG;
     public static MetaTileEntityBasicMiner BASIC_ORE_DRILLING_RIG;
     public static MetaTileEntityBasicMiner ADVANCED_ORE_DRILLING_RIG;
     //STORAGE SECTION
@@ -428,7 +428,8 @@ public class MetaTileEntities {
 
         // Chunk Miner, IDs 920-934
 
-        BASIC_ORE_DRILLING_RIG = registerMetaTileEntity(920, new MetaTileEntityBasicMiner(gregtechId("drill.basic")));
+        COAL_ORE_DRILLING_RIG = registerMetaTileEntity(920, new MetaTileEntityCoalMiner(gregtechId("drill.coal")));
+        BASIC_ORE_DRILLING_RIG = registerMetaTileEntity(921, new MetaTileEntityBasicMiner(gregtechId("drill.basic")));
 
         // Diesel Generator, IDs 935-949
         COMBUSTION_GENERATOR[0] = registerMetaTileEntity(935, new SimpleGeneratorMetaTileEntity(gregtechId("combustion_generator.lv"), RecipeMaps.COMBUSTION_GENERATOR_FUELS, Textures.COMBUSTION_GENERATOR_OVERLAY, 1, GTUtility.genericGeneratorTankSizeFunction));

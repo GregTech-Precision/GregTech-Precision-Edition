@@ -178,6 +178,7 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
         return super.onScrewdriverClick(playerIn, hand, facing, hitResult);
     }
 
+    @Override
     public boolean fillInventory(ItemStack stack, boolean simulate) {
         return GTTransferUtils.addItemsToItemHandler(outputItemInventory, simulate, Collections.singletonList(stack));
     }
@@ -204,59 +205,5 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     @Override
     public boolean hasMaintenanceMechanics() {
         return true;
-    }
-
-    @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound data) {
-        super.writeToNBT(data);
-        return this.minerLogic.writeToNBT(data);
-    }
-
-    @Override
-    public void readFromNBT(NBTTagCompound data) {
-        super.readFromNBT(data);
-        this.minerLogic.readFromNBT(data);
-    }
-
-    @Override
-    public void writeInitialSyncData(PacketBuffer buf) {
-        super.writeInitialSyncData(buf);
-        this.minerLogic.writeInitialSyncData(buf);
-    }
-
-    @Override
-    public void receiveInitialSyncData(PacketBuffer buf) {
-        super.receiveInitialSyncData(buf);
-        this.minerLogic.receiveInitialSyncData(buf);
-    }
-
-    @Override
-    public void receiveCustomData(int dataId, PacketBuffer buf) {
-        super.receiveCustomData(dataId, buf);
-        this.minerLogic.receiveCustomData(dataId, buf);
-    }
-
-    @Override
-    public int getProgress() {
-        return minerLogic.getProgressTime();
-    }
-
-    @Override
-    public int getMaxProgress() {
-        return FluidDrillLogic.MAX_PROGRESS;
-    }
-
-    @Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing side) {
-        if (capability == GregtechTileCapabilities.CAPABILITY_WORKABLE)
-            return GregtechTileCapabilities.CAPABILITY_WORKABLE.cast(this);
-        if (capability == GregtechTileCapabilities.CAPABILITY_CONTROLLABLE)
-            return GregtechTileCapabilities.CAPABILITY_CONTROLLABLE.cast(this);
-        return super.getCapability(capability, side);
-    }
-
-    @Override
-    protected boolean shouldShowVoidingModeButton() {
-        return false;
     }
 }
