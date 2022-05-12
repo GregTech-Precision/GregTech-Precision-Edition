@@ -209,7 +209,7 @@ public class GregTechMod {
                 }
                 if(saveOreData == null){
                     saveOreData = new BedrockOreVeinSaveData(BedrockOreVeinSaveData.dataName);
-                    world.setData(BedrockOreVeinSaveData.dataName, saveData);
+                    world.setData(BedrockOreVeinSaveData.dataName, saveOreData);
                 }
                 BedrockFluidVeinSaveData.setInstance(saveData);
                 BedrockOreVeinSaveData.setInstance(saveOreData);
