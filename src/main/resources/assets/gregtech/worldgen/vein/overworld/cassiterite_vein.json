@@ -1,6 +1,7 @@
 {
   "weight": 80,
-  "name": "Overworld Salt Water Deposit",
+  "name": "Cassiterite Vein",
+  "layer": 1,
   "yield": {
     "min": 50,
     "max": 100

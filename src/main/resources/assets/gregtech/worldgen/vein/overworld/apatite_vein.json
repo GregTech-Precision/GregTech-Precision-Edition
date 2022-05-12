@@ -1,6 +1,7 @@
 {
   "weight": 40,
-  "name": "Overworld Salt Water Deposit",
+  "name": "Apatite Vein",
+  "layer": 1,
   "yield": {
     "min": 50,
     "max": 100

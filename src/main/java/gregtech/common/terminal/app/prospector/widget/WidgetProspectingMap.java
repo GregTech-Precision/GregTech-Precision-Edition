@@ -104,12 +104,12 @@ public class WidgetProspectingMap extends Widget {
 
             switch (mode) {
                 case ORE_PROSPECTING_MODE:
-                    BedrockOreVeinHandler.OreVeinWorldEntry oreStack = BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z);
+                    BedrockOreVeinHandler.OreVeinWorldEntry oreStack = BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z, 1);
                     if (oreStack != null && oreStack.getDefinition() != null) {
-                        packet.addBlock(0, 3, 0, GTUtility.formatNumbers(100.0 * BedrockOreVeinHandler.getOperationsRemaining(world, chunk.x, chunk.z)
+                        packet.addBlock(0, 3, 0, GTUtility.formatNumbers(100.0 * BedrockOreVeinHandler.getOperationsRemaining(world, chunk.x, chunk.z, 1)
                                 / BedrockOreVeinHandler.MAXIMUM_VEIN_OPERATIONS));
-                        packet.addBlock(0, 2, 0, "" + BedrockOreVeinHandler.getOreYield(world, chunk.x, chunk.z));
-                        packet.addBlock(0, 1, 0, BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z).getDefinition().getAssignedName());
+                        packet.addBlock(0, 2, 0, "" + BedrockOreVeinHandler.getOreYield(world, chunk.x, chunk.z, 1));
+                        packet.addBlock(0, 1, 0, BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z, 1).getDefinition().getAssignedName());
                     }
                     break;
                 case FLUID_PROSPECTING_MODE:

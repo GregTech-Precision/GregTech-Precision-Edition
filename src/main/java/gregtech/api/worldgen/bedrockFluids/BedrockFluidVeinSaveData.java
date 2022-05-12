@@ -49,7 +49,6 @@ public class BedrockFluidVeinSaveData extends WorldSavedData {
         return nbt;
     }
 
-
     public static void setDirty() {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER && INSTANCE != null)
             INSTANCE.markDirty();

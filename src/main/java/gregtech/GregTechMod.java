@@ -22,6 +22,8 @@ import gregtech.api.util.VirtualTankRegistry;
 import gregtech.api.util.input.KeyBind;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinSaveData;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinSaveData;
 import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.client.utils.BloomEffectUtil;
 import gregtech.common.CommonProxy;
@@ -180,7 +182,7 @@ public class GregTechMod {
     public void onPostInit(FMLPostInitializationEvent event) {
         proxy.onPostLoad();
         BedrockFluidVeinHandler.recalculateChances(true);
-
+        BedrockOreVeinHandler.recalculateChances(true);
     }
 
     @Mod.EventHandler
@@ -200,11 +202,17 @@ public class GregTechMod {
             World world = FMLCommonHandler.instance().getMinecraftServerInstance().getEntityWorld();
             if (!world.isRemote) {
                 BedrockFluidVeinSaveData saveData = (BedrockFluidVeinSaveData) world.loadData(BedrockFluidVeinSaveData.class, BedrockFluidVeinSaveData.dataName);
+                BedrockOreVeinSaveData saveOreData = (BedrockOreVeinSaveData) world.loadData(BedrockOreVeinSaveData.class, BedrockOreVeinSaveData.dataName);
                 if (saveData == null) {
                     saveData = new BedrockFluidVeinSaveData(BedrockFluidVeinSaveData.dataName);
                     world.setData(BedrockFluidVeinSaveData.dataName, saveData);
                 }
+                if(saveOreData == null){
+                    saveOreData = new BedrockOreVeinSaveData(BedrockOreVeinSaveData.dataName);
+                    world.setData(BedrockOreVeinSaveData.dataName, saveData);
+                }
                 BedrockFluidVeinSaveData.setInstance(saveData);
+                BedrockOreVeinSaveData.setInstance(saveOreData);
             }
         }
     }

@@ -1,7 +1,9 @@
 package gregtech.api.worldgen.bedrockOres;
 
+import com.google.common.collect.Table;
 import gregtech.api.GTValues;
 import gregtech.api.worldgen.bedrockFluids.ChunkPosDimension;
+import javafx.util.Pair;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.storage.WorldSavedData;
@@ -27,9 +29,10 @@ public class BedrockOreVeinSaveData extends WorldSavedData {
         for (int i = 0; i < veinList.tagCount(); i++) {
             NBTTagCompound tag = veinList.getCompoundTagAt(i);
             ChunkPosDimension coords = ChunkPosDimension.readFromNBT(tag);
+            int layer = tag.getInteger("layer");
             if (coords != null) {
                 BedrockOreVeinHandler.OreVeinWorldEntry info = BedrockOreVeinHandler.OreVeinWorldEntry.readFromNBT(tag.getCompoundTag("oreInfo"));
-                BedrockOreVeinHandler.veinCache.put(coords, info);
+                BedrockOreVeinHandler.veinCache.put(coords, layer, info);
             }
         }
     }
@@ -37,15 +40,16 @@ public class BedrockOreVeinSaveData extends WorldSavedData {
     @Override
     public @Nonnull
     NBTTagCompound writeToNBT(@Nonnull NBTTagCompound nbt) {
-        NBTTagList oilList = new NBTTagList();
-        for (Map.Entry<ChunkPosDimension, BedrockOreVeinHandler.OreVeinWorldEntry> e : BedrockOreVeinHandler.veinCache.entrySet()) {
-            if (e.getKey() != null && e.getValue() != null) {
-                NBTTagCompound tag = e.getKey().writeToNBT();
+        NBTTagList veinList = new NBTTagList();
+        for (Table.Cell<ChunkPosDimension, Integer, BedrockOreVeinHandler.OreVeinWorldEntry> e : BedrockOreVeinHandler.veinCache.cellSet()) {
+            if (e.getRowKey() != null && e.getColumnKey() != null && e.getValue() != null) {
+                NBTTagCompound tag = e.getRowKey().writeToNBT();
                 tag.setTag("oreInfo", e.getValue().writeToNBT());
-                oilList.appendTag(tag);
+                tag.setInteger("layer", e.getColumnKey());
+                veinList.appendTag(tag);
             }
         }
-        nbt.setTag("oreVeinInfo", oilList);
+        nbt.setTag("oreVeinInfo", veinList);
 
         return nbt;
     }

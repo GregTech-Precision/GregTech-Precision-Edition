@@ -1,13 +1,9 @@
 package gregtech.api.capability.impl.miner;
 
-import gregtech.api.GTValues;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.common.ConfigHolder;
-import gregtech.common.metatileentities.multi.electric.MetaTileEntityBasicMiner;
-import gregtech.common.metatileentities.multi.electric.MetaTileEntityCoalMiner;
-import gregtech.common.metatileentities.multi.electric.MetaTileEntityMiner;
-import net.minecraft.item.ItemStack;
+import gregtech.common.metatileentities.multi.MetaTileEntityCoalMiner;
 
 public class CoalMinerLogic extends AbstractMinerLogic {
 

@@ -1,13 +1,18 @@
 package gregtech.api.worldgen.bedrockOres;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import gregtech.api.GTValues;
 import gregtech.api.net.NetworkHandler;
 import gregtech.api.net.packets.CPacketOreVeinList;
 import gregtech.api.unification.material.Material;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.XSTR;
+import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
 import gregtech.api.worldgen.bedrockFluids.ChunkPosDimension;
+import gregtech.api.worldgen.config.BedrockFluidDepositDefinition;
 import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
+import javafx.util.Pair;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -15,6 +20,7 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
+import scala.collection.mutable.HashTable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -24,7 +30,7 @@ public class BedrockOreVeinHandler {
 
     public final static LinkedHashMap<BedrockOreDepositDefinition, Integer> veinList = new LinkedHashMap<>();
     private final static Map<Integer, HashMap<Integer, Integer>> totalWeightMap = new HashMap<>();
-    public static HashMap<ChunkPosDimension, OreVeinWorldEntry> veinCache = new HashMap<>();
+    public static HashBasedTable<ChunkPosDimension, Integer, OreVeinWorldEntry> veinCache = HashBasedTable.create();
 
     public static final int VEIN_CHUNK_SIZE = 4; // veins are 4x4 chunk squares
 
@@ -40,45 +46,48 @@ public class BedrockOreVeinHandler {
      * @return The OreVeinWorldInfo corresponding with the given chunk
      */
     @Nullable
-    public static OreVeinWorldEntry getOreVeinWorldEntry(@Nonnull World world, int chunkX, int chunkZ) {
+    public static OreVeinWorldEntry getOreVeinWorldEntry(@Nonnull World world, int chunkX, int chunkZ, int layer) {
         if (world.isRemote)
             return null;
 
         ChunkPosDimension coords = new ChunkPosDimension(world.provider.getDimension(), chunkX / VEIN_CHUNK_SIZE, chunkZ / VEIN_CHUNK_SIZE);
 
-        OreVeinWorldEntry worldEntry = veinCache.get(coords);
-        if (worldEntry == null) {
-            BedrockOreDepositDefinition definition = null;
+        if(veinCache.contains(coords, layer))
+             return veinCache.get(coords, layer);
 
-            int query = world.getChunk(chunkX / VEIN_CHUNK_SIZE, chunkZ / VEIN_CHUNK_SIZE).getRandomWithSeed(90210).nextInt();
+        BedrockOreDepositDefinition definition = null;
+        OreVeinWorldEntry worldEntry;
 
-            Biome biome = world.getBiomeForCoordsBody(new BlockPos(chunkX << 4, 64, chunkZ << 4));
-            int totalWeight = getTotalWeight(world.provider, biome);
-            if (totalWeight > 0) {
-                int weight = Math.abs(query % totalWeight);
-                for (Map.Entry<BedrockOreDepositDefinition, Integer> entry : veinList.entrySet()) {
-                    int veinWeight = entry.getValue() + entry.getKey().getBiomeWeightModifier().apply(biome);
-                    if (veinWeight > 0 && entry.getKey().getDimensionFilter().test(world.provider)) {
-                        weight -= veinWeight;
-                        if (weight < 0) {
-                            definition = entry.getKey();
-                            break;
-                        }
+        int query = world.getChunk(chunkX / VEIN_CHUNK_SIZE, chunkZ / VEIN_CHUNK_SIZE).getRandomWithSeed(90210).nextInt();
+
+        Biome biome = world.getBiomeForCoordsBody(new BlockPos(chunkX << 4, 64, chunkZ << 4));
+        int totalWeight = getTotalWeight(world.provider, biome, layer);
+        if (totalWeight > 0) {
+            int weight = Math.abs(query % totalWeight);
+            for (Map.Entry<BedrockOreDepositDefinition, Integer> entry : veinList.entrySet()) {
+                if(entry.getKey().getLayer() != layer)
+                    continue;
+                int veinWeight = entry.getValue() + entry.getKey().getBiomeWeightModifier().apply(biome);
+                if (veinWeight > 0 && entry.getKey().getDimensionFilter().test(world.provider)) {
+                    weight -= veinWeight;
+                    if (weight < 0) {
+                        definition = entry.getKey();
+                        break;
                     }
                 }
             }
-
-            Random random = new XSTR(31L * 31 * chunkX + chunkZ * 31L + Long.hashCode(world.getSeed()));
-
-            int maximumYield = 0;
-            if (definition != null) {
-                maximumYield = random.nextInt(definition.getMaximumYield() - definition.getMinimumYield()) + definition.getMinimumYield();
-                maximumYield = Math.min(maximumYield, definition.getMaximumYield());
-            }
-
-            worldEntry = new OreVeinWorldEntry(definition, maximumYield);
-            veinCache.put(coords, worldEntry);
         }
+
+        Random random = new XSTR(31L * 31 * chunkX + chunkZ * 31L + Long.hashCode(world.getSeed()));
+
+        int maximumYield = 0;
+        if (definition != null) {
+            maximumYield = random.nextInt(definition.getMaximumYield() - definition.getMinimumYield()) + definition.getMinimumYield();
+            maximumYield = Math.min(maximumYield, definition.getMaximumYield());
+        }
+
+        worldEntry = new OreVeinWorldEntry(definition, maximumYield, definition.getLayer() == 0 ? MAXIMUM_SMALL_VEIN_OPERATIONS : MAXIMUM_VEIN_OPERATIONS);
+        veinCache.put(coords, layer, worldEntry);
         return worldEntry;
     }
 
@@ -89,7 +98,7 @@ public class BedrockOreVeinHandler {
      * @param biome    The biome type to check
      * @return The total weight associated with the dimension/biome pair
      */
-    public static int getTotalWeight(@Nonnull WorldProvider provider, Biome biome) {
+    public static int getTotalWeight(@Nonnull WorldProvider provider, Biome biome, int layer) {
         int dim = provider.getDimension();
         if (!totalWeightMap.containsKey(dim)) {
             totalWeightMap.put(dim, new HashMap<>());
@@ -104,7 +113,7 @@ public class BedrockOreVeinHandler {
 
         int totalWeight = 0;
         for (Map.Entry<BedrockOreDepositDefinition, Integer> entry : veinList.entrySet()) {
-            if (entry.getKey().getDimensionFilter().test(provider)) {
+            if (entry.getKey().getDimensionFilter().test(provider) && entry.getKey().getLayer() == layer) {
                 totalWeight += entry.getKey().getBiomeWeightModifier().apply(biome);
                 totalWeight += entry.getKey().getWeight();
             }
@@ -131,8 +140,8 @@ public class BedrockOreVeinHandler {
         totalWeightMap.clear();
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER && !mutePackets) {
             HashMap<OreVeinWorldEntry, Integer> packetMap = new HashMap<>();
-            for (Map.Entry<ChunkPosDimension, OreVeinWorldEntry> entry : BedrockOreVeinHandler.veinCache.entrySet()) {
-                if (entry.getKey() != null && entry.getValue() != null)
+            for (Table.Cell<ChunkPosDimension, Integer, OreVeinWorldEntry> entry : BedrockOreVeinHandler.veinCache.cellSet()) {
+                if (entry.getRowKey() != null && entry.getValue() != null)
                     packetMap.put(entry.getValue(), entry.getValue().getDefinition().getWeight());
             }
             NetworkHandler.channel.sendToAll(new CPacketOreVeinList(packetMap).toFMLPacket());
@@ -147,8 +156,8 @@ public class BedrockOreVeinHandler {
      * @param chunkZ Z coordinate of desired chunk
      * @return yield in the vein
      */
-    public static int getOreYield(World world, int chunkX, int chunkZ) {
-        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ);
+    public static int getOreYield(World world, int chunkX, int chunkZ, int layer) {
+        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ, layer);
         if (info == null) return 0;
         return info.getOreYield();
     }
@@ -161,8 +170,8 @@ public class BedrockOreVeinHandler {
      * @param chunkZ Z coordinate of desired chunk
      * @return yield of Ore post depletion
      */
-    public static int getDepletedOreYield(World world, int chunkX, int chunkZ) {
-        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ);
+    public static int getDepletedOreYield(World world, int chunkX, int chunkZ, int layer) {
+        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ, layer);
         if (info == null || info.getDefinition() == null) return 0;
         return info.getDefinition().getDepletedYield();
     }
@@ -175,8 +184,8 @@ public class BedrockOreVeinHandler {
      * @param chunkZ Z coordinate of desired chunk
      * @return amount of operations in the given chunk
      */
-    public static int getOperationsRemaining(World world, int chunkX, int chunkZ) {
-        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ);
+    public static int getOperationsRemaining(World world, int chunkX, int chunkZ, int layer) {
+        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ, layer);
         if (info == null) return 0;
         return info.getOperationsRemaining();
     }
@@ -190,16 +199,10 @@ public class BedrockOreVeinHandler {
      * @return Ore in given chunk
      */
     @Nullable
-    public static List<Material> getOreInChunk(World world, int chunkX, int chunkZ) {
-        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ);
+    public static List<Material> getOreInChunk(World world, int chunkX, int chunkZ, int layer) {
+        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ, layer);
         if (info == null || info.getDefinition() == null) return null;
         return info.getDefinition().getStoredOres();
-    }
-
-    public static int getVeinLayer(World world, int chunkX, int chunkY){
-        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkY);
-        if(info == null || info.getDefinition() == null) return -1;
-        return info.getDefinition().getLayer();
     }
 
     /**
@@ -211,8 +214,8 @@ public class BedrockOreVeinHandler {
      * @param amount          the amount of Ore to deplete the vein by
      * @param ignoreVeinStats whether to ignore the vein's depletion data, if false ignores amount
      */
-    public static void depleteVein(World world, int chunkX, int chunkZ, int amount, boolean ignoreVeinStats) {
-        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ);
+    public static void depleteVein(World world, int chunkX, int chunkZ, int layer, int amount, boolean ignoreVeinStats) {
+        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ, layer);
         if (info == null) return;
 
         if (ignoreVeinStats) {
@@ -237,14 +240,13 @@ public class BedrockOreVeinHandler {
         private int oreYield;
         private int operationsRemaining;
 
-        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int oreYield) {
+        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int oreYield, int maxVeinOperations) {
             this.vein = vein;
             this.oreYield = oreYield;
-            this.operationsRemaining = getMaxVeinOperations();
+            this.operationsRemaining = maxVeinOperations;
         }
 
-        private OreVeinWorldEntry() {
-        }
+        private OreVeinWorldEntry() {}
 
         public BedrockOreDepositDefinition getDefinition() {
             return this.vein;
@@ -256,16 +258,6 @@ public class BedrockOreVeinHandler {
 
         public int getOperationsRemaining() {
             return this.operationsRemaining;
-        }
-
-        public int getMaxVeinOperations(){
-            switch (this.vein.getLayer()){
-                case 0:
-                    return MAXIMUM_SMALL_VEIN_OPERATIONS;
-                case 1:
-                    return MAXIMUM_VEIN_OPERATIONS;
-            }
-            return MAXIMUM_VEIN_OPERATIONS;
         }
 
         @SuppressWarnings("unused")
@@ -280,9 +272,9 @@ public class BedrockOreVeinHandler {
         public NBTTagCompound writeToNBT() {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setInteger("oreYield", oreYield);
-            tag.setInteger("oreOperationsRemaining", operationsRemaining);
+            tag.setInteger("operationsRemaining", operationsRemaining);
             if (vein != null) {
-                tag.setString("oreVein", vein.getDepositName());
+                tag.setString("vein", vein.getDepositName());
             }
             return tag;
         }
@@ -291,15 +283,16 @@ public class BedrockOreVeinHandler {
         public static OreVeinWorldEntry readFromNBT(@Nonnull NBTTagCompound tag) {
             OreVeinWorldEntry info = new OreVeinWorldEntry();
             info.oreYield = tag.getInteger("oreYield");
-            info.operationsRemaining = tag.getInteger("oreOperationsRemaining");
+            info.operationsRemaining = tag.getInteger("operationsRemaining");
 
-            if (tag.hasKey("oreVein")) {
-                String s = tag.getString("oreVein");
+            if (tag.hasKey("vein")) {
+                String s = tag.getString("vein");
                 for (BedrockOreDepositDefinition definition : veinList.keySet()) {
                     if (s.equalsIgnoreCase(definition.getDepositName()))
                         info.vein = definition;
                 }
             }
+
             return info;
         }
     }

@@ -60,7 +60,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
 
         // Zero Layer Vein
        if(configRoot.has("layer")){
-           this.layer = configRoot.get("small").getAsInt();
+           this.layer = configRoot.get("layer").getAsInt();
        }
 
        if(configRoot.has("special_fluid")){

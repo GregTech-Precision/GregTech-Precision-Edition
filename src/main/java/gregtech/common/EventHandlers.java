@@ -9,6 +9,7 @@ import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.VirtualTankRegistry;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinSaveData;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinSaveData;
 import gregtech.common.items.MetaItems;
 import gregtech.common.items.behaviors.ToggleEnergyConsumerBehavior;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityCentralMonitor;
@@ -171,11 +172,13 @@ public class EventHandlers {
     @SubscribeEvent
     public static void onWorldUnloadEvent(WorldEvent.Unload event) {
         BedrockFluidVeinSaveData.setDirty();
+        BedrockOreVeinSaveData.setDirty();
     }
 
     @SubscribeEvent
     public static void onWorldSaveEvent(WorldEvent.Save event) {
         BedrockFluidVeinSaveData.setDirty();
+        BedrockOreVeinSaveData.setDirty();
     }
 
     @SubscribeEvent

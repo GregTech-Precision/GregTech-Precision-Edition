@@ -266,19 +266,12 @@ public class TricorderBehavior implements IItemBehaviour {
             list.add(new TextComponentTranslation("behavior.tricorder.bedrock_fluid.nothing"));
         }
 
-
-        List<Material> ores = BedrockOreVeinHandler.getOreInChunk(world, pos.getX() / 16, pos.getZ() / 16);
-        if(ores != null && !ores.isEmpty()){
-            for(Material ore : ores) {
-                ItemStack is = OreDictUnifier.get(OrePrefix.crushed, ore, 1);
-                list.add(new TextComponentTranslation(is.getDisplayName()));
-            }
-            list.add(new TextComponentString("Vein size: " + BedrockOreVeinHandler.getOperationsRemaining(world, pos.getX() / 16, pos.getZ() / 16)));
-            list.add(new TextComponentString("Vein layer: " + (BedrockOreVeinHandler.getOreVeinWorldEntry(world, pos.getX() / 16, pos.getZ() / 16).getDefinition().getLayer())));
-        } else {
-            list.add(new TextComponentString("Null Ore Vein"));
-        }
         //bedrock ores
+        for(int layer = 0; layer<2;layer++) {
+            list.add(new TextComponentTranslation("behavior.tricorder.divider"));
+            list.add(new TextComponentString("Vein name: " + BedrockOreVeinHandler.getOreVeinWorldEntry(world, pos.getX() / 16, pos.getZ() / 16, layer).getDefinition().getAssignedName()));
+            list.add(new TextComponentString("Vein size: " + BedrockOreVeinHandler.getOperationsRemaining(world, pos.getX() / 16, pos.getZ() / 16, layer)));
+        }
 
         // pollution
 //            if (GT_Pollution.hasPollution(currentChunk)) {

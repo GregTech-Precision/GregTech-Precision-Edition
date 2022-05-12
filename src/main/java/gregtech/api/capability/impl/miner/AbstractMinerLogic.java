@@ -28,6 +28,7 @@ public abstract class AbstractMinerLogic {
     protected boolean wasActiveAndNeedsUpdate;
     protected boolean isDone = false;
     protected boolean isInventoryFull;
+    protected int previousLayer;
 
     protected BedrockOreVeinHandler.OreVeinWorldEntry vein = null;
 
@@ -39,6 +40,10 @@ public abstract class AbstractMinerLogic {
         return metaTileEntity;
     }
 
+    private int getLayer(){
+        return getMetaTileEntity().getLayer();
+    }
+
     /**
      * Performs the actual drilling
      * Call this method every tick in update
@@ -47,11 +52,11 @@ public abstract class AbstractMinerLogic {
         if (getMetaTileEntity().getWorld().isRemote) return;
 
         // if we have no Ore, try to get a new one
-        if (vein == null)
+        if (vein == null || getLayer() != previousLayer)
             if (!acquireNewOre())
                 return; // stop if we still have no Ore
 
-
+        previousLayer = getLayer();
         // drills that cannot work do nothing
         if (!this.isWorkingEnabled)
             return;
@@ -86,7 +91,7 @@ public abstract class AbstractMinerLogic {
 
         if (getMetaTileEntity().fillInventory(ore, true)) {
             getMetaTileEntity().fillInventory(ore, false);
-            BedrockOreVeinHandler.depleteVein(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), 0, false);
+            BedrockOreVeinHandler.depleteVein(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), getLayer(), 0, false);
         } else {
             isInventoryFull = true;
             setActive(false);
@@ -103,11 +108,7 @@ public abstract class AbstractMinerLogic {
     abstract protected boolean checkCanDrain();
 
     private boolean acquireNewOre() {
-        if(BedrockOreVeinHandler.getVeinLayer(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ()) != getMetaTileEntity().getLayer()) {
-            vein = null;
-            return false;
-        }
-        this.vein = BedrockOreVeinHandler.getOreVeinWorldEntry(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ());
+        this.vein = BedrockOreVeinHandler.getOreVeinWorldEntry(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), getLayer());
         return this.vein != null;
     }
 

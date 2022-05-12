@@ -15,6 +15,10 @@ import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.miner.AbstractMinerLogic;
 import gregtech.api.capability.impl.miner.BasicMinerLogic;
+import gregtech.api.gui.ModularUI;
+import gregtech.api.gui.Widget;
+import gregtech.api.gui.widgets.ClickButtonWidget;
+import gregtech.api.gui.widgets.IncrementButtonWidget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
@@ -38,10 +42,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.*;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -65,6 +66,17 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityBasicMiner(metaTileEntityId);
+    }
+
+    @Override
+    protected ModularUI.Builder createUITemplate(EntityPlayer entityPlayer) {
+        ModularUI.Builder builder = super.createUITemplate(entityPlayer);
+        builder.widget(new ClickButtonWidget(135, 104, 32, 18, "Next Layer", this::nextLayer));
+        return builder;
+    }
+
+    private void nextLayer(Widget.ClickData clickData) {
+        layer = (layer + 1) % 2;
     }
 
     protected void initializeAbilities() {
@@ -149,6 +161,8 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
 
         if (minerLogic.isInventoryFull())
             textList.add(new TextComponentTranslation("gregtech.multiblock.large_miner.invfull").setStyle(new Style().setColor(TextFormatting.RED)));
+
+        textList.add(new TextComponentString("Current Layer: "+layer));
     }
 
     @Override
@@ -178,13 +192,6 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     @Override
     public void setWorkingEnabled(boolean isActivationAllowed) {
         this.minerLogic.setWorkingEnabled(isActivationAllowed);
-    }
-
-    @Override
-    public boolean onScrewdriverClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing, CuboidRayTraceResult hitResult) {
-        this.layer++;
-        if(layer > 1) layer = 0;
-        return super.onScrewdriverClick(playerIn, hand, facing, hitResult);
     }
 
     @Override
