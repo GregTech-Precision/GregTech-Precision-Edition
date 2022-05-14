@@ -17,6 +17,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -106,19 +107,18 @@ public class WidgetProspectingMap extends Widget {
                 case ORE_PROSPECTING_MODE:
                     BedrockOreVeinHandler.OreVeinWorldEntry oreStack = BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z, 1);
                     if (oreStack != null && oreStack.getDefinition() != null) {
-                        packet.addBlock(0, 3, 0, GTUtility.formatNumbers(100.0 * BedrockOreVeinHandler.getOperationsRemaining(world, chunk.x, chunk.z, 1)
-                                / BedrockOreVeinHandler.MAXIMUM_VEIN_OPERATIONS));
-                        packet.addBlock(0, 2, 0, "" + BedrockOreVeinHandler.getOreYield(world, chunk.x, chunk.z, 1));
-                        packet.addBlock(0, 1, 0, BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z, 1).getDefinition().getAssignedName());
+                        packet.addInfo(3, GTUtility.formatNumbers(100.0 * oreStack.getOperationsRemaining() / BedrockOreVeinHandler.MAXIMUM_VEIN_OPERATIONS));
+                        packet.addInfo(2, "" + oreStack.getOreYield());
+                        packet.addInfo(1, oreStack.getDefinition().getDepositName());
                     }
                     break;
                 case FLUID_PROSPECTING_MODE:
                     BedrockFluidVeinHandler.FluidVeinWorldEntry fStack = BedrockFluidVeinHandler.getFluidVeinWorldEntry(world, chunk.x, chunk.z);
                     if (fStack != null && fStack.getDefinition() != null) {
-                        packet.addBlock(0, 3, 0, GTUtility.formatNumbers(100.0 * BedrockFluidVeinHandler.getOperationsRemaining(world, chunk.x, chunk.z)
+                        packet.addInfo(3, GTUtility.formatNumbers(100.0 * BedrockFluidVeinHandler.getOperationsRemaining(world, chunk.x, chunk.z)
                                 / BedrockFluidVeinHandler.MAXIMUM_VEIN_OPERATIONS));
-                        packet.addBlock(0, 2, 0, "" + BedrockFluidVeinHandler.getFluidYield(world, chunk.x, chunk.z));
-                        packet.addBlock(0, 1, 0, BedrockFluidVeinHandler.getFluidInChunk(world, chunk.x, chunk.z).getName());
+                        packet.addInfo(2, "" + BedrockFluidVeinHandler.getFluidYield(world, chunk.x, chunk.z));
+                        packet.addInfo(1, BedrockFluidVeinHandler.getFluidInChunk(world, chunk.x, chunk.z).getName());
                     }
                     break;
                 default:

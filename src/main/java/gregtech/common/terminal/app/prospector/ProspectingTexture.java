@@ -37,10 +37,7 @@ public class ProspectingTexture extends AbstractTexture {
         this.darkMode = darkMode;
         this.radius = radius;
         this.mode = mode;
-        if (this.mode == 1)
-            map = new HashMap[(radius * 2 - 1)][(radius * 2 - 1)];
-        else
-            map = new HashMap[(radius * 2 - 1) * 16][(radius * 2 - 1) * 16];
+        this.map = new HashMap[(radius * 2 - 1)][(radius * 2 - 1)];
     }
 
     public void updateTexture(PacketProspecting packet) {
@@ -48,28 +45,18 @@ public class ProspectingTexture extends AbstractTexture {
         int playerChunkZ = packet.posZ >> 4;
         playerI = packet.posX - (playerChunkX - this.radius + 1) * 16 - 1;
         playerJ = packet.posZ - (playerChunkZ - this.radius + 1) * 16 - 1;
-        if (this.mode == 1) {
-            map[packet.chunkX - (playerChunkX - radius + 1)][packet.chunkZ - (playerChunkZ - radius + 1)] = packet.map[0][0] == null ?
-                    emptyTag : packet.map[0][0];
-        } else {
-            for (int x = 0; x < 16; x++) {
-                for (int z = 0; z < 16; z++) {
-                    map[x + (packet.chunkX - (playerChunkX - radius) - 1) * 16][z + (packet.chunkZ - (playerChunkZ - radius) - 1) * 16] = packet.map[x][z] == null ?
-                            emptyTag : packet.map[x][z];
-                }
-            }
-        }
+        map[packet.chunkX - (playerChunkX - radius + 1)][packet.chunkZ - (playerChunkZ - radius + 1)] = packet.map == null ? emptyTag : packet.map;
         loadTexture(null);
     }
 
     private BufferedImage getImage() {
-        int wh = (this.radius * 2 - 1) * 16;
+        int wh = this.radius * 2 - 1;
         BufferedImage image = new BufferedImage(wh, wh, BufferedImage.TYPE_INT_ARGB);
         WritableRaster raster = image.getRaster();
 
         for (int i = 0; i < wh; i++){
             for (int j = 0; j < wh; j++) {
-                HashMap<Byte, String> data = this.map[this.mode == 0 ? i : i / 16][this.mode == 0 ? j : j / 16];
+                HashMap<Byte, String> data = this.map[i][j];
                 // draw bg
                 image.setRGB(i, j, ((data == null) ^ darkMode) ? Color.darkGray.getRGB(): Color.WHITE.getRGB());
                 //draw ore

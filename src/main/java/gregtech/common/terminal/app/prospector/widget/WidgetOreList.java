@@ -14,7 +14,10 @@ import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.MaterialStack;
+import gregtech.api.util.GTLog;
 import gregtech.api.util.Position;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
@@ -70,16 +73,24 @@ public class WidgetOreList extends DraggableScrollableWidgetGroup {
         if (ores.containsKey(orePrefix)) {
             return;
         }
-        Material material = GregTechAPI.MATERIAL_REGISTRY.getObject(orePrefix);
-        ItemStack itemStack = OreDictUnifier.get(OrePrefix.crushed, material);
+
+        BedrockOreDepositDefinition vein = null;
+
+        for (BedrockOreDepositDefinition definition : BedrockOreVeinHandler.veinList.keySet()) {
+            if(orePrefix.equalsIgnoreCase(definition.getDepositName())){
+                vein = definition;
+                ores.put(orePrefix, vein.getAssignedName());
+            }
+        }
+
+        ItemStack itemStack = OreDictUnifier.get(OrePrefix.crushed, vein.getNextOre());
         if (itemStack == null || itemStack.isEmpty()) return;
-        ores.put(orePrefix, itemStack.getDisplayName());
         MaterialStack materialStack = OreDictUnifier.getMaterial(OreDictUnifier.get(orePrefix));
         ItemStackHandler itemStackHandler = new ItemStackHandler(1);
         itemStackHandler.insertItem(0, itemStack, false);
         WidgetGroup widgetGroup = new WidgetGroup(0, 0, getSize().width - 5, 18);
         widgetGroup.addWidget(new SlotWidget(itemStackHandler, 0, 0, 0, false, false));
-        widgetGroup.addWidget(new LabelWidget(20, 5, itemStack.getDisplayName(), materialStack==null? orePrefix.hashCode():materialStack.material.getMaterialRGB() | 0XFF000000));
+        widgetGroup.addWidget(new LabelWidget(20, 5, vein.getAssignedName(), materialStack==null? orePrefix.hashCode():materialStack.material.getMaterialRGB() | 0XFF000000));
         addOrePrefix(orePrefix, widgetGroup);
     }
 
