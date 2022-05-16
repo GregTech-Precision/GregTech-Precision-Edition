@@ -197,20 +197,14 @@ public class WidgetProspectingMap extends Widget {
                     new Color(0x4B6C6C6C, true).getRGB());
             if (this.mode == 0) { // draw ore
                 tooltips.add(I18n.format("terminal.prospector.ore"));
-                HashMap<String, Integer> oreInfo = new HashMap<>();
-                for (int i = 0; i < 16; i++) {
-                    for (int j = 0; j < 16; j++) {
-                        if (texture.map[cX * 16 + i][cZ * 16 + j] != null) {
-                            texture.map[cX * 16 + i][cZ * 16 + j].values().forEach(dict -> {
-                                String name = OreDictUnifier.get(dict).getDisplayName();
-                                if (texture.getSelected().equals("[all]") || texture.getSelected().equals(dict)) {
-                                    oreInfo.put(name, oreInfo.getOrDefault(name, 0) + 1);
-                                }
-                            });
-                        }
+                if (texture.map[cX][cZ] != null && !texture.map[cX][cZ].isEmpty()) {
+                    if (texture.getSelected().equals("[all]") || texture.getSelected().equals(texture.map[cX][cZ].get((byte) 1))) {
+                        tooltips.add(I18n.format("terminal.prospector.fluid.info",
+                                texture.map[cX][cZ].get((byte) 1),
+                                texture.map[cX][cZ].get((byte) 2),
+                                texture.map[cX][cZ].get((byte) 3)));
                     }
                 }
-                oreInfo.forEach((name, count)->tooltips.add(name + " --- " + count));
             } else if(this.mode == 1){
                 tooltips.add(I18n.format("terminal.prospector.fluid"));
                 if (texture.map[cX][cZ] != null && !texture.map[cX][cZ].isEmpty()) {

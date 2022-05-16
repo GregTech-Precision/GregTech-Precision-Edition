@@ -179,14 +179,15 @@ public class WidgetOreList extends DraggableScrollableWidgetGroup {
                     Widget widget1 = ((WidgetGroup) widget).getContainedWidgets(true).get(0);
                     if (widget1 instanceof SlotWidget){
                         SlotWidget slotWidget = (SlotWidget) widget1;
-                        List<ItemStack> list = OreDictUnifier.getAllWithOreDictionaryName(widgetMap.get(widget));
-                        if (list.size() > 0 ) {
-                            slotWidget.getHandle().decrStackSize(64);
-                            slotWidget.getHandle().putStack(list.get(Math.floorMod(tickCounter / 20, list.size())));
+                        for(BedrockOreDepositDefinition definition : BedrockOreVeinHandler.veinList.keySet()) {
+                            if (widgetMap.get(widget).equalsIgnoreCase(definition.getAssignedName())) {
+                                slotWidget.getHandle().decrStackSize(64);
+                                slotWidget.getHandle().putStack(OreDictUnifier.get(OrePrefix.crushed, definition.getStoredOres().get(Math.floorMod(tickCounter / 20, definition.getStoredOres().size()))));
+                                break;
+                            }
                         }
                     }
                 }
-
             });
         }
     }

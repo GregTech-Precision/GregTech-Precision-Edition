@@ -3,7 +3,6 @@ package gregtech.api.worldgen.bedrockOres;
 import com.google.common.collect.Table;
 import gregtech.api.GTValues;
 import gregtech.api.worldgen.bedrockFluids.ChunkPosDimension;
-import javafx.util.Pair;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.storage.WorldSavedData;
@@ -11,7 +10,6 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
 
 public class BedrockOreVeinSaveData extends WorldSavedData {
 

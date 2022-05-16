@@ -5,8 +5,10 @@ import com.google.gson.JsonObject;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.fluids.MetaFluids;
+import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
+import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
@@ -78,13 +80,15 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
                 array.forEach(ore -> {
                     JsonObject obj = ore.getAsJsonObject();
                     Material newOre = getMaterialByName(obj.get("ore").getAsString());
-                    this.storedOres.add(newOre);
-                    int weight = 1;
-                    if(obj.has("weight")){
-                        weight = obj.get("weight").getAsInt();
+                    if(OreDictUnifier.get(OrePrefix.crushed, newOre) != null) {
+                        this.storedOres.add(newOre);
+                        int weight = 1;
+                        if (obj.has("weight")) {
+                            weight = obj.get("weight").getAsInt();
+                        }
+                        maxOresWeight += weight;
+                        this.oreWeights.put(newOre, weight);
                     }
-                    maxOresWeight += weight;
-                    this.oreWeights.put(newOre, weight);
                 });
             }
         }

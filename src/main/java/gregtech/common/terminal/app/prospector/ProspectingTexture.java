@@ -50,13 +50,13 @@ public class ProspectingTexture extends AbstractTexture {
     }
 
     private BufferedImage getImage() {
-        int wh = this.radius * 2 - 1;
+        int wh = (this.radius * 2 - 1) * 16;
         BufferedImage image = new BufferedImage(wh, wh, BufferedImage.TYPE_INT_ARGB);
         WritableRaster raster = image.getRaster();
 
         for (int i = 0; i < wh; i++){
             for (int j = 0; j < wh; j++) {
-                HashMap<Byte, String> data = this.map[i][j];
+                HashMap<Byte, String> data = this.map[i / 16][j / 16];
                 // draw bg
                 image.setRGB(i, j, ((data == null) ^ darkMode) ? Color.darkGray.getRGB(): Color.WHITE.getRGB());
                 //draw ore
