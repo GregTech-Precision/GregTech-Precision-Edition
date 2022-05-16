@@ -74,18 +74,15 @@ public class WidgetOreList extends DraggableScrollableWidgetGroup {
             return;
         }
 
-        BedrockOreDepositDefinition vein = null;
+        BedrockOreDepositDefinition vein = BedrockOreVeinHandler.getDepositByName(orePrefix);
 
-        for (BedrockOreDepositDefinition definition : BedrockOreVeinHandler.veinList.keySet()) {
-            if(orePrefix.equalsIgnoreCase(definition.getDepositName())){
-                vein = definition;
-                ores.put(orePrefix, vein.getAssignedName());
-            }
-        }
+        if(vein == null)
+            return;
 
-        ItemStack itemStack = OreDictUnifier.get(OrePrefix.crushed, vein.getNextOre());
+        ores.put(orePrefix, vein.getAssignedName());
+        ItemStack itemStack = OreDictUnifier.get(OrePrefix.crushed, vein.getStoredOres().get(0));
         if (itemStack == null || itemStack.isEmpty()) return;
-        MaterialStack materialStack = OreDictUnifier.getMaterial(OreDictUnifier.get(orePrefix));
+        MaterialStack materialStack = OreDictUnifier.getMaterial(itemStack);
         ItemStackHandler itemStackHandler = new ItemStackHandler(1);
         itemStackHandler.insertItem(0, itemStack, false);
         WidgetGroup widgetGroup = new WidgetGroup(0, 0, getSize().width - 5, 18);
@@ -179,12 +176,10 @@ public class WidgetOreList extends DraggableScrollableWidgetGroup {
                     Widget widget1 = ((WidgetGroup) widget).getContainedWidgets(true).get(0);
                     if (widget1 instanceof SlotWidget){
                         SlotWidget slotWidget = (SlotWidget) widget1;
-                        for(BedrockOreDepositDefinition definition : BedrockOreVeinHandler.veinList.keySet()) {
-                            if (widgetMap.get(widget).equalsIgnoreCase(definition.getDepositName())) {
-                                slotWidget.getHandle().decrStackSize(64);
-                                slotWidget.getHandle().putStack(OreDictUnifier.get(OrePrefix.crushed, definition.getStoredOres().get(Math.floorMod(tickCounter / 20, definition.getStoredOres().size()))));
-                                break;
-                            }
+                        BedrockOreDepositDefinition definition = BedrockOreVeinHandler.getDepositByName(widgetMap.get(widget));
+                        if(definition != null){
+                            slotWidget.getHandle().decrStackSize(64);
+                            slotWidget.getHandle().putStack(OreDictUnifier.get(OrePrefix.crushed, definition.getStoredOres().get(Math.floorMod(tickCounter / 20, definition.getStoredOres().size()))));
                         }
                     }
                 }

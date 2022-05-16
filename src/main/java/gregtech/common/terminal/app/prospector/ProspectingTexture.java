@@ -2,7 +2,10 @@ package gregtech.common.terminal.app.prospector;
 
 import gregtech.api.net.packets.PacketProspecting;
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.MaterialStack;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import gregtech.client.utils.RenderUtil;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
@@ -63,9 +66,11 @@ public class ProspectingTexture extends AbstractTexture {
                 if (this.mode == 0 && data != null) {
                     for (String orePrefix : data.values()) {
                         if (!selected.equals("[all]") && !selected.equals(orePrefix)) continue;
-                        MaterialStack mterialStack = OreDictUnifier.getMaterial(OreDictUnifier.get(orePrefix));
-                        image.setRGB(i, j, mterialStack==null? orePrefix.hashCode():mterialStack.material.getMaterialRGB() | 0XFF000000);
-                        break;
+                        BedrockOreDepositDefinition definition = BedrockOreVeinHandler.getDepositByName(orePrefix);
+                        if(definition != null) {
+                            MaterialStack mterialStack = OreDictUnifier.getMaterial(OreDictUnifier.get(OrePrefix.crushed, definition.getStoredOres().get(0)));
+                            image.setRGB(i, j, mterialStack == null ? orePrefix.hashCode() : mterialStack.material.getMaterialRGB() | 0XFF000000);
+                        }
                     }
                 }
                 // draw player pos

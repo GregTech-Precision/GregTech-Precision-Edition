@@ -20,6 +20,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -63,7 +64,9 @@ public class ProspectorScannerBehavior implements IItemBehaviour, ItemUIFactory,
                     player.sendStatusMessage(new TextComponentTranslation("metaitem.prospector.mode.ores"), true);
                 }
             } else if (checkCanUseScanner(heldItem, player, true)) {
-                new PlayerInventoryHolder(player, hand).openUI();
+                if(player.getDistance(player.prevPosX, player.prevPosY, player.prevPosZ) == 0) {
+                    new PlayerInventoryHolder(player, hand).openUI();
+                } else player.sendMessage(new TextComponentTranslation("behavior.prospector.not_moving"));
             } else {
                 player.sendMessage(new TextComponentTranslation("behavior.prospector.not_enough_energy"));
             }

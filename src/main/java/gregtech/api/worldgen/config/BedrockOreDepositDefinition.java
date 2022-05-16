@@ -220,9 +220,13 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
             return false;
         if (this.depletionChance != objDeposit.getDepletionChance())
             return false;
+        if (!this.storedOres.equals(objDeposit.storedOres))
+            return false;
+        if(!this.oreWeights.equals(objDeposit.oreWeights))
+            return false;
         if(this.layer != objDeposit.layer)
             return false;
-        if (!this.storedOres.equals(objDeposit.storedOres))
+        if(!this.specialFluid.equals(objDeposit.specialFluid))
             return false;
         if ((this.assignedName == null && objDeposit.getAssignedName() != null) ||
                 (this.assignedName != null && objDeposit.getAssignedName() == null) ||

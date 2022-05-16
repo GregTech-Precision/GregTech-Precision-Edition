@@ -9,6 +9,7 @@ import gregtech.api.util.Position;
 import gregtech.api.util.Size;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import gregtech.common.terminal.app.prospector.ProspectingTexture;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.Gui;
@@ -199,10 +200,13 @@ public class WidgetProspectingMap extends Widget {
                 tooltips.add(I18n.format("terminal.prospector.ore"));
                 if (texture.map[cX][cZ] != null && !texture.map[cX][cZ].isEmpty()) {
                     if (texture.getSelected().equals("[all]") || texture.getSelected().equals(texture.map[cX][cZ].get((byte) 1))) {
-                        tooltips.add(I18n.format("terminal.prospector.fluid.info",
-                                texture.map[cX][cZ].get((byte) 1),
-                                texture.map[cX][cZ].get((byte) 2),
-                                texture.map[cX][cZ].get((byte) 3)));
+                        BedrockOreDepositDefinition definition = BedrockOreVeinHandler.getDepositByName(texture.map[cX][cZ].get((byte) 1));
+                        if(definition != null) {
+                            tooltips.add(I18n.format("terminal.prospector.ore.info",
+                                    definition.getAssignedName(),
+                                    texture.map[cX][cZ].get((byte) 2),
+                                    texture.map[cX][cZ].get((byte) 3)));
+                        }
                     }
                 }
             } else if(this.mode == 1){

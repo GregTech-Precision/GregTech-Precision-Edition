@@ -27,6 +27,7 @@ public class BedrockOreVeinHandler {
     public final static LinkedHashMap<BedrockOreDepositDefinition, Integer> veinList = new LinkedHashMap<>();
     private final static Map<Integer, HashMap<Integer, Integer>> totalWeightMap = new HashMap<>();
     public static HashBasedTable<ChunkPosDimension, Integer, OreVeinWorldEntry> veinCache = HashBasedTable.create();
+    private static LinkedHashMap<String, BedrockOreDepositDefinition> nameVein = new LinkedHashMap<>();
 
     public static final int VEIN_CHUNK_SIZE = 4; // veins are 4x4 chunk squares
 
@@ -85,6 +86,20 @@ public class BedrockOreVeinHandler {
         worldEntry = new OreVeinWorldEntry(definition, maximumYield, definition.getLayer() == 0 ? MAXIMUM_SMALL_VEIN_OPERATIONS : MAXIMUM_VEIN_OPERATIONS);
         veinCache.put(coords, layer, worldEntry);
         return worldEntry;
+    }
+
+    public static BedrockOreDepositDefinition getDepositByName(String name){
+        if(nameVein.containsKey(name))
+            return nameVein.get(name);
+
+        for(BedrockOreDepositDefinition definition : veinList.keySet()){
+            if(name.equalsIgnoreCase(definition.getDepositName()))
+            {
+                nameVein.put(name, definition);
+                return definition;
+            }
+        }
+        return null;
     }
 
     /**
@@ -282,11 +297,7 @@ public class BedrockOreVeinHandler {
             info.operationsRemaining = tag.getInteger("operationsRemaining");
 
             if (tag.hasKey("vein")) {
-                String s = tag.getString("vein");
-                for (BedrockOreDepositDefinition definition : veinList.keySet()) {
-                    if (s.equalsIgnoreCase(definition.getDepositName()))
-                        info.vein = definition;
-                }
+                info.vein = BedrockOreVeinHandler.getDepositByName(tag.getString("vein"));
             }
 
             return info;
