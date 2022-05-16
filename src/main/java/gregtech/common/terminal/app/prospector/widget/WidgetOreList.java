@@ -180,7 +180,7 @@ public class WidgetOreList extends DraggableScrollableWidgetGroup {
                     if (widget1 instanceof SlotWidget){
                         SlotWidget slotWidget = (SlotWidget) widget1;
                         for(BedrockOreDepositDefinition definition : BedrockOreVeinHandler.veinList.keySet()) {
-                            if (widgetMap.get(widget).equalsIgnoreCase(definition.getAssignedName())) {
+                            if (widgetMap.get(widget).equalsIgnoreCase(definition.getDepositName())) {
                                 slotWidget.getHandle().decrStackSize(64);
                                 slotWidget.getHandle().putStack(OreDictUnifier.get(OrePrefix.crushed, definition.getStoredOres().get(Math.floorMod(tickCounter / 20, definition.getStoredOres().size()))));
                                 break;

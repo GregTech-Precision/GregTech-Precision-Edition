@@ -10,6 +10,7 @@ import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import net.minecraft.init.Items;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.Fluid;
@@ -80,7 +81,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
                 array.forEach(ore -> {
                     JsonObject obj = ore.getAsJsonObject();
                     Material newOre = getMaterialByName(obj.get("ore").getAsString());
-                    if(OreDictUnifier.get(OrePrefix.crushed, newOre) != null) {
+                    if(OreDictUnifier.get(OrePrefix.crushed, newOre).getItem() != Items.AIR) {
                         this.storedOres.add(newOre);
                         int weight = 1;
                         if (obj.has("weight")) {
