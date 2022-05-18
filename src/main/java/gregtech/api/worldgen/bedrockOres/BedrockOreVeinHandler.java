@@ -84,7 +84,7 @@ public class BedrockOreVeinHandler {
             maximumYield = Math.min(maximumYield, definition.getMaximumYield());
         }
 
-        worldEntry = new OreVeinWorldEntry(definition, maximumYield, getOperationsPerLayer(definition.getLayer()));
+        worldEntry = new OreVeinWorldEntry(definition, maximumYield ,50 + random.nextInt(getOperationsPerLayer(definition.getLayer()) - 50));
         veinCache.put(coords, layer, worldEntry);
         return worldEntry;
     }
@@ -268,10 +268,10 @@ public class BedrockOreVeinHandler {
         private int oreYield;
         private int operationsRemaining;
 
-        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int oreYield, int maxVeinOperations) {
+        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int oreYield,int operations) {
             this.vein = vein;
             this.oreYield = oreYield;
-            this.operationsRemaining = maxVeinOperations;
+            this.operationsRemaining = operations;
         }
 
         private OreVeinWorldEntry() {}

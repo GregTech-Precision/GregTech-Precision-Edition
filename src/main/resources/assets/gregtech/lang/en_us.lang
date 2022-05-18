@@ -5010,7 +5010,8 @@ terminal.recipe_chart.tier.3=cache of 8 pages
 terminal.prospector.vis_mode=switching color mode
 terminal.prospector.list=All Resources
 terminal.prospector.ore=Ore Data
-terminal.prospector.ore.info=%s %s - %s%%
+terminal.prospector.ore.info=%s - %s%%
+terminal.prospector.ore.info_yield=%s %s - %s%%
 terminal.prospector.fluid=Fluid Deposit Data
 terminal.prospector.fluid.info=%s %s - %s%%
 

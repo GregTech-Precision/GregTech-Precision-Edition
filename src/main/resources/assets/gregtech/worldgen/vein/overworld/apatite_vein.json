@@ -4,10 +4,10 @@
   "layer": 1,
   "ores": [
     {
-      "ore": "calcite"
+      "ore": "apatite"
     },
     {
-      "ore": "apatite"
+      "ore": "calcite"
     },
     {
       "ore": "tricalcium_phosphate"

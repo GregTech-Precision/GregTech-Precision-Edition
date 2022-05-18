@@ -203,10 +203,16 @@ public class WidgetProspectingMap extends Widget {
                         BedrockOreDepositDefinition definition = BedrockOreVeinHandler.getDepositByName(texture.map[cX][cZ].get((byte) 1));
                         if(definition != null) {
                             String yieldSize = texture.map[cX][cZ].get((byte) 2);
-                            tooltips.add(I18n.format("terminal.prospector.ore.info",
-                                    definition.getAssignedName(),
-                                    Integer.getInteger(yieldSize) > 1 ? yieldSize : "",
-                                    texture.map[cX][cZ].get((byte) 3)));
+                            if(Integer.parseInt(yieldSize) > 1) {
+                                tooltips.add(I18n.format("terminal.prospector.ore.info_yield",
+                                        definition.getAssignedName(),
+                                        yieldSize,
+                                        texture.map[cX][cZ].get((byte) 3)));
+                            } else {
+                                tooltips.add(I18n.format("terminal.prospector.ore.info",
+                                        definition.getAssignedName(),
+                                        texture.map[cX][cZ].get((byte) 3)));
+                            }
                         }
                     }
                 }
