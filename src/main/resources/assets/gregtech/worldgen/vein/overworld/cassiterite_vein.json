@@ -2,15 +2,6 @@
   "weight": 80,
   "name": "Cassiterite Vein",
   "layer": 1,
-  "yield": {
-    "min": 50,
-    "max": 100
-  },
-  "depletion": {
-    "amount": 1,
-    "chance": 100,
-    "depleted_yield": 15
-  },
   "ores": [
     {
       "ore": "tin",

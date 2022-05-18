@@ -79,12 +79,14 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
+        data.setInteger("layer", this.layer);
         return this.minerLogic.writeToNBT(data);
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
+        this.layer = data.getInteger("layer");
         this.minerLogic.readFromNBT(data);
     }
 

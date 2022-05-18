@@ -108,7 +108,7 @@ public class WidgetProspectingMap extends Widget {
                 case ORE_PROSPECTING_MODE:
                     BedrockOreVeinHandler.OreVeinWorldEntry oreStack = BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z, 1);
                     if (oreStack != null && oreStack.getDefinition() != null) {
-                        packet.addInfo(3, GTUtility.formatNumbers(100.0 * oreStack.getOperationsRemaining() / BedrockOreVeinHandler.MAXIMUM_VEIN_OPERATIONS));
+                        packet.addInfo(3, GTUtility.formatNumbers(100.0 * oreStack.getOperationsRemaining() / BedrockOreVeinHandler.getOperationsPerLayer(1)));
                         packet.addInfo(2, "" + oreStack.getOreYield());
                         packet.addInfo(1, oreStack.getDefinition().getDepositName());
                     }
@@ -202,9 +202,10 @@ public class WidgetProspectingMap extends Widget {
                     if (texture.getSelected().equals("[all]") || texture.getSelected().equals(texture.map[cX][cZ].get((byte) 1))) {
                         BedrockOreDepositDefinition definition = BedrockOreVeinHandler.getDepositByName(texture.map[cX][cZ].get((byte) 1));
                         if(definition != null) {
+                            String yieldSize = texture.map[cX][cZ].get((byte) 2);
                             tooltips.add(I18n.format("terminal.prospector.ore.info",
                                     definition.getAssignedName(),
-                                    texture.map[cX][cZ].get((byte) 2),
+                                    Integer.getInteger(yieldSize) > 1 ? yieldSize : "",
                                     texture.map[cX][cZ].get((byte) 3)));
                         }
                     }

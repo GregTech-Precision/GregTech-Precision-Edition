@@ -65,6 +65,9 @@ public abstract class AbstractMinerLogic {
         if (!checkCanDrain())
             return;
 
+        if(!consumeFluid(true))
+            return;
+
         // if the inventory is not full, drain energy etc. from the drill
         // the storages have already been checked earlier
         if (!isInventoryFull) {
@@ -86,8 +89,9 @@ public abstract class AbstractMinerLogic {
         if (progressTime % MAX_PROGRESS != 0)
             return;
         progressTime = 0;
+        consumeFluid(false);
 
-        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 1 + getDrillEfficiency());
+        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), getOrePerCycle() + getDrillEfficiency());
 
         if (getMetaTileEntity().fillInventory(ore, true)) {
             getMetaTileEntity().fillInventory(ore, false);
@@ -106,6 +110,8 @@ public abstract class AbstractMinerLogic {
      * @return true if the rig is able to drain, else false
      */
     abstract protected boolean checkCanDrain();
+    
+    abstract protected boolean consumeFluid(boolean simulae);
 
     private boolean acquireNewOre() {
         this.vein = BedrockOreVeinHandler.getOreVeinWorldEntry(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), getLayer());
@@ -114,6 +120,10 @@ public abstract class AbstractMinerLogic {
 
     protected int getDrillEfficiency(){
         return getMetaTileEntity().getAbilities(MultiblockAbility.DRILL_HANDLER).get(0).getDrillEfficiency();
+    }
+
+    protected int getOrePerCycle(){
+        return Math.min(vein.getDefinition().getDepletedYield(), vein.getOreYield() * vein.getOperationsRemaining()/BedrockOreVeinHandler.getOperationsPerLayer(vein.getDefinition().getLayer()));
     }
 
     private int getChunkX() {

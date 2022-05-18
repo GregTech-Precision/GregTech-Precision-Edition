@@ -79,11 +79,12 @@ public class BedrockOreVeinHandler {
 
         int maximumYield = 0;
         if (definition != null) {
-            maximumYield = random.nextInt(definition.getMaximumYield() - definition.getMinimumYield()) + definition.getMinimumYield();
+            int r = definition.getMaximumYield() - definition.getMinimumYield();
+            maximumYield = (r == 0 ? 0 : random.nextInt(r)) + definition.getMinimumYield();
             maximumYield = Math.min(maximumYield, definition.getMaximumYield());
         }
 
-        worldEntry = new OreVeinWorldEntry(definition, maximumYield, definition.getLayer() == 0 ? MAXIMUM_SMALL_VEIN_OPERATIONS : MAXIMUM_VEIN_OPERATIONS);
+        worldEntry = new OreVeinWorldEntry(definition, maximumYield, getOperationsPerLayer(definition.getLayer()));
         veinCache.put(coords, layer, worldEntry);
         return worldEntry;
     }
@@ -243,6 +244,22 @@ public class BedrockOreVeinHandler {
         if (definition.getDepletionChance() == 100 || GTValues.RNG.nextInt(100) <= definition.getDepletionChance()) {
             info.decreaseOperations(definition.getDepletionAmount());
             BedrockOreVeinSaveData.setDirty();
+        }
+    }
+
+    /**
+     *
+     * @param layer
+     * @return maximum amount of operations per this vein layer
+     */
+    public static int getOperationsPerLayer(int layer){
+        switch (layer){
+            case 0:
+                return 10000;
+            case 1:
+                return 200000;
+            default:
+                return 10000;
         }
     }
 

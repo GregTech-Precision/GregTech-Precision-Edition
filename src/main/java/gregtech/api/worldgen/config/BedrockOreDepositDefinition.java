@@ -15,11 +15,13 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -40,7 +42,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
     private final ConcurrentHashMap<Material, Integer> oreWeights = new ConcurrentHashMap<>();
     private int maxOresWeight;
     private int layer = 0;
-    private Fluid specialFluid;
+    private FluidStack specialFluid;
 
     private Function<Biome, Integer> biomeWeightModifier = biome -> 0; // weighting of biomes
     private Predicate<WorldProvider> dimensionFilter = WorldProvider::isSurfaceWorld; // filtering of dimensions
@@ -54,25 +56,44 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         // the weight value for determining which vein will appear
         this.weight = configRoot.get("weight").getAsInt();
         // the [minimum, maximum) yield of the vein
-        this.yields[0] = configRoot.get("yield").getAsJsonObject().get("min").getAsInt();
-        this.yields[1] = configRoot.get("yield").getAsJsonObject().get("max").getAsInt();
+        if(configRoot.has("yield")) {
+            this.yields[0] = configRoot.get("yield").getAsJsonObject().get("min").getAsInt();
+            this.yields[1] = configRoot.get("yield").getAsJsonObject().get("max").getAsInt();
+        } else {
+            this.yields[0] = 1;
+            this.yields[1] = 1;
+        }
+
         // amount of Ore the vein gets depleted by
-        this.depletionAmount = configRoot.get("depletion").getAsJsonObject().get("amount").getAsInt();
-        // the chance [0, 100] that the vein will deplete by depletionAmount
-        this.depletionChance = Math.max(0, Math.min(100, configRoot.get("depletion").getAsJsonObject().get("chance").getAsInt()));
+        if(configRoot.has("depletion")) {
+            this.depletionAmount = configRoot.get("depletion").getAsJsonObject().get("amount").getAsInt();
+            // the chance [0, 100] that the vein will deplete by depletionAmount
+            this.depletionChance = Math.max(0, Math.min(100, configRoot.get("depletion").getAsJsonObject().get("chance").getAsInt()));
+            // yield after the vein is depleted
+            if (configRoot.get("depletion").getAsJsonObject().has("depleted_yield")) {
+                this.depletedYield = configRoot.get("depletion").getAsJsonObject().get("depleted_yield").getAsInt();
+            } else {
+                this.depletedYield = 1;
+            }
+        } else {
+            this.depletionAmount = 1;
+            this.depletionChance = 100;
+        }
 
         // Zero Layer Vein
        if(configRoot.has("layer")){
            this.layer = configRoot.get("layer").getAsInt();
+       } else {
+           this.layer = 0;
        }
 
        if(configRoot.has("special_fluid")){
-           this.specialFluid = getFluidByName(configRoot.get("special_fluid").getAsString());
+           Fluid fluid = getFluidByName(configRoot.get("speclal_fluid").getAsJsonObject().get("fluid").getAsString());
+           int fluidAmount = configRoot.get("special_fluid").getAsJsonObject().get("amount").getAsInt();
+           this.specialFluid = new FluidStack(fluid, fluidAmount);
        } else {
-           this.specialFluid = getFluidByName("lubricant");
+           this.specialFluid = new FluidStack(getFluidByName("lubricant"),50);
        }
-
-
 
         // Second Layer Ores
         if(configRoot.has("ores")) {
@@ -101,10 +122,6 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         // vein description for JEI display
         if (configRoot.has("description")) {
             this.description = configRoot.get("description").getAsString();
-        }
-        // yield after the vein is depleted
-        if (configRoot.get("depletion").getAsJsonObject().has("depleted_yield")) {
-            this.depletedYield = configRoot.get("depletion").getAsJsonObject().get("depleted_yield").getAsInt();
         }
         // additional weighting changes determined by biomes
         if (configRoot.has("biome_modifier")) {
@@ -179,6 +196,8 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         return storedOres;
     }
 
+    public FluidStack getSpecialFluid() { return specialFluid; }
+
     public Material getNextOre(){
         for(Material ore : storedOres){
             if(GTValues.RNG.nextInt(maxOresWeight) <= getOreWeight(ore)){
@@ -194,6 +213,10 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
 
     public int getOreWeight(Material ore){
         return oreWeights.getOrDefault(ore, 1);
+    }
+
+    public Map<Material, Integer> getOreWeights(){
+        return oreWeights;
     }
 
     public Function<Biome, Integer> getBiomeWeightModifier() {

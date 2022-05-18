@@ -45,6 +45,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.*;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
@@ -115,6 +116,7 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
                 .where('M', states(getCasingState())
                         .or(abilities(MultiblockAbility.INPUT_ENERGY).setMinGlobalLimited(1).setMaxGlobalLimited(3))
                         .or(abilities(MultiblockAbility.EXPORT_ITEMS).setMaxGlobalLimited(1))
+                        .or(abilities(MultiblockAbility.IMPORT_FLUIDS).setMaxGlobalLimited(1))
                         .or(autoAbilities(true, false)))
                 .where('C', states(getCasingState()))
                 .where('F', states(MetaBlocks.FRAMES.get(Materials.Steel).getBlock(Materials.Steel)))
@@ -199,6 +201,10 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
         return GTTransferUtils.addItemsToItemHandler(outputItemInventory, simulate, Collections.singletonList(stack));
     }
 
+    public boolean drainFluid(FluidStack fluid, boolean simulate){
+        return inputFluidInventory.drain(fluid, simulate) != null;
+    }
+
     public int getEnergyTier() {
         return GTUtility.getTierByVoltage(energyContainer.getInputVoltage());
     }
@@ -216,6 +222,10 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
             return true;
         }
         return false;
+    }
+
+    public IMultipleTankHandler getInputFluidInventory() {
+        return inputFluidInventory;
     }
 
     @Override

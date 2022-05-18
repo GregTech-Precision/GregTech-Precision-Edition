@@ -23,6 +23,11 @@ public class CoalMinerLogic extends AbstractMinerLogic {
         return getMetaTileEntity().drainEnergy(simulate);
     }
 
+    @Override
+    protected boolean consumeFluid(boolean simulate) {
+        return true;
+    }
+
     protected boolean checkCanDrain() {
         if (!consumeEnergy(true)) {
             if (progressTime >= 2) {

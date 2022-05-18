@@ -5,7 +5,6 @@ import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityBasicMiner;
-import gregtech.common.metatileentities.multi.electric.MetaTileEntityMiner;
 
 public class BasicMinerLogic extends AbstractMinerLogic {
 
@@ -23,6 +22,11 @@ public class BasicMinerLogic extends AbstractMinerLogic {
     @Override
     protected boolean consumeEnergy(boolean simulate)  {
         return getMetaTileEntity().drainEnergy(simulate);
+    }
+
+    @Override
+    protected boolean consumeFluid(boolean simulate) {
+        return getMetaTileEntity().drainFluid(vein.getDefinition().getSpecialFluid(), simulate);
     }
 
     @Override
@@ -59,5 +63,4 @@ public class BasicMinerLogic extends AbstractMinerLogic {
         }
         return false;
     }
-
 }
