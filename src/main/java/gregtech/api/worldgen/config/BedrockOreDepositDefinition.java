@@ -215,6 +215,10 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         return oreWeights.getOrDefault(ore, 1);
     }
 
+    public int getMaxOresWeight(){
+        return maxOresWeight;
+    }
+
     public Map<Material, Integer> getOreWeights(){
         return oreWeights;
     }

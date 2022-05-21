@@ -15,10 +15,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.biome.Biome;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.IFluidBlock;
+import net.minecraftforge.fluids.*;
 import net.minecraftforge.fml.common.Loader;
 
 import java.nio.file.FileSystem;
@@ -34,11 +31,10 @@ public class GTOreInfo implements IRecipeWrapper {
     private final BedrockOreDepositDefinition definition;
     private final int layer;
     private final String name;
-    private final FluidStack specialFluid;
     private final int weight;
     private final List<List<ItemStack>> groupedOutputsAsItemStacks = new ArrayList<>();
+    private final List<List<FluidStack>> groupedInputAsFluidStacks = new ArrayList<>();
     private final Function<Biome, Integer> biomeFunction;
-    private final Map<Material, Integer> oreWeights;
 
     public GTOreInfo(BedrockOreDepositDefinition definition) {
         this.definition = definition;
@@ -54,18 +50,17 @@ public class GTOreInfo implements IRecipeWrapper {
         }
 
         this.biomeFunction = definition.getBiomeWeightModifier();
-        this.oreWeights = definition.getOreWeights();
         this.weight = definition.getWeight();
         for(Material material : definition.getStoredOres()){
             groupedOutputsAsItemStacks.add(Collections.singletonList(OreDictUnifier.get(OrePrefix.crushed, material, 1)));
         }
-        this.specialFluid = definition.getSpecialFluid();
+        groupedInputAsFluidStacks.add(Collections.singletonList(definition.getSpecialFluid()));
     }
 
     @Override
     public void getIngredients(IIngredients ingredients) {
         ingredients.setOutputLists(VanillaTypes.ITEM, groupedOutputsAsItemStacks);
-        ingredients.setInputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(specialFluid)));
+        ingredients.setInputLists(VanillaTypes.FLUID, groupedInputAsFluidStacks);
     }
 
     public String makePrettyName(String name) {
@@ -97,53 +92,22 @@ public class GTOreInfo implements IRecipeWrapper {
         }
     }
 
-    //Creates a tooltip showing the Biome weighting of the ore vein
-    public List<String> createBiomeTooltip() {
-
-        Iterator<Biome> biomeIterator = Biome.REGISTRY.iterator();
-        int biomeWeight;
-        Map<Biome, Integer> modifiedBiomeMap = new HashMap<>();
-        List<String> tooltip = new ArrayList<>();
-
-        //Tests biomes against all registered biomes to find which biomes have had their weights modified
-        while (biomeIterator.hasNext()) {
-
-            Biome biome = biomeIterator.next();
-
-            //Gives the Biome Weight
-            biomeWeight = biomeFunction.apply(biome);
-            //Check if the biomeWeight is modified
-            if (biomeWeight != weight) {
-                modifiedBiomeMap.put(biome, weight + biomeWeight);
-            }
-        }
-
-        for (Map.Entry<Biome, Integer> entry : modifiedBiomeMap.entrySet()) {
-
-            //Don't show non changed weights, to save room
-            if (!(entry.getValue() == weight)) {
-                //Cannot Spawn
-                if (entry.getValue() <= 0) {
-                    tooltip.add(I18n.format("gregtech.jei.ore.biome_weighting_no_spawn", entry.getKey().getBiomeName()));
-                } else {
-                    tooltip.add(I18n.format("gregtech.jei.ore.biome_weighting", entry.getKey().getBiomeName(), entry.getValue()));
-                }
-            }
-        }
-
-
-        return tooltip;
-    }
-
     public List<String> createOreWeightingTooltip(int slotIndex) {
         List<String> tooltip = new ArrayList<>();
         tooltip.add(I18n.format("gregtech.jei.ore.ore_weight", getOreWeight(slotIndex)));
         return tooltip;
     }
 
+    public List<String> addFluidTooltip(int slotIndex, boolean input, Object ingredient, List<String> tooltip){
+        tooltip.add("Fluid is consumed every cycle");
+        return tooltip;
+    }
+
     public int getOutputCount() {
         return groupedOutputsAsItemStacks.size();
     }
+
+    public int getFluidInputCount() { return 1; }
 
     public String getVeinName() {
         return name;
@@ -162,6 +126,6 @@ public class GTOreInfo implements IRecipeWrapper {
     }
 
     public int getOreWeight(int index) {
-        return oreWeights.size() > index ? -1 : definition.getOreWeight(definition.getStoredOres().get(index));
+        return index >= definition.getStoredOres().size() ? -1 : 100*definition.getOreWeight(definition.getStoredOres().get(index))/ definition.getMaxOresWeight();
     }
 }
