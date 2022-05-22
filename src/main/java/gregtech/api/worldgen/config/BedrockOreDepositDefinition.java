@@ -4,10 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
-import gregtech.api.fluids.MetaFluids;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
-import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
 import net.minecraft.init.Items;
@@ -16,7 +14,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -42,7 +39,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
     private final ConcurrentHashMap<Material, Integer> oreWeights = new ConcurrentHashMap<>();
     private int maxOresWeight;
     private int layer = 0;
-    private FluidStack specialFluid;
+    private final List<FluidStack> specialFluids = new ArrayList<>();
 
     private Function<Biome, Integer> biomeWeightModifier = biome -> 0; // weighting of biomes
     private Predicate<WorldProvider> dimensionFilter = WorldProvider::isSurfaceWorld; // filtering of dimensions
@@ -87,12 +84,30 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
            this.layer = 0;
        }
 
-       if(configRoot.has("special_fluid")){
-           Fluid fluid = getFluidByName(configRoot.get("speclal_fluid").getAsJsonObject().get("fluid").getAsString());
-           int fluidAmount = configRoot.get("special_fluid").getAsJsonObject().get("amount").getAsInt();
-           this.specialFluid = new FluidStack(fluid, fluidAmount);
-       } else {
-           this.specialFluid = new FluidStack(getFluidByName("lubricant"),50);
+       if(layer > 0){
+           specialFluids.add(new FluidStack(getFluidByName("drilling_fluid"), 50));
+       }
+
+       if(configRoot.has("additional_fluids") || configRoot.has("fluids")){
+           boolean resetFluids = configRoot.has("fluids");
+           if(resetFluids){
+               this.specialFluids.clear();
+           }
+           JsonArray array = configRoot.get(resetFluids ? "fluids" : "additional_fluids").getAsJsonArray();
+           array.forEach(element -> {
+               JsonObject obj = element.getAsJsonObject();
+               Fluid fluid = null;
+               int amount = 50;
+               if(obj.has("fluid")){
+                   fluid = getFluidByName(obj.get("fluid").getAsString());
+               }
+               if(obj.has("amount")){
+                   amount = obj.get("amount").getAsInt();
+               }
+               if(fluid != null && amount > 0){
+                   this.specialFluids.add(new FluidStack(fluid, amount));
+               }
+           });
        }
 
         // Second Layer Ores
@@ -196,7 +211,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         return storedOres;
     }
 
-    public FluidStack getSpecialFluid() { return specialFluid; }
+    public List<FluidStack> getSpecialFluids() { return specialFluids; }
 
     public Material getNextOre(){
         for(Material ore : storedOres){
@@ -253,7 +268,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
             return false;
         if(this.layer != objDeposit.layer)
             return false;
-        if(!this.specialFluid.equals(objDeposit.specialFluid))
+        if(!this.specialFluids.equals(objDeposit.specialFluids))
             return false;
         if ((this.assignedName == null && objDeposit.getAssignedName() != null) ||
                 (this.assignedName != null && objDeposit.getAssignedName() == null) ||

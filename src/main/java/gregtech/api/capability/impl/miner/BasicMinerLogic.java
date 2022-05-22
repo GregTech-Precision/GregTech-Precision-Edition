@@ -5,6 +5,7 @@ import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityBasicMiner;
+import net.minecraftforge.fluids.FluidStack;
 
 public class BasicMinerLogic extends AbstractMinerLogic {
 
@@ -26,7 +27,16 @@ public class BasicMinerLogic extends AbstractMinerLogic {
 
     @Override
     protected boolean consumeFluid(boolean simulate) {
-        return getMetaTileEntity().drainFluid(vein.getDefinition().getSpecialFluid(), simulate);
+        if(vein.getDefinition().getSpecialFluids().isEmpty())
+            return true;
+        boolean success = true;
+        for(FluidStack fluid : vein.getDefinition().getSpecialFluids()){
+            if(!getMetaTileEntity().drainFluid(fluid, simulate)){
+                success = false;
+                break;
+            }
+        }
+        return success;
     }
 
     @Override

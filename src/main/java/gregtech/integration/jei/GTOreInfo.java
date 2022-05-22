@@ -1,30 +1,22 @@
 package gregtech.integration.jei;
 
-import com.google.common.collect.ImmutableList;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
-import gregtech.common.blocks.BlockOre;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.*;
-import net.minecraftforge.fml.common.Loader;
 
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
-
-import static gregtech.api.GTValues.*;
 
 public class GTOreInfo implements IRecipeWrapper {
 
@@ -54,7 +46,9 @@ public class GTOreInfo implements IRecipeWrapper {
         for(Material material : definition.getStoredOres()){
             groupedOutputsAsItemStacks.add(Collections.singletonList(OreDictUnifier.get(OrePrefix.crushed, material, 1)));
         }
-        groupedInputAsFluidStacks.add(Collections.singletonList(definition.getSpecialFluid()));
+        for(FluidStack stack : definition.getSpecialFluids()){
+            groupedInputAsFluidStacks.add(Collections.singletonList(stack));
+        }
     }
 
     @Override
@@ -107,7 +101,7 @@ public class GTOreInfo implements IRecipeWrapper {
         return groupedOutputsAsItemStacks.size();
     }
 
-    public int getFluidInputCount() { return 1; }
+    public int getFluidInputCount() { return groupedInputAsFluidStacks.size(); }
 
     public String getVeinName() {
         return name;

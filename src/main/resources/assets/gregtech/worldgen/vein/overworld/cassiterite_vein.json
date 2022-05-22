@@ -2,6 +2,12 @@
   "weight": 80,
   "name": "Cassiterite Vein",
   "layer": 1,
+  "additional_fluids": [
+    {
+      "fluid": "chlorine",
+      "amount": 150
+    }
+  ],
   "ores": [
     {
       "ore": "tin",

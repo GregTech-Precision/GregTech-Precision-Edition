@@ -52,9 +52,11 @@ public abstract class AbstractMinerLogic {
         if (getMetaTileEntity().getWorld().isRemote) return;
 
         // if we have no Ore, try to get a new one
-        if (vein == null || getLayer() != previousLayer)
+        if (vein == null || getLayer() != previousLayer) {
+            progressTime = 0;
             if (!acquireNewOre())
                 return; // stop if we still have no Ore
+        }
 
         previousLayer = getLayer();
         // drills that cannot work do nothing
@@ -111,7 +113,7 @@ public abstract class AbstractMinerLogic {
      */
     abstract protected boolean checkCanDrain();
     
-    abstract protected boolean consumeFluid(boolean simulae);
+    abstract protected boolean consumeFluid(boolean simulate);
 
     private boolean acquireNewOre() {
         this.vein = BedrockOreVeinHandler.getOreVeinWorldEntry(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), getLayer());

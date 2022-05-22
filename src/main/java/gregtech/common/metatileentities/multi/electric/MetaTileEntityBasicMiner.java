@@ -116,7 +116,7 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
                 .where('M', states(getCasingState())
                         .or(abilities(MultiblockAbility.INPUT_ENERGY).setMinGlobalLimited(1).setMaxGlobalLimited(3))
                         .or(abilities(MultiblockAbility.EXPORT_ITEMS).setMaxGlobalLimited(1))
-                        .or(abilities(MultiblockAbility.IMPORT_FLUIDS).setMaxGlobalLimited(1))
+                        .or(abilities(MultiblockAbility.IMPORT_FLUIDS).setMaxGlobalLimited(4))
                         .or(autoAbilities(true, false)))
                 .where('C', states(getCasingState()))
                 .where('F', states(MetaBlocks.FRAMES.get(Materials.Steel).getBlock(Materials.Steel)))
@@ -202,7 +202,7 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     }
 
     public boolean drainFluid(FluidStack fluid, boolean simulate){
-        return inputFluidInventory.drain(fluid, simulate) != null;
+        return inputFluidInventory.drain(fluid, !simulate) != null;
     }
 
     public int getEnergyTier() {
@@ -224,12 +224,32 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
         return false;
     }
 
-    public IMultipleTankHandler getInputFluidInventory() {
-        return inputFluidInventory;
-    }
-
     @Override
     public boolean hasMaintenanceMechanics() {
         return true;
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound data) {
+        data.setInteger("layer", layer);
+        return super.writeToNBT(data);
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound data) {
+        this.layer = data.getInteger("layer");
+        super.readFromNBT(data);
+    }
+
+    @Override
+    public void writeInitialSyncData(PacketBuffer buf) {
+        super.writeInitialSyncData(buf);
+        buf.writeInt(layer);
+    }
+
+    @Override
+    public void receiveInitialSyncData(PacketBuffer buf) {
+        super.receiveInitialSyncData(buf);
+        this.layer = buf.readInt();
     }
 }

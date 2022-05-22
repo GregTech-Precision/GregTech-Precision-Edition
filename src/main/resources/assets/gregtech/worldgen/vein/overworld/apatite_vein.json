@@ -2,6 +2,12 @@
   "weight": 40,
   "name": "Apatite Vein",
   "layer": 1,
+  "fluids": [
+    {
+      "fluid": "chlorine",
+      "amount": 100
+    }
+  ],
   "ores": [
     {
       "ore": "apatite"

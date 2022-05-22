@@ -139,7 +139,9 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
         }
 
         minecraft.fontRenderer.drawString("Ores:", baseXPos, baseYPos, 0x111111);
-        minecraft.fontRenderer.drawString("Fluids:", baseFluidXPos, baseYPos, 0x111111);
+        if(inputFluidCount > 0) {
+            minecraft.fontRenderer.drawString("Fluids:", baseFluidXPos, baseYPos, 0x111111);
+        }
 
         //base positions set to position of last rendered slot for later use.
         //Must account for the fact that yPos is the top corner of the slot, so add in another slot height
@@ -194,7 +196,7 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
                 dimDisplayPos = 80;
             }
 
-            minecraft.fontRenderer.drawString(fullDimName, dimDisplayPos, baseYPos + (3 * FONT_HEIGHT), 0x111111);
+            minecraft.fontRenderer.drawString(fullDimName, dimDisplayPos, baseYPos + (2 * FONT_HEIGHT), 0x111111);
 
             //Increment the dimension name display position
             dimDisplayPos = dimDisplayPos + dimDisplayLength;
