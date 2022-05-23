@@ -51,6 +51,9 @@ public abstract class AbstractMinerLogic {
     public void performDrilling() {
         if (getMetaTileEntity().getWorld().isRemote) return;
 
+        if(!getMetaTileEntity().getAbilities(MultiblockAbility.DRILL_HANDLER).get(0).hasDrillHead())
+            return;
+
         // if we have no Ore, try to get a new one
         if (vein == null || getLayer() != previousLayer) {
             progressTime = 0;
@@ -91,12 +94,13 @@ public abstract class AbstractMinerLogic {
         if (progressTime % MAX_PROGRESS != 0)
             return;
         progressTime = 0;
-        consumeFluid(false);
 
         ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), getOrePerCycle() + getDrillEfficiency());
 
         if (getMetaTileEntity().fillInventory(ore, true)) {
             getMetaTileEntity().fillInventory(ore, false);
+            consumeFluid(false);
+            getMetaTileEntity().getAbilities(MultiblockAbility.DRILL_HANDLER).get(0).applyDrillHeadDamage(1);
             BedrockOreVeinHandler.depleteVein(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), getLayer(), 0, false);
         } else {
             isInventoryFull = true;
@@ -128,11 +132,11 @@ public abstract class AbstractMinerLogic {
         return Math.min(vein.getDefinition().getDepletedYield(), vein.getOreYield() * vein.getOperationsRemaining()/BedrockOreVeinHandler.getOperationsPerLayer(vein.getDefinition().getLayer()));
     }
 
-    private int getChunkX() {
+    protected int getChunkX() {
         return metaTileEntity.getPos().getX() / 16;
     }
 
-    private int getChunkZ() {
+    protected int getChunkZ() {
         return metaTileEntity.getPos().getZ() / 16;
     }
 

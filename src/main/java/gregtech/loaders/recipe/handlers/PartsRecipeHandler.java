@@ -54,6 +54,7 @@ public class PartsRecipeHandler {
         OrePrefix.springSmall.addProcessingHandler(PropertyKey.INGOT, PartsRecipeHandler::processSpringSmall);
         OrePrefix.spring.addProcessingHandler(PropertyKey.INGOT, PartsRecipeHandler::processSpring);
         OrePrefix.round.addProcessingHandler(PropertyKey.INGOT, PartsRecipeHandler::processRound);
+        OrePrefix.drillHead.addProcessingHandler(PropertyKey.INGOT, PartsRecipeHandler::processDrillHead);
     }
 
     public static void processBolt(OrePrefix boltPrefix, Material material, DustProperty property) {
@@ -551,6 +552,12 @@ public class PartsRecipeHandler {
                 .input(nugget, material)
                 .output(round, material)
                 .buildAndRegister();
+    }
+
+    public static void processDrillHead(OrePrefix drillHeadPrefix, Material material, IngotProperty property){
+        ItemStack drillHeadStack = MetaItems.DRILL_HEAD.getStackForm();
+        //noinspection ConstantConditions
+        TurbineRotorBehavior.getInstanceFor(drillHeadStack).setPartMaterial(drillHeadStack, material);
     }
 
     private static int getVoltageMultiplier(Material material) {

@@ -9,8 +9,11 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
+import gregtech.common.items.behaviors.DrillHeadBehaviour;
+import gregtech.common.items.behaviors.TurbineRotorBehavior;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
@@ -43,8 +46,25 @@ public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart 
     }
 
     @Override
+    public boolean hasDrillHead() {
+        return !drillHandler.getStackInSlot(0).isEmpty();
+    }
+
+    @Override
     public int getDrillEfficiency() {
-        return 1;
+        ItemStack stack = drillHandler.getStackInSlot(0);
+        if(stack.isEmpty())
+            return 0;
+        return DrillHeadBehaviour.getInstanceFor(stack).getDrillHeadLevel(stack);
+    }
+
+    @Override
+    public void applyDrillHeadDamage(int damageApplied) {
+        ItemStack stack = drillHandler.getStackInSlot(0);
+        if(stack.isEmpty())
+            return;
+
+        DrillHeadBehaviour.getInstanceFor(stack).applyDrillHeadDamage(stack, damageApplied);
     }
 
     @Override
@@ -57,7 +77,19 @@ public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart 
         abilityList.add(this);
     }
 
-    private class InventoryDrillHandler extends ItemStackHandler {
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound data) {
+        data.setTag("inventory", drillHandler.serializeNBT());
+        return super.writeToNBT(data);
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound data) {
+        this.drillHandler.deserializeNBT(data.getCompoundTag("inventory"));
+        super.readFromNBT(data);
+    }
+
+    private static class InventoryDrillHandler extends ItemStackHandler {
 
         public InventoryDrillHandler(){
             super(1);
@@ -65,7 +97,7 @@ public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart 
 
         @Override
         public boolean isItemValid(int slot, @Nonnull ItemStack stack) {
-            return true;
+            return DrillHeadBehaviour.getInstanceFor(stack) != null && super.isItemValid(slot, stack);
         }
     }
 }
