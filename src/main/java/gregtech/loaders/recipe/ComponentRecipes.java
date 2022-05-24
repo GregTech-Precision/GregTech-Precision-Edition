@@ -10,8 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static gregtech.api.GTValues.*;
-import static gregtech.api.recipes.RecipeMaps.COMPONENT_ASSEMBLER;
-import static gregtech.api.recipes.RecipeMaps.ASSEMBLY_LINE_RECIPES;
+import static gregtech.api.recipes.RecipeMaps.*;
 import static gregtech.api.unification.material.Materials.*;
 import static gregtech.api.unification.ore.OrePrefix.*;
 import static gregtech.common.items.MetaItems.*;
@@ -376,7 +375,7 @@ public class ComponentRecipes {
 
         ModHandler.addShapedRecipe(true, "cover_item_voiding", COVER_ITEM_VOIDING.getStackForm(), "SDS", "dPw", " E ", 'S', new UnificationEntry(screw, Steel), 'D', COVER_ITEM_DETECTOR.getStackForm(), 'P', new UnificationEntry(pipeNormalItem, Brass), 'E', Items.ENDER_PEARL);
 
-        ASSEMBLER_RECIPES.recipeBuilder()
+        COMPONENT_ASSEMBLER.recipeBuilder()
                 .input(screw, Steel, 2)
                 .inputs(COVER_ITEM_DETECTOR.getStackForm())
                 .input(pipeNormalItem, Brass)
@@ -384,7 +383,7 @@ public class ComponentRecipes {
                 .outputs(COVER_ITEM_VOIDING.getStackForm())
                 .duration(100).EUt(VA[LV]).buildAndRegister();
 
-        ASSEMBLER_RECIPES.recipeBuilder()
+        COMPONENT_ASSEMBLER.recipeBuilder()
                 .input(COVER_ITEM_VOIDING)
                 .input(circuit, Tier.MV, 1)
                 .outputs(COVER_ITEM_VOIDING_ADVANCED.getStackForm())
@@ -392,7 +391,7 @@ public class ComponentRecipes {
 
         ModHandler.addShapedRecipe(true, "cover_fluid_voiding", COVER_FLUID_VOIDING.getStackForm(), "SDS", "dPw", " E ", 'S', new UnificationEntry(screw, Steel), 'D', COVER_FLUID_DETECTOR.getStackForm(), 'P', new UnificationEntry(pipeNormalFluid, Bronze), 'E', Items.ENDER_PEARL);
 
-        ASSEMBLER_RECIPES.recipeBuilder()
+        COMPONENT_ASSEMBLER.recipeBuilder()
                 .input(screw, Steel, 2)
                 .inputs(COVER_FLUID_DETECTOR.getStackForm())
                 .input(pipeNormalFluid, Bronze)
@@ -400,7 +399,7 @@ public class ComponentRecipes {
                 .outputs(COVER_FLUID_VOIDING.getStackForm())
                 .duration(100).EUt(VA[LV]).buildAndRegister();
 
-        ASSEMBLER_RECIPES.recipeBuilder()
+        COMPONENT_ASSEMBLER.recipeBuilder()
                 .input(COVER_FLUID_VOIDING)
                 .input(circuit, Tier.MV, 1)
                 .outputs(COVER_FLUID_VOIDING_ADVANCED.getStackForm())
