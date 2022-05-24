@@ -17,7 +17,7 @@ public class DrillHeadBehaviour extends AbstractMaterialPartBehavior implements 
 
     public int getDrillHeadLevel(ItemStack stack){
         Material material = getPartMaterial(stack);
-        return material.getHarvestLevel()-1;
+        return material.getToolHarvestLevel() - 1;
     }
 
     public int getDrillHeadDurabilityPercent(ItemStack itemStack) {
