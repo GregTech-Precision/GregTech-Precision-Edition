@@ -660,6 +660,6 @@ public class MetaItem1 extends StandardMetaItem {
         // Misc 1000+
         NAN_CERTIFICATE = addItem(1000, "nan.certificate").setRarity(EnumRarity.EPIC);
         FERTILIZER = addItem(1001, "fertilizer").addComponents(new FertilizerBehavior());
-        LAPTOP = addItem(1002, "laptop").addComponents(new LaptopBehavior(), new LaptopItemStat(), ElectricStats.createElectricItem(100000L, 1L)).setMaxStackSize(1);
+        LAPTOP = addItem(1002, "laptop").addComponents(new LaptopBehavior(), new LaptopItemStat(), ElectricStats.createElectricItem(1600000L, GTValues.HV)).setMaxStackSize(1);
     }
 }

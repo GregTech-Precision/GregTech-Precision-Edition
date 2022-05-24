@@ -309,18 +309,6 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
             return false;
         }
 
-        if(itemStack.hasCapability(GregtechCapabilities.CAPABILITY_LAPTOP, null)) {
-            ILaptopItem laptop = itemStack.getCapability(GregtechCapabilities.CAPABILITY_LAPTOP, null);
-
-            if(laptop.damageItem(DamageValues.DAMAGE_FOR_LAPTOP, true) &&
-                    metaTileEntity.onCoverLaptopClick(playerIn, hand, rayTraceResult)) {
-                laptop.damageItem(DamageValues.DAMAGE_FOR_LAPTOP, false);
-                IToolStats.onOtherUse(itemStack, worldIn, pos);
-                return true;
-            }
-            return false;
-        }
-
         if (itemStack.hasCapability(GregtechCapabilities.CAPABILITY_SCREWDRIVER, null)) {
             IScrewdriverItem screwdriver = itemStack.getCapability(GregtechCapabilities.CAPABILITY_SCREWDRIVER, null);
 
@@ -341,6 +329,14 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
                     metaTileEntity.onWrenchClick(playerIn, hand, wrenchDirection, rayTraceResult)) {
 
                 wrenchItem.damageItem(DamageValues.DAMAGE_FOR_WRENCH, false);
+                IToolStats.onOtherUse(itemStack, worldIn, pos);
+                return true;
+            }
+            return false;
+        }
+
+        if(itemStack.hasCapability(GregtechCapabilities.CAPABILITY_LAPTOP, null)) {
+            if(metaTileEntity.onCoverLaptopClick(playerIn, hand, rayTraceResult)) {
                 IToolStats.onOtherUse(itemStack, worldIn, pos);
                 return true;
             }
