@@ -207,12 +207,6 @@ public class MetaTool extends ToolMetaItem<ToolMetaItem<?>.MetaToolValueItem> {
                 .addOreDict(ToolDictNames.craftingToolSaw)
                 .addComponents(ElectricStats.createElectricItem(100000L, 1L))
                 .setSound(GTSounds.CHAINSAW_TOOL);
-
-        LAPTOP = addItem(33, "tool.laptop").setToolStats(new ToolLaptop())
-                .addOreDict(ToolDictNames.craftingToolLaptop)
-                .addComponents(new LaptopBehavior())
-                .addComponents(new LaptopItemStat())
-                .addComponents(ElectricStats.createElectricItem(100000L, 1L));
     }
 
 }

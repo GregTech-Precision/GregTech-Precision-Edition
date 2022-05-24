@@ -1,6 +1,8 @@
 package gregtech.common.items.behaviors;
 
 import gregtech.api.GTValues;
+import gregtech.api.capability.GregtechCapabilities;
+import gregtech.api.capability.IElectricItem;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.Widget;
@@ -10,8 +12,13 @@ import gregtech.api.gui.widgets.SimpleTextWidget;
 import gregtech.api.items.gui.ItemUIFactory;
 import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
+import gregtech.api.terminal.TerminalRegistry;
+import gregtech.api.terminal.hardware.Hardware;
 import gregtech.api.util.GTUtility;
+import gregtech.common.terminal.hardware.BatteryHardware;
 import gregtech.common.tools.DamageValues;
+import net.minecraft.entity.Entity;
+import net.minecraft.nbt.NBTTagCompound;
 import precisioncore.api.capability.IAddresable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -30,28 +37,8 @@ public class LaptopBehavior extends AbstractUsableBehaviour implements ItemUIFac
     private EntityPlayer player;
 
     public LaptopBehavior() {
-        super(10000);
+        super(1000);
     }
-
-//    @Override
-//    public ActionResult<ItemStack> onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-//        ItemStack itemStack = player.getHeldItem(hand);
-//        TileEntity blockClicked = world.getTileEntity(pos);
-//        if (blockClicked instanceof MetaTileEntityHolder) {
-//            MetaTileEntityHolder holder = ((MetaTileEntityHolder) blockClicked);
-//            if (holder.getMetaTileEntity() instanceof IAddresable) {
-//                this.player = player;
-//                this.holder = holder;
-//                if(!world.isRemote) {
-//                    PlayerInventoryHolder inventoryHolder = new PlayerInventoryHolder(player, hand);
-//                    inventoryHolder.openUI();
-//                    return ActionResult.newResult(EnumActionResult.SUCCESS, player.getHeldItem(hand));
-//                }
-//            }
-//        }
-//        itemStack.damageItem(1, player);
-//        return ActionResult.newResult(EnumActionResult.PASS, player.getHeldItem(hand));
-//    }
 
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
@@ -59,6 +46,10 @@ public class LaptopBehavior extends AbstractUsableBehaviour implements ItemUIFac
 
             ItemStack itemStack = player.getHeldItem(hand);
             if(!GTUtility.doDamageItem(itemStack, DamageValues.DAMAGE_FOR_LAPTOP, true))
+                return EnumActionResult.FAIL;
+
+            IElectricItem electricItem = itemStack.getCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null);
+            if(!(electricItem != null && electricItem.getCharge() > 0))
                 return EnumActionResult.FAIL;
 
             TileEntity blockClicked = world.getTileEntity(pos);
@@ -78,6 +69,14 @@ public class LaptopBehavior extends AbstractUsableBehaviour implements ItemUIFac
         return EnumActionResult.PASS;
     }
 
+    @Override
+    public void onUpdate(ItemStack itemStack, Entity entity) {
+        IElectricItem electricItem = itemStack.getCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null);
+        if (electricItem != null) {
+            electricItem.discharge(32, 999, true, false, false);
+        }
+    }
+
     private void changeFrequency(int change){
         frequency+=change;
     }
@@ -87,7 +86,7 @@ public class LaptopBehavior extends AbstractUsableBehaviour implements ItemUIFac
     }
 
     private String getFrequencyString(){
-        return "Frequency: "+frequency;
+        return "Frequency: " + frequency;
     }
 
     private String getNetAddressString(){
