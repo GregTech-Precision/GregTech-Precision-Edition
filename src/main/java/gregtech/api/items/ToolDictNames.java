@@ -26,5 +26,6 @@ public enum ToolDictNames {
     craftingToolScrewdriver,
     craftingToolSolderingIron,
     craftingToolSolderingMetal,
-    craftingToolChainsaw
+    craftingToolChainsaw,
+    craftingToolLaptop
 }

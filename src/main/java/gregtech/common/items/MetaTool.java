@@ -6,6 +6,7 @@ import gregtech.api.items.metaitem.ElectricStats;
 import gregtech.api.items.toolitem.*;
 import gregtech.api.sound.GTSounds;
 import gregtech.common.ConfigHolder;
+import gregtech.common.items.behaviors.LaptopBehavior;
 import gregtech.common.tools.*;
 import gregtech.common.tools.largedrills.ToolDrills;
 import net.minecraft.init.SoundEvents;

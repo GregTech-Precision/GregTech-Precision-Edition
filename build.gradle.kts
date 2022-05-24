@@ -69,6 +69,7 @@ dependencies {
     "compile"(files("etc/jei_1.12.2-4.16.1.301.jar"))
     "compile"(files("etc/theoneprobe-1.12-1.4.28.jar"))
     "compile"(files("etc/CTM-MC1.12.2-1.0.2.31.jar"))
+    "compile"(files("etc/PrecisionCore-0.0.5.jar"))
 
     "testImplementation"("junit:junit:4.13.1")
     "implementation"("org.projectlombok:lombok:1.18.16")

@@ -1,9 +1,11 @@
 package gregtech.common.items;
 
 import gregtech.api.GTValues;
+import gregtech.api.items.ToolDictNames;
 import gregtech.api.items.metaitem.*;
 import gregtech.api.items.metaitem.stats.IItemComponent;
 import gregtech.api.items.metaitem.stats.IItemContainerItemProvider;
+import gregtech.api.items.toolitem.LaptopItemStat;
 import gregtech.api.sound.GTSounds;
 import gregtech.api.terminal.hardware.HardwareProvider;
 import gregtech.api.unification.OreDictUnifier;
@@ -23,6 +25,7 @@ import gregtech.common.items.behaviors.monitorplugin.AdvancedMonitorPluginBehavi
 import gregtech.common.items.behaviors.monitorplugin.FakeGuiPluginBehavior;
 import gregtech.common.items.behaviors.monitorplugin.OnlinePicPluginBehavior;
 import gregtech.common.items.behaviors.monitorplugin.TextPluginBehavior;
+import gregtech.common.tools.ToolLaptop;
 import net.minecraft.init.Items;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.EnumDyeColor;
@@ -660,5 +663,6 @@ public class MetaItem1 extends StandardMetaItem {
         // Misc 1000+
         NAN_CERTIFICATE = addItem(1000, "nan.certificate").setRarity(EnumRarity.EPIC);
         FERTILIZER = addItem(1001, "fertilizer").addComponents(new FertilizerBehavior());
+        LAPTOP = addItem(1002, "laptop").addComponents(new LaptopBehavior(), new LaptopItemStat(), ElectricStats.createElectricItem(1600000L, GTValues.HV)).setMaxStackSize(1);
     }
 }

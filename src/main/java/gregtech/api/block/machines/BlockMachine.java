@@ -9,6 +9,7 @@ import codechicken.lib.vec.Cuboid6;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.BlockCustomParticle;
 import gregtech.api.capability.GregtechCapabilities;
+import gregtech.api.capability.tool.ILaptopItem;
 import gregtech.api.capability.tool.IScrewdriverItem;
 import gregtech.api.capability.tool.IWrenchItem;
 import gregtech.api.cover.CoverBehavior;
@@ -328,6 +329,14 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
                     metaTileEntity.onWrenchClick(playerIn, hand, wrenchDirection, rayTraceResult)) {
 
                 wrenchItem.damageItem(DamageValues.DAMAGE_FOR_WRENCH, false);
+                IToolStats.onOtherUse(itemStack, worldIn, pos);
+                return true;
+            }
+            return false;
+        }
+
+        if(itemStack.hasCapability(GregtechCapabilities.CAPABILITY_LAPTOP, null)) {
+            if(metaTileEntity.onCoverLaptopClick(playerIn, hand, rayTraceResult)) {
                 IToolStats.onOtherUse(itemStack, worldIn, pos);
                 return true;
             }

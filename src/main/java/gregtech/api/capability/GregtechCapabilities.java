@@ -28,6 +28,9 @@ public class GregtechCapabilities {
     @CapabilityInject(ICutterItem.class)
     public static Capability<ICutterItem> CAPABILITY_CUTTER = null;
 
+    @CapabilityInject(ILaptopItem.class)
+    public static Capability<ILaptopItem> CAPABILITY_LAPTOP = null;
+
     @CapabilityInject(IScrewdriverItem.class)
     public static Capability<IScrewdriverItem> CAPABILITY_SCREWDRIVER = null;
 
@@ -36,7 +39,6 @@ public class GregtechCapabilities {
 
     @CapabilityInject(IHammerItem.class)
     public static Capability<IHammerItem> CAPABILITY_HAMMER = null;
-
 
     @CapabilityInject(IFuelable.class)
     public static Capability<IFuelable> CAPABILITY_FUELABLE = null;

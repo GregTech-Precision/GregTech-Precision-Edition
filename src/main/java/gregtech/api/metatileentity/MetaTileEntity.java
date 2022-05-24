@@ -62,6 +62,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import precisioncore.api.utils.PrecisionChatUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -378,6 +379,22 @@ public abstract class MetaTileEntity implements ICoverable, IVoidable {
         return onScrewdriverClick(playerIn, hand, result.sideHit, result);
     }
 
+    public final boolean onCoverLaptopClick(EntityPlayer playerIn, EnumHand hand, CuboidRayTraceResult result){
+        EnumFacing hitFacing = ICoverable.determineGridSideHit(result);
+        boolean accessingActiveOutputSide = false;
+        if (this.getCapability(GregtechTileCapabilities.CAPABILITY_ACTIVE_OUTPUT_SIDE, hitFacing) != null) {
+            accessingActiveOutputSide = playerIn.isSneaking();
+        }
+        EnumFacing coverSide = ICoverable.traceCoverSide(result);
+        CoverBehavior coverBehavior = coverSide == null ? null : getCoverAtSide(coverSide);
+        EnumActionResult coverResult = coverBehavior == null ? EnumActionResult.PASS :
+                accessingActiveOutputSide ? EnumActionResult.PASS : coverBehavior.onLaptopClick(playerIn, hand, result);
+        if (coverResult != EnumActionResult.PASS) {
+            return coverResult == EnumActionResult.SUCCESS;
+        }
+        return onLaptopClick(playerIn, hand, result.sideHit, result);
+    }
+
     /**
      * Called when player clicks on specific side of this meta tile entity
      *
@@ -426,6 +443,10 @@ public abstract class MetaTileEntity implements ICoverable, IVoidable {
      * @return true if something happened, so screwdriver will get damaged and animation will be played
      */
     public boolean onScrewdriverClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing, CuboidRayTraceResult hitResult) {
+        return false;
+    }
+
+    public boolean onLaptopClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing, CuboidRayTraceResult hitResult) {
         return false;
     }
 
