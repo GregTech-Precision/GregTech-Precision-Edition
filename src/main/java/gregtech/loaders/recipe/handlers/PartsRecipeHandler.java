@@ -17,6 +17,7 @@ import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 import gregtech.common.items.MetaItems;
+import gregtech.common.items.behaviors.DrillHeadBehaviour;
 import gregtech.common.items.behaviors.TurbineRotorBehavior;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
@@ -54,7 +55,6 @@ public class PartsRecipeHandler {
         OrePrefix.springSmall.addProcessingHandler(PropertyKey.INGOT, PartsRecipeHandler::processSpringSmall);
         OrePrefix.spring.addProcessingHandler(PropertyKey.INGOT, PartsRecipeHandler::processSpring);
         OrePrefix.round.addProcessingHandler(PropertyKey.INGOT, PartsRecipeHandler::processRound);
-        OrePrefix.drillHead.addProcessingHandler(PropertyKey.INGOT, PartsRecipeHandler::processDrillHead);
     }
 
     public static void processBolt(OrePrefix boltPrefix, Material material, DustProperty property) {
@@ -508,6 +508,21 @@ public class PartsRecipeHandler {
         }
     }
 
+    public static void processDrillHead(OrePrefix toolPrefix, Material material, IngotProperty property) {
+        ItemStack drillHeadStack = MetaItems.DRILL_HEAD.getStackForm();
+        //noinspection ConstantConditions
+        DrillHeadBehaviour.getInstanceFor(drillHeadStack).setPartMaterial(drillHeadStack, material);
+
+        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder()
+                .input(OrePrefix.plate, material, 8)
+                .input(OrePrefix.plateDouble, Materials.Steel, 4)
+                .input(OrePrefix.stickLong, material, 1)
+                .outputs(drillHeadStack)
+                .duration(200)
+                .EUt(400)
+                .buildAndRegister();
+    }
+
     public static void processTurbine(OrePrefix toolPrefix, Material material, IngotProperty property) {
         ItemStack rotorStack = MetaItems.TURBINE_ROTOR.getStackForm();
         //noinspection ConstantConditions
@@ -552,12 +567,6 @@ public class PartsRecipeHandler {
                 .input(nugget, material)
                 .output(round, material)
                 .buildAndRegister();
-    }
-
-    public static void processDrillHead(OrePrefix drillHeadPrefix, Material material, IngotProperty property){
-        ItemStack drillHeadStack = MetaItems.DRILL_HEAD.getStackForm();
-        //noinspection ConstantConditions
-        TurbineRotorBehavior.getInstanceFor(drillHeadStack).setPartMaterial(drillHeadStack, material);
     }
 
     private static int getVoltageMultiplier(Material material) {
