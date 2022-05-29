@@ -12,6 +12,7 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.IParallelableRecipeLogic;
 import gregtech.api.recipes.recipeproperties.RecipePropertyStorage;
+import gregtech.api.util.GTLog;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
@@ -23,15 +24,14 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static gregtech.api.recipes.logic.OverclockingLogic.*;
 
@@ -55,8 +55,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected int recipeEUt;
     protected List<FluidStack> fluidOutputs;
     protected NonNullList<ItemStack> itemOutputs;
-    protected HashMap<Integer, HashSet<ItemStack>> timedOutputs;
-    protected HashMap<Integer, HashSet<FluidStack>> timedFluidOutputs;
+    protected List<Recipe.TimeEntryItem> timedOutputs;
+    protected List<Recipe.TimeEntryFluid> timedFluidOutputs;
 
     protected boolean isActive;
     protected boolean workingEnabled = true;
@@ -223,10 +223,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             drawEnergy(recipeEUt, false);
 
             //try to push timed output
-            if(timedOutputs != null)
+            if(timedOutputs != null && !timedOutputs.isEmpty())
                 timedOutput(progressTime);
 
-            if(timedFluidOutputs != null)
+            if(timedFluidOutputs != null && !timedFluidOutputs.isEmpty())
                 timedFluidOutput(progressTime);
 
             //as recipe starts with progress on 1 this has to be > only not => to compensate for it
@@ -252,13 +252,35 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     protected void timedOutput(int time){
-        if (timedOutputs.containsKey(time))
-            GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, new ArrayList<>(timedOutputs.get(time)));
+//        Iterator<Recipe.TimeEntryItem> it = timedOutputs.iterator();
+//        while(it.hasNext()){
+//            Recipe.TimeEntryItem entry = it.next();
+//            if(time == entry.getTime()){
+//                GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, Collections.singletonList(entry.getStack()));
+//                it.remove();
+//            }
+//        }
+        timedOutputs.forEach(entry -> {
+            if(entry.getTime() == time) {
+                GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, Collections.singletonList(entry.getStack()));
+            }
+        });
     }
 
     protected void timedFluidOutput(int time){
-        if (timedFluidOutputs.containsKey(time))
-            GTTransferUtils.addFluidsToFluidHandler(getOutputTank(), false, new ArrayList<>(timedFluidOutputs.get(time)));
+//        Iterator<Recipe.TimeEntryFluid> it = timedFluidOutputs.iterator();
+//        while(it.hasNext()){
+//            Recipe.TimeEntryFluid entry = it.next();
+//            if(time == entry.getTime()){
+//                GTTransferUtils.addFluidsToFluidHandler(getOutputTank(), false, Collections.singletonList(entry.getStack()));
+//                it.remove();
+//            }
+//        }
+        timedFluidOutputs.forEach(entry -> {
+            if(entry.getTime() == time) {
+                GTTransferUtils.addFluidsToFluidHandler(getOutputTank(), false, Collections.singletonList(entry.getStack()));
+            }
+        });
     }
 
     /**
@@ -430,7 +452,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         }
 
         // We have already trimmed fluid outputs at this time
-        if (!metaTileEntity.canVoidRecipeFluidOutputs() && !GTTransferUtils.addFluidsToFluidHandler(exportFluids, true, recipe.getFluidOutputs())) {
+        if (!metaTileEntity.canVoidRecipeFluidOutputs() && !GTTransferUtils.addFluidsToFluidHandler(exportFluids, true, recipe.getAllFluidOutputs())) {
             this.isOutputsFull = true;
             return false;
         }
@@ -619,26 +641,14 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         this.progressTime = 1;
         setMaxProgress(resultOverclock[1]);
         this.recipeEUt = resultOverclock[0];
-        this.fluidOutputs = GTUtility.copyFluidList(recipe.getAllFluidOutputs(metaTileEntity.getFluidOutputLimit()));
+        this.fluidOutputs = GTUtility.copyFluidList(recipe.getFluidOutputs());
         this.itemOutputs = GTUtility.copyStackList(recipe.getResultItemOutputs(GTUtility.getTierByVoltage(recipeEUt), getRecipeMap()));
+        this.timedOutputs = new ArrayList<>(recipe.getTimedOutputs());
+        this.timedFluidOutputs = new ArrayList<>(recipe.getTimedFluidOutputs());
+        float OC = 1.0f * recipe.getDuration() / getMaxProgress();
 
-        if(recipe.hasTimedOutputs()){
-            this.timedOutputs = new HashMap<>();
-            recipe.getTimedOutputs().entrySet().forEach(it -> {
-                int time = Math.max(1, (int) (((double) it.getKey()) / ((double) recipe.getDuration()) * ((double) getMaxProgress())));
-                if (this.timedOutputs.containsKey(time)) this.timedOutputs.get(time).addAll(it.getValue());
-                else this.timedOutputs.put(time, it.getValue());
-            });
-        }
-
-        if(recipe.hasTimedFluidOutputs()){
-            this.timedFluidOutputs = new HashMap<>();
-            recipe.getTimedFluidOutputs().entrySet().forEach(it -> {
-                int time = Math.max(1, (int) (((double) it.getKey()) / ((double) recipe.getDuration()) * ((double) getMaxProgress())));
-                if (this.timedFluidOutputs.containsKey(time)) this.timedFluidOutputs.get(time).addAll(it.getValue());
-                else this.timedFluidOutputs.put(time, it.getValue());
-            });
-        }
+        this.timedOutputs.forEach(entry -> entry.setOC(OC));
+        this.timedFluidOutputs.forEach(entry -> entry.setOC(OC));
 
         if (this.wasActiveAndNeedsUpdate) {
             this.wasActiveAndNeedsUpdate = false;

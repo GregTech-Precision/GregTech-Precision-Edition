@@ -265,11 +265,11 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             }
             recipeStatus = EnumValidationResult.INVALID;
         }
-        if (!GTUtility.isBetweenInclusive(getMinOutputs(), getMaxOutputs(), recipe.getOutputs().size() + recipe.getChancedOutputs().size())) {
-            GTLog.logger.error("Invalid amount of recipe outputs. Actual: {}. Should be between {} and {} inclusive.", recipe.getOutputs().size() + recipe.getChancedOutputs().size(), getMinOutputs(), getMaxOutputs());
+        if (!GTUtility.isBetweenInclusive(getMinOutputs(), getMaxOutputs(), recipe.getOutputs().size() + recipe.getChancedOutputs().size() + (recipe.hasTimedOutputs() ? recipe.getTimedOutputs().size() : 0))) {
+            GTLog.logger.error("Invalid amount of recipe outputs. Actual: {}. Should be between {} and {} inclusive.", recipe.getOutputs().size() + recipe.getChancedOutputs().size() + (recipe.hasTimedOutputs() ? recipe.getTimedOutputs().size() : 0), getMinOutputs(), getMaxOutputs());
             GTLog.logger.error("Stacktrace:", new IllegalArgumentException("Invalid number of Outputs"));
             if(recipe.getIsCTRecipe()) {
-                CraftTweakerAPI.logError(String.format("Invalid amount of recipe outputs. Actual: %s. Should be between %s and %s inclusive.", recipe.getOutputs().size() + recipe.getChancedOutputs().size(), getMinOutputs(), getMaxOutputs()));
+                CraftTweakerAPI.logError(String.format("Invalid amount of recipe outputs. Actual: %s. Should be between %s and %s inclusive.", recipe.getOutputs().size() + recipe.getChancedOutputs().size() + (recipe.hasTimedOutputs() ? recipe.getTimedOutputs().size() : 0), getMinOutputs(), getMaxOutputs()));
                 CraftTweakerAPI.logError("Stacktrace:", new IllegalArgumentException("Invalid number of Outputs"));
             }
             recipeStatus = EnumValidationResult.INVALID;
@@ -283,11 +283,11 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             }
             recipeStatus = EnumValidationResult.INVALID;
         }
-        if (!GTUtility.isBetweenInclusive(getMinFluidOutputs(), getMaxFluidOutputs(), recipe.getFluidOutputs().size())) {
-            GTLog.logger.error("Invalid amount of recipe fluid outputs. Actual: {}. Should be between {} and {} inclusive.", recipe.getFluidOutputs().size(), getMinFluidOutputs(), getMaxFluidOutputs());
+        if (!GTUtility.isBetweenInclusive(getMinFluidOutputs(), getMaxFluidOutputs(), recipe.getFluidOutputs().size() + (recipe.hasTimedFluidOutputs() ? recipe.getTimedFluidOutputs().size() : 0))) {
+            GTLog.logger.error("Invalid amount of recipe fluid outputs. Actual: {}. Should be between {} and {} inclusive.", recipe.getFluidOutputs().size() +  + (recipe.hasTimedFluidOutputs() ? recipe.getTimedFluidOutputs().size() : 0), getMinFluidOutputs(), getMaxFluidOutputs());
             GTLog.logger.error("Stacktrace:", new IllegalArgumentException("Invalid number of Fluid Outputs"));
             if(recipe.getIsCTRecipe()) {
-                CraftTweakerAPI.logError(String.format("Invalid amount of recipe fluid outputs. Actual: %s. Should be between %s and %s inclusive.", recipe.getFluidOutputs().size(), getMinFluidOutputs(), getMaxFluidOutputs()));
+                CraftTweakerAPI.logError(String.format("Invalid amount of recipe fluid outputs. Actual: %s. Should be between %s and %s inclusive.", recipe.getFluidOutputs().size() + (recipe.hasTimedFluidOutputs() ? recipe.getTimedFluidOutputs().size() : 0), getMinFluidOutputs(), getMaxFluidOutputs()));
                 CraftTweakerAPI.logError("Stacktrace:", new IllegalArgumentException("Invalid number of Fluid Outputs"));
             }
             recipeStatus = EnumValidationResult.INVALID;

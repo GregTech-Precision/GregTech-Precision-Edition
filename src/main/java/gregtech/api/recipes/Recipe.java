@@ -8,11 +8,13 @@ import gregtech.api.recipes.recipeproperties.RecipePropertyStorage;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.ItemStackHashStrategy;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,8 +54,8 @@ public class Recipe {
     /**
      * Output by time
      */
-    private final HashMap<Integer, HashSet<ItemStack>> timedOutputs;
-    private final HashMap<Integer, HashSet<FluidStack>> timedFluidOutputs;
+    private final List<TimeEntryItem> timedOutputs;
+    private final List<TimeEntryFluid> timedFluidOutputs;
 
     private final int duration;
 
@@ -79,7 +81,8 @@ public class Recipe {
     private final int hashCode;
 
     public Recipe(List<CountableIngredient> inputs, List<ItemStack> outputs, List<ChanceEntry> chancedOutputs,
-                  List<FluidStack> fluidInputs, List<FluidStack> fluidOutputs,
+                  List<FluidStack> fluidInputs, List<FluidStack> fluidOutputs, List<TimeEntryItem> timedOutputs,
+                  List<TimeEntryFluid> timedFluidOutputs,
                   int duration, int EUt, boolean hidden, boolean isCTRecipe) {
         this.recipePropertyStorage = new RecipePropertyStorage();
         this.inputs = NonNullList.create();
@@ -89,8 +92,8 @@ public class Recipe {
         this.chancedOutputs = new ArrayList<>(chancedOutputs);
         this.fluidInputs = ImmutableList.copyOf(fluidInputs);
         this.fluidOutputs = ImmutableList.copyOf(fluidOutputs);
-        this.timedOutputs = null;
-        this.timedFluidOutputs = null;
+        this.timedOutputs = new ArrayList<>(timedOutputs);
+        this.timedFluidOutputs = new ArrayList<>(timedFluidOutputs);
         this.duration = duration;
         this.EUt = EUt;
         this.hidden = hidden;
@@ -102,8 +105,7 @@ public class Recipe {
     }
 
     public Recipe(List<CountableIngredient> inputs, List<ItemStack> outputs, List<ChanceEntry> chancedOutputs,
-                  List<FluidStack> fluidInputs, List<FluidStack> fluidOutputs, HashMap<Integer,
-            HashSet<ItemStack>> timedOutputs, HashMap<Integer, HashSet<FluidStack>> timedFluidOutputs,
+                  List<FluidStack> fluidInputs, List<FluidStack> fluidOutputs,
                   int duration, int EUt, boolean hidden, boolean isCTRecipe) {
         this.recipePropertyStorage = new RecipePropertyStorage();
         this.inputs = NonNullList.create();
@@ -113,8 +115,8 @@ public class Recipe {
         this.chancedOutputs = new ArrayList<>(chancedOutputs);
         this.fluidInputs = ImmutableList.copyOf(fluidInputs);
         this.fluidOutputs = ImmutableList.copyOf(fluidOutputs);
-        this.timedOutputs = timedOutputs;
-        this.timedFluidOutputs = timedFluidOutputs;
+        this.timedOutputs = Collections.emptyList();
+        this.timedFluidOutputs = Collections.emptyList();
         this.duration = duration;
         this.EUt = EUt;
         this.hidden = hidden;
@@ -157,26 +159,28 @@ public class Recipe {
             return currentRecipe;
         }
 
-
         currentRecipe = currentRecipe.copy();
         RecipeBuilder<?> builder = new RecipeBuilder<>(currentRecipe, recipeMap);
 
         builder.clearOutputs();
         builder.clearChancedOutput();
+        builder.clearTimedOutputs();
         builder.clearFluidOutputs();
+        builder.clearTimedFluidOutputs();
 
-        // Chanced outputs are removed in this if they cannot fit the limit
-        Pair<List<ItemStack>, List<Recipe.ChanceEntry>> recipeOutputs = currentRecipe.getItemAndChanceOutputs(itemTrimLimit);
+        // Chanced and timed outputs are removed in this if they cannot fit the limit
+        Triple<List<ItemStack>, List<Recipe.ChanceEntry>, List<TimeEntryItem>> recipeOutputs = currentRecipe.trimItemOutputs(itemTrimLimit);
 
-        // Add the trimmed chanced outputs and outputs
-        builder.chancedOutputs(recipeOutputs.getRight());
+        // Add the trimmed regular, chanced and timed outputs
         builder.outputs(recipeOutputs.getLeft());
+        builder.chancedOutputs(recipeOutputs.getMiddle());
+        builder.timedOutputs(recipeOutputs.getRight());
 
-        List<FluidStack> recipeFluidOutputs = currentRecipe.getAllFluidOutputs(fluidTrimLimit);
+        Pair<List<FluidStack>, List<TimeEntryFluid>> recipeFluidOutputs = currentRecipe.trimFluidOutputs(fluidTrimLimit);
 
         // Add the trimmed fluid outputs
-        builder.fluidOutputs(recipeFluidOutputs);
-
+        builder.fluidOutputs(recipeFluidOutputs.getLeft());
+        builder.timedFluidOutputs(recipeFluidOutputs.getRight());
 
         return builder.build().getResult();
     }
@@ -304,6 +308,8 @@ public class Recipe {
         hash = 31 * hash + hashInputs();
         hash = 41 * hash + hashOutputs();
         hash = 31 * hash + hashChancedOutputs();
+        hash = 31 * hash + hashTimedOutputs();
+        hash = 31 * hash + hashTimedFluidOutputs();
         hash = 31 * hash + hashFluidList(this.fluidInputs);
         hash = 41 * hash + hashFluidList(this.fluidOutputs);
         hash = 31 * hash + hashRecipeProperties();
@@ -366,6 +372,25 @@ public class Recipe {
         return hash;
     }
 
+    private int hashTimedOutputs(){
+        int hash = 0;
+        for(TimeEntryItem entry : this.getTimedOutputs()){
+            hash = 31 * hash + hashStrategy.hashCode(entry.stack);
+            hash = 31 * hash + entry.time;
+        }
+        return hash;
+    }
+
+    private int hashTimedFluidOutputs(){
+        int hash = 0;
+        for(TimeEntryFluid entry : this.timedFluidOutputs){
+            hash = 31 * hash + new FluidKey(entry.stack).hashCode();
+            hash = 31 * hash + entry.stack.amount;
+            hash = 31 * hash + entry.time;
+        }
+        return hash;
+    }
+
     private boolean hasSameChancedOutputs(Recipe otherRecipe) {
         if (this.chancedOutputs.size() != otherRecipe.chancedOutputs.size()) return false;
         for (int i = 0; i < chancedOutputs.size(); i++) {
@@ -419,11 +444,11 @@ public class Recipe {
     }
 
     public boolean hasTimedOutputs() {
-        return timedOutputs != null && !timedOutputs.isEmpty();
+        return !timedOutputs.isEmpty();
     }
 
     public boolean hasTimedFluidOutputs(){
-        return timedFluidOutputs != null && !timedFluidOutputs.isEmpty();
+        return !timedFluidOutputs.isEmpty();
     }
 
     @Override
@@ -455,11 +480,11 @@ public class Recipe {
         return outputs;
     }
 
-    public HashMap<Integer, HashSet<ItemStack>> getTimedOutputs() {
+    public List<TimeEntryItem> getTimedOutputs() {
         return timedOutputs;
     }
 
-    public HashMap<Integer, HashSet<FluidStack>> getTimedFluidOutputs() {
+    public List<TimeEntryFluid> getTimedFluidOutputs() {
         return timedFluidOutputs;
     }
 
@@ -468,7 +493,7 @@ public class Recipe {
     /**
      * Returns all outputs from the recipe.
      * This is where Chanced Outputs for the recipe are calculated.
-     * The Recipe should be trimmed by calling {@link Recipe#getItemAndChanceOutputs(int)} before calling this method,
+     * The Recipe should be trimmed by calling {@link Recipe#trimItemOutputs(int)} before calling this method,
      * if trimming is required.
      *
      * @param tier The Voltage Tier of the Recipe, used for chanced output calculation
@@ -501,14 +526,13 @@ public class Recipe {
      * @param outputLimit The limit on the number of outputs, -1 for disabled.
      * @return A Pair of recipe outputs and chanced outputs, limited by some factor
      */
-    public Pair<List<ItemStack>, List<ChanceEntry>> getItemAndChanceOutputs(int outputLimit) {
+    public Triple<List<ItemStack>, List<ChanceEntry>, List<TimeEntryItem>> trimItemOutputs(int outputLimit) {
         List<ItemStack> outputs = new ArrayList<>();
-
-
 
         // Create an entry for the chanced outputs, and initially populate it
         List<ChanceEntry> chancedOutputs = new ArrayList<>(getChancedOutputs());
 
+        List<TimeEntryItem> timedOutputs = new ArrayList<>(getTimedOutputs());
 
         // No limiting
         if(outputLimit == -1) {
@@ -519,19 +543,33 @@ public class Recipe {
             outputs.addAll(GTUtility.copyStackList(getOutputs()).subList(0, Math.min(outputLimit, getOutputs().size())));
             // clear the chanced outputs, as we are only getting regular outputs
             chancedOutputs.clear();
+
+            timedOutputs.clear();
         }
         // If the regular outputs and chanced outputs are required to satisfy the outputLimit
-        else if(!getOutputs().isEmpty() && (getOutputs().size() + chancedOutputs.size()) >= outputLimit) {
+        else if(!getOutputs().isEmpty() && (getOutputs().size() + chancedOutputs.size() + timedOutputs.size()) >= outputLimit) {
             outputs.addAll(GTUtility.copyStackList(getOutputs()));
 
             // Calculate the number of chanced outputs after adding all the regular outputs
             int numChanced = outputLimit - getOutputs().size();
 
             chancedOutputs = chancedOutputs.subList(0, Math.min(numChanced, chancedOutputs.size()));
+            int numTimed = numChanced - Math.min(numChanced, chancedOutputs.size());
+            timedOutputs = timedOutputs.subList(0, Math.min(numTimed, timedOutputs.size()));
         }
         // There are only chanced outputs to satisfy the outputLimit
         else if(getOutputs().isEmpty()) {
-            chancedOutputs = chancedOutputs.subList(0, Math.min(outputLimit, chancedOutputs.size()));
+            if(timedOutputs.isEmpty()) {
+                chancedOutputs = chancedOutputs.subList(0, Math.min(outputLimit, chancedOutputs.size()));
+            }
+            else if(chancedOutputs.isEmpty()) {
+                timedOutputs = timedOutputs.subList(0, Math.min(outputLimit, timedOutputs.size()));
+            }
+            else {
+                chancedOutputs = chancedOutputs.subList(0, Math.min(outputLimit, chancedOutputs.size()));
+                int numTimed = outputLimit - chancedOutputs.size();
+                timedOutputs = timedOutputs.subList(0, Math.min(numTimed, timedOutputs.size()));
+            }
         }
         // The number of outputs + chanced outputs is lower than the trim number, so just add everything
         else {
@@ -539,7 +577,45 @@ public class Recipe {
             // Chanced outputs are taken care of in the original copy
         }
 
-        return Pair.of(outputs, chancedOutputs);
+        return Triple.of(outputs, chancedOutputs, timedOutputs);
+    }
+
+    public Pair<List<FluidStack>, List<TimeEntryFluid>> trimFluidOutputs(int outputLimit){
+        List<FluidStack> fluidOutputs = new ArrayList<>();
+
+        // Create an entry for the chanced outputs, and initially populate it
+        List<TimeEntryFluid> timedFluidOutputs = new ArrayList<>(getTimedFluidOutputs());
+
+        // No limiting
+        if(outputLimit == -1) {
+            fluidOutputs.addAll(GTUtility.copyFluidList(getFluidOutputs()));
+        }
+        // If just the regular outputs would satisfy the outputLimit
+        else if(getFluidOutputs().size() >= outputLimit) {
+            fluidOutputs.addAll(GTUtility.copyFluidList(getFluidOutputs()).subList(0, Math.min(outputLimit, getFluidOutputs().size())));
+            // clear the chanced outputs, as we are only getting regular outputs
+            timedFluidOutputs.clear();
+        }
+        // If the regular outputs and chanced outputs are required to satisfy the outputLimit
+        else if(!getFluidOutputs().isEmpty() && (getFluidOutputs().size() + timedFluidOutputs.size()) >= outputLimit) {
+            fluidOutputs.addAll(GTUtility.copyFluidList(getFluidOutputs()));
+
+            // Calculate the number of chanced outputs after adding all the regular outputs
+            int numTimed = outputLimit - getFluidOutputs().size();
+
+            timedFluidOutputs = timedFluidOutputs.subList(0, Math.min(numTimed, timedFluidOutputs.size()));
+        }
+        // There are only chanced outputs to satisfy the outputLimit
+        else if(getFluidOutputs().isEmpty()) {
+            timedFluidOutputs = timedFluidOutputs.subList(0, Math.min(outputLimit, timedFluidOutputs.size()));
+        }
+        // The number of outputs + chanced outputs is lower than the trim number, so just add everything
+        else {
+            fluidOutputs.addAll(GTUtility.copyFluidList(getFluidOutputs()));
+            // Chanced outputs are taken care of in the original copy
+        }
+
+        return Pair.of(fluidOutputs, timedFluidOutputs);
     }
 
     /**
@@ -551,10 +627,10 @@ public class Recipe {
         List<ItemStack> recipeOutputs = new ArrayList<>(this.outputs);
 
         recipeOutputs.addAll(chancedOutputs.stream().map(ChanceEntry::getItemStack).collect(Collectors.toList()));
+        recipeOutputs.addAll(timedOutputs.stream().map(TimeEntryItem::getStack).collect(Collectors.toList()));
 
         return recipeOutputs;
     }
-
 
     public List<ChanceEntry> getChancedOutputs() {
         return chancedOutputs;
@@ -580,21 +656,16 @@ public class Recipe {
         return false;
     }
 
-    public List<FluidStack> getFluidOutputs() {
-        return fluidOutputs;
+    public List<FluidStack> getAllFluidOutputs() {
+        List<FluidStack> recipeOutputs = new ArrayList<>(fluidOutputs);
+
+        recipeOutputs.addAll(timedFluidOutputs.stream().map(TimeEntryFluid::getStack).collect(Collectors.toList()));
+
+        return recipeOutputs;
     }
 
-    /**
-     * Trims the list of fluid outputs based on some passed factor.
-     * Similar to {@link Recipe#getItemAndChanceOutputs(int)} but does not handle chanced fluid outputs
-     *
-     * @param outputLimit The limiting factor to trim the fluid outputs to, -1 for disabled.
-     *
-     * @return A trimmed List of fluid outputs.
-     */
-    // TODO, implement future chanced fluid outputs here
-    public List<FluidStack> getAllFluidOutputs(int outputLimit) {
-        return outputLimit == -1 ? fluidOutputs : fluidOutputs.subList(0, Math.min(fluidOutputs.size(), outputLimit));
+    public List<FluidStack> getFluidOutputs(){
+        return fluidOutputs;
     }
 
     public int getDuration() {
@@ -693,6 +764,94 @@ public class Recipe {
 
         public ChanceEntry copy() {
             return new ChanceEntry(itemStack, chance, boostPerTier);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////
+    //                   Timed Output                        //
+    ///////////////////////////////////////////////////////////
+    public static abstract class TimeEntry<T> {
+        protected T stack;
+        protected int time;
+
+        public T getStackRaw() {
+            return stack;
+        }
+
+        public int getTime() {
+            return time;
+        }
+
+        public void setOC(float OC){
+            this.time = (int) Math.max(1, Math.floor(time/OC));
+        }
+
+        public abstract T getStack();
+
+        public abstract TimeEntry copy();
+
+        public abstract NBTTagCompound writeToNBT(NBTTagCompound nbt);
+
+        public abstract TimeEntry loadFromNBT(NBTTagCompound nbt);
+    }
+
+    public static class TimeEntryItem extends TimeEntry<ItemStack> {
+
+        public TimeEntryItem(ItemStack stack, int time){
+            this.stack = stack;
+            this.time = time;
+        }
+
+        @Override
+        public ItemStack getStack() {
+            return stack.copy();
+        }
+
+        @Override
+        public TimeEntryItem copy() {
+            return new TimeEntryItem(stack, time);
+        }
+
+        @Override
+        public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+            stack.writeToNBT(nbt);
+            nbt.setInteger("OutputTime", this.time);
+            return nbt;
+        }
+
+        @Override
+        public TimeEntryItem loadFromNBT(NBTTagCompound nbt) {
+            return new TimeEntryItem(new ItemStack(nbt), nbt.getInteger("OutputTime"));
+        }
+    }
+
+    public static class TimeEntryFluid extends TimeEntry<FluidStack> {
+
+        public TimeEntryFluid(FluidStack stack, int time){
+            this.stack = stack;
+            this.time = time;
+        }
+
+        @Override
+        public FluidStack getStack() {
+            return stack.copy();
+        }
+
+        @Override
+        public TimeEntryFluid copy() {
+            return new TimeEntryFluid(stack, time);
+        }
+
+        @Override
+        public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+            stack.writeToNBT(nbt);
+            nbt.setInteger("OutputTime", this.time);
+            return nbt;
+        }
+
+        @Override
+        public TimeEntryFluid loadFromNBT(NBTTagCompound nbt) {
+            return new TimeEntryFluid(FluidStack.loadFluidStackFromNBT(nbt), nbt.getInteger("OutputTime"));
         }
     }
 }

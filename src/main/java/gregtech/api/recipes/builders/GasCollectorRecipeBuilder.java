@@ -64,7 +64,7 @@ public class GasCollectorRecipeBuilder extends RecipeBuilder<GasCollectorRecipeB
     }
 
     public ValidationResult<Recipe> build() {
-        Recipe recipe = new Recipe(inputs, outputs, chancedOutputs, fluidInputs, fluidOutputs,
+        Recipe recipe = new Recipe(inputs, outputs, chancedOutputs, fluidInputs, fluidOutputs, timedOutputs, timedFluidOutputs,
                 duration, EUt, hidden, isCTRecipe);
         if (!recipe.setProperty(GasCollectorDimensionProperty.getInstance(), dimensionIDs)) {
             return ValidationResult.newResult(EnumValidationResult.INVALID, recipe);
