@@ -10,7 +10,10 @@ import gregtech.api.recipes.ingredients.GTRecipeInput;
 import gregtech.api.recipes.machines.*;
 import gregtech.api.sound.GTSounds;
 import gregtech.api.unification.material.Materials;
+import gregtech.common.items.MetaItems;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenProperty;
 
@@ -120,15 +123,41 @@ public class RecipeMaps {
      *               .fluidInputs(Materials.SolderingAlloy.getFluid(GTValues.L))
      *               .fluidInputs(Materials.Lubricant.getFluid(250))
      *               .output(MetaItems.ELECTRIC_MOTOR_LuV)
+     *               .research(ELECTRIC_MOTOR_IV.getStackForm())
      *               .duration(600).EUt(6000).buildAndRegister();
      * </pre>
      *
-     * The Assembly Line Recipe Builder has no special properties/build actions yet, but will in the future
+     * The Assembly Line has a special action that is performed when the recipe is built, designated by the <B>onRecipeBuild</B>
+     * call on the Recipe Map. This action adds a Scanner recipe for the specified research item, if generation of this recipe is enabled.
      */
     @ZenProperty
-    public static final RecipeMapAssemblyLine<SimpleRecipeBuilder> ASSEMBLY_LINE_RECIPES = (RecipeMapAssemblyLine<SimpleRecipeBuilder>) new RecipeMapAssemblyLine<>("assembly_line", 4, 16, 1, 1, 0, 4, 0, 0, new SimpleRecipeBuilder(), false)
+    public static final RecipeMap<AssemblyLineRecipeBuilder> ASSEMBLY_LINE_RECIPES = new RecipeMapAssemblyLine("assembly_line", 4, 16, 1, 1, 0, 4, 0, 0, new AssemblyLineRecipeBuilder(), false)
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, MoveType.HORIZONTAL)
-            .setSound(GTSounds.ASSEMBLER);
+            .setSound(GTSounds.ASSEMBLER)
+            .onRecipeBuild(recipeBuilder -> {
+                AssemblyLineRecipeBuilder builder = (AssemblyLineRecipeBuilder) recipeBuilder;
+                if (!builder.shouldAddResearchRecipe()) return;
+
+                String researchId = builder.getResearchId();
+                if (researchId.isEmpty()) return;
+
+                NBTTagCompound compound = new NBTTagCompound();
+                compound.setTag(IResearchRecipeMap.RESEARCH_NBT_TAG, AssemblyLineRecipeBuilder.generateResearchNBT(researchId));
+
+                ItemStack dataStick = MetaItems.TOOL_DATA_STICK.getStackForm();
+                dataStick.setTagCompound(compound);
+
+                ItemStack researchItem = builder.getResearchItem();
+                if (researchItem.isEmpty()) return;
+
+                RecipeMaps.SCANNER_RECIPES.recipeBuilder()
+                        .input(MetaItems.TOOL_DATA_STICK)
+                        .inputs(researchItem)
+                        .outputs(dataStick)
+                        .EUt(builder.getScanEUt())
+                        .duration(builder.getScanDuration())
+                        .buildAndRegister();
+            });
 
     /**
      * Example:

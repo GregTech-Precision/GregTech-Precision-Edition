@@ -5,18 +5,29 @@ import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.gui.widgets.SlotWidget;
-import gregtech.api.recipes.RecipeBuilder;
+import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.builders.AssemblyLineRecipeBuilder;
+import gregtech.api.recipes.recipeproperties.ResearchProperty;
+import gregtech.api.util.EnumValidationResult;
+import gregtech.api.util.ValidationResult;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
-public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap<R> {
+public class RecipeMapAssemblyLine extends RecipeMap<AssemblyLineRecipeBuilder> implements IResearchRecipeMap {
+
+    private final Map<String, Set<Recipe>> researchEntries = new Object2ObjectOpenHashMap<>();
 
     public RecipeMapAssemblyLine(String unlocalizedName,
                                  int minInputs, int maxInputs, int minOutputs, int maxOutputs,
                                  int minFluidInputs, int maxFluidInputs, int minFluidOutputs, int maxFluidOutputs,
-                                 R defaultRecipe, boolean isHidden) {
+                                 AssemblyLineRecipeBuilder defaultRecipe, boolean isHidden) {
         super(unlocalizedName, minInputs, maxInputs, minOutputs, maxOutputs, minFluidInputs, maxFluidInputs, minFluidOutputs, maxFluidOutputs, defaultRecipe, isHidden);
     }
 
@@ -69,5 +80,53 @@ public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap
         } else {
             addSlot(builder, startInputsX + 18 * 4, 1, 0/*18*/, itemHandler, fluidHandler, invertFluids, true); // Output Slot - 18 for data slot
         }
+    }
+
+    @Override
+    public void addRecipe(ValidationResult<Recipe> validationResult) {
+        super.addRecipe(validationResult);
+        if (validationResult.getType() == EnumValidationResult.VALID) {
+            Recipe recipe = validationResult.getResult();
+            if (recipe.hasProperty(ResearchProperty.getInstance())) {
+                String researchId = recipe.getProperty(ResearchProperty.getInstance(), "");
+                if (!researchId.isEmpty()) addDataStickEntry(researchId, recipe);
+            }
+        }
+    }
+
+    @Override
+    public boolean removeRecipe(Recipe recipe) {
+        boolean result = super.removeRecipe(recipe);
+        if (result && recipe.hasProperty(ResearchProperty.getInstance())) {
+            String researchId = recipe.getProperty(ResearchProperty.getInstance(), "");
+            if (!researchId.isEmpty()) removeDataStickEntry(researchId, recipe);
+        }
+
+        return result;
+    }
+
+    @Override
+    public void addDataStickEntry(@Nonnull String researchId, @Nonnull Recipe recipe) {
+        Set<Recipe> recipes = researchEntries.get(researchId);
+        if (recipes == null) {
+            recipes = new ObjectOpenHashSet<>();
+            recipes.add(recipe);
+            researchEntries.put(researchId, recipes);
+        } else {
+            recipes.add(recipe);
+        }
+    }
+
+    @Nonnull
+    public Set<Recipe> getDataStickEntry(@Nonnull String researchId) {
+        Set<Recipe> recipes = researchEntries.get(researchId);
+        return recipes == null ? Collections.emptySet() : recipes;
+    }
+
+    @Override
+    public boolean removeDataStickEntry(@Nonnull String researchId, @Nonnull Recipe recipe) {
+        Set<Recipe> recipes = researchEntries.get(researchId);
+        if (recipes == null) return false;
+        return recipes.remove(recipe);
     }
 }

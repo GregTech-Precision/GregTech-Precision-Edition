@@ -390,8 +390,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     protected Recipe findRecipe(long maxVoltage, IItemHandlerModifiable inputs, IMultipleTankHandler fluidInputs) {
-
-        if(!isRecipeMapValid(getRecipeMap())) {
+        if (!isRecipeMapValid(getRecipeMap())) {
             return null;
         }
 
