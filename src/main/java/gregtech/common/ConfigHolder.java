@@ -107,6 +107,14 @@ public class ConfigHolder {
                 "This does nothing if B:enableCleanroom is false.",
                 "Default: false"})
         public boolean cleanMultiblocks = false;
+
+        @Config.Comment({"Whether to enable Assembly Line research for recipes.", "Default: true"})
+        public boolean enableResearch = true;
+
+        @Config.Comment({"Whether the Assembly Line should require the inputs to be in order.",
+                "This does nothing if B:enableResearch is false.",
+                "Default: true"})
+        public boolean orderedAssembly = true;
     }
 
     public static class WorldGenOptions {

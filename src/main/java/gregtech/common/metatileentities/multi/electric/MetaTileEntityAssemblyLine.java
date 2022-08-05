@@ -12,6 +12,7 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.common.ConfigHolder;
 import gregtech.common.blocks.BlockGlassCasing;
 import gregtech.common.blocks.BlockMetalCasing;
 import gregtech.common.blocks.BlockMultiblockCasing;
@@ -54,7 +55,8 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
                 .where('A', states(MetaBlocks.MULTIBLOCK_CASING.getState(BlockMultiblockCasing.MultiblockCasingType.ASSEMBLY_CONTROL)))
                 .where('R', states(MetaBlocks.TRANSPARENT_CASING.getState(BlockGlassCasing.CasingType.LAMINATED_GLASS)))
                 .where('T', states(MetaBlocks.MULTIBLOCK_CASING.getState(BlockMultiblockCasing.MultiblockCasingType.ASSEMBLY_LINE_CASING)))
-                .where('D', abilities(MultiblockAbility.DATA_ACCESS_HATCH))
+                .where('D', ConfigHolder.machines.enableResearch ? abilities(MultiblockAbility.DATA_ACCESS_HATCH) :
+                        states(MetaBlocks.MULTIBLOCK_CASING.getState(BlockMultiblockCasing.MultiblockCasingType.GRATE_CASING)))
                 .where('#', any())
                 .build();
     }
@@ -70,11 +72,15 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
 
     @Override
     public boolean checkRecipe(@Nonnull Recipe recipe, boolean consumeIfSuccess) {
+        if (!ConfigHolder.machines.enableResearch) return true;
+
         List<IDataAccessHatch> dataHatches = getAbilities(MultiblockAbility.DATA_ACCESS_HATCH);
         for (IDataAccessHatch hatch : dataHatches) {
             if (hatch.isCreative()) return true;
             for (Recipe r : hatch.getAvailableRecipes()) {
-                if (r.equals(recipe)) return true;
+                if (ConfigHolder.machines.orderedAssembly) {
+
+                } else if (r.equals(recipe)) return true;
             }
         }
         return false;
