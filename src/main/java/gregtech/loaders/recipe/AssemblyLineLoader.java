@@ -1,5 +1,6 @@
 package gregtech.loaders.recipe;
 
+import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.MarkerMaterials.Tier;
 
 import static gregtech.api.GTValues.*;
@@ -30,6 +31,7 @@ public class AssemblyLineLoader {
                 .fluidInputs(SolderingAlloy.getFluid(L * 8))
                 .fluidInputs(NiobiumTitanium.getFluid(L * 8))
                 .outputs(FUSION_REACTOR[0].getStackForm())
+                .research(OreDictUnifier.get(wireGtSingle, IndiumTinBariumTitaniumCuprate))
                 .duration(800).EUt(VA[LuV]).buildAndRegister();
 
         ASSEMBLY_LINE_RECIPES.recipeBuilder()
@@ -47,6 +49,7 @@ public class AssemblyLineLoader {
                 .fluidInputs(SolderingAlloy.getFluid(L * 8))
                 .fluidInputs(VanadiumGallium.getFluid(L * 8))
                 .outputs(FUSION_REACTOR[1].getStackForm())
+                .research(OreDictUnifier.get(block, Europium), 288000, VA[LV])
                 .duration(1000).EUt(61440).buildAndRegister();
 
         ASSEMBLY_LINE_RECIPES.recipeBuilder()
@@ -64,6 +67,7 @@ public class AssemblyLineLoader {
                 .fluidInputs(SolderingAlloy.getFluid(L * 8))
                 .fluidInputs(YttriumBariumCuprate.getFluid(L * 8))
                 .outputs(FUSION_REACTOR[2].getStackForm())
+                .research(OreDictUnifier.get(block, Americium), 432000, VA[LV])
                 .duration(1000).EUt(VA[ZPM]).buildAndRegister();
     }
 }
