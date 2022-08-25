@@ -36,7 +36,7 @@ public class ImplosionRecipeBuilder extends RecipeBuilder<ImplosionRecipeBuilder
     }
 
     @Override
-    public boolean applyProperty(@Nonnull String key, Object value) {
+    public boolean applyPropertyCT(@Nonnull String key, Object value) {
         if (key.equals(ImplosionExplosiveProperty.KEY)) {
             if (value instanceof ItemStack) {
                 this.applyProperty(ImplosionExplosiveProperty.getInstance(), value);
@@ -45,7 +45,7 @@ public class ImplosionRecipeBuilder extends RecipeBuilder<ImplosionRecipeBuilder
             }
             return true;
         }
-        return super.applyProperty(key, value);
+        return super.applyPropertyCT(key, value);
     }
 
     @ZenMethod

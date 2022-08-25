@@ -12,7 +12,10 @@ import gregtech.api.recipes.ingredients.GTRecipeItemInput;
 import gregtech.api.recipes.ingredients.GTRecipeOreInput;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTCondition;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTMatcher;
-import gregtech.api.recipes.recipeproperties.*;
+import gregtech.api.recipes.recipeproperties.CleanroomProperty;
+import gregtech.api.recipes.recipeproperties.IRecipePropertyStorage;
+import gregtech.api.recipes.recipeproperties.RecipeProperty;
+import gregtech.api.recipes.recipeproperties.RecipePropertyStorage;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
@@ -115,21 +118,29 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         return (R) this;
     }
 
-    public boolean applyProperty(@Nonnull String key, @Nullable Object value) {
+    public boolean applyPropertyCT(@Nonnull String key, @Nullable Object value) {
         if (key.equals(CleanroomProperty.KEY)) {
             if (value instanceof CleanroomType) {
                 this.cleanroom((CleanroomType) value);
+                return true;
             } else if (value instanceof String) {
                 this.cleanroom(CleanroomType.getByName((String) value));
-            } else {
-                return false;
+                return true;
             }
-            return true;
+            return false;
         }
         return false;
     }
 
-    public boolean applyProperty(@Nonnull RecipeProperty<?> property, @Nullable Object value) {
+    /**
+     * @deprecated use {@link RecipeBuilder#applyPropertyCT(String, Object)} instead
+     */
+    @Deprecated
+    public boolean applyProperty(@Nonnull String key, @Nullable Object value) {
+        return applyPropertyCT(key, value);
+    }
+
+    protected final boolean applyProperty(@Nonnull RecipeProperty<?> property, @Nullable Object value) {
         if (value == null) {
             if (this.recipePropertyStorage != null) {
                 return this.recipePropertyStorage.remove(property);
@@ -570,7 +581,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     public R append(Recipe recipe, int multiplier, boolean multiplyDuration) {
         for (Map.Entry<RecipeProperty<?>, Object> property : recipe.getPropertyValues()) {
-            this.applyProperty(property.getKey().getKey(), property.getValue());
+            this.applyPropertyCT(property.getKey().getKey(), property.getValue());
         }
 
         // Create holders for the various parts of the new multiplied Recipe
