@@ -17,8 +17,8 @@ import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
 import gregtech.api.items.toolitem.ToolMetaItem;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.WorkableTieredMetaTileEntity;
 import gregtech.api.metatileentity.SimpleGeneratorMetaTileEntity;
+import gregtech.api.metatileentity.WorkableTieredMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
@@ -52,6 +52,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.util.Constants;
@@ -236,7 +237,8 @@ public class GTUtility {
                 continue; //if itemstacks don't match, continue
             int slotMaxStackSize = Math.min(stackInSlot.getMaxStackSize(), slot.getItemStackLimit(stackInSlot));
             int amountToInsert = Math.min(itemStack.getCount(), slotMaxStackSize - stackInSlot.getCount());
-            if (amountToInsert == 0)
+            // Need to check <= 0 for the PA, which could have this value negative due to slot limits in the Machine Access Interface
+            if (amountToInsert <= 0)
                 continue; //if we can't insert anything, continue
             //shrink our stack, grow slot's stack and mark slot as changed
             if (!simulate) {
@@ -906,8 +908,16 @@ public class GTUtility {
         return romanNumeralConversions.get(conversion) + romanNumeralString(num - conversion);
     }
 
-    public static boolean isOre(Block block) {
-        OrePrefix orePrefix = OreDictUnifier.getPrefix(new ItemStack(block));
+    public static ItemStack toItem(IBlockState state) {
+        return toItem(state, 1);
+    }
+
+    public static ItemStack toItem(IBlockState state, int amount) {
+        return new ItemStack(state.getBlock(), amount, state.getBlock().getMetaFromState(state));
+    }
+
+    public static boolean isOre(ItemStack item) {
+        OrePrefix orePrefix = OreDictUnifier.getPrefix(item);
         return orePrefix != null && orePrefix.name().startsWith("ore");
     }
 
@@ -946,9 +956,7 @@ public class GTUtility {
         }
 
         MetaTileEntity machine = getMetaTileEntity(machineStack);
-        // Blacklist the Rock Breaker here instead of through the config option so we don't get people removing the config entry and then
-        // complaining it does not work. Remove from here if we ever decide to implement PA Rock Breaker
-        if (machine instanceof WorkableTieredMetaTileEntity && !(machine instanceof SimpleGeneratorMetaTileEntity || machine instanceof MetaTileEntityRockBreaker))
+        if (machine instanceof WorkableTieredMetaTileEntity && !(machine instanceof SimpleGeneratorMetaTileEntity))
             return !findMachineInBlacklist(machine.getRecipeMap().getUnlocalizedName(), recipeMapBlacklist);
 
         return false;
@@ -1025,5 +1033,22 @@ public class GTUtility {
     public static MetaTileEntity getMetaTileEntity(ItemStack stack) {
         if (!(stack.getItem() instanceof MachineItemBlock)) return null;
         return GregTechAPI.MTE_REGISTRY.getObjectById(stack.getItemDamage());
+    }
+
+    public static boolean canSeeSunClearly(World world, BlockPos blockPos) {
+        if (!world.canSeeSky(blockPos.up())) {
+            return false;
+        }
+        Biome biome = world.getBiome(blockPos.up());
+        if (world.isRaining()) {
+            if (biome.canRain() || biome.getEnableSnow()) {
+                return false;
+            }
+        }
+        Set<BiomeDictionary.Type> biomeTypes = BiomeDictionary.getTypes(biome);
+        if (biomeTypes.contains(BiomeDictionary.Type.END)) {
+            return false;
+        }
+        return world.isDaytime();
     }
 }

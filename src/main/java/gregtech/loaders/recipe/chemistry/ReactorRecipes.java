@@ -183,6 +183,7 @@ public class ReactorRecipes {
         CHEMICAL_RECIPES.recipeBuilder()
                 .input(dust, Quicklime, 2)
                 .fluidInputs(AceticAcid.getFluid(2000))
+                .notConsumable(new IntCircuitIngredient(1))
                 .fluidOutputs(DissolvedCalciumAcetate.getFluid(1000))
                 .duration(400).EUt(380).buildAndRegister();
 
@@ -240,6 +241,7 @@ public class ReactorRecipes {
         CHEMICAL_RECIPES.recipeBuilder()
                 .fluidInputs(Hydrogen.getFluid(6000))
                 .fluidInputs(CarbonDioxide.getFluid(1000))
+                .notConsumable(new IntCircuitIngredient(2))
                 .fluidOutputs(Water.getFluid(1000))
                 .fluidOutputs(Methanol.getFluid(1000))
                 .duration(120).EUt(96).buildAndRegister();
@@ -501,15 +503,6 @@ public class ReactorRecipes {
                 .duration(640).EUt(VA[LV]).buildAndRegister();
 
         CHEMICAL_RECIPES.recipeBuilder()
-                .notConsumable(new IntCircuitIngredient(3))
-                .fluidInputs(Oxygen.getFluid(7000))
-                .fluidInputs(Nitrogen.getFluid(2000))
-                .fluidInputs(Hydrogen.getFluid(6000))
-                .fluidOutputs(DinitrogenTetroxide.getFluid(1000))
-                .fluidOutputs(Water.getFluid(3000))
-                .duration(1100).EUt(VA[HV]).buildAndRegister();
-
-        CHEMICAL_RECIPES.recipeBuilder()
                 .input(dust, SodiumHydroxide, 3)
                 .fluidInputs(SulfuricAcid.getFluid(1000))
                 .output(dust, SodiumBisulfate, 7)
@@ -604,12 +597,6 @@ public class ReactorRecipes {
                 .fluidOutputs(Phenol.getFluid(1000))
                 .fluidOutputs(Oxygen.getFluid(1000))
                 .duration(120).EUt(VA[LV]).buildAndRegister();
-
-        CHEMICAL_RECIPES.recipeBuilder()
-                .fluidInputs(Benzene.getFluid(1000))
-                .fluidInputs(Oxygen.getFluid(1000))
-                .fluidOutputs(Phenol.getFluid(1000))
-                .duration(400).EUt(2000).buildAndRegister();
 
         CHEMICAL_RECIPES.recipeBuilder()
                 .fluidInputs(MethylAcetate.getFluid(1000))

@@ -35,7 +35,7 @@ import java.util.UUID;
 
 public class CoverEnderFluidLink extends CoverBehavior implements CoverWithUI, ITickable, IControllable {
 
-    private final int TRANSFER_RATE = 8000; // mB/t
+    public static final int TRANSFER_RATE = 8000; // mB/t
 
     protected CoverPump.PumpMode pumpMode;
     private int color;
@@ -65,6 +65,14 @@ public class CoverEnderFluidLink extends CoverBehavior implements CoverWithUI, I
 
     private UUID getTankUUID() {
         return isPrivate ? playerUUID : null;
+    }
+
+    public FluidFilterContainer getFluidFilterContainer() {
+        return this.fluidFilter;
+    }
+
+    public boolean isIOEnabled() {
+        return this.ioEnabled;
     }
 
     @Override
@@ -111,6 +119,7 @@ public class CoverEnderFluidLink extends CoverBehavior implements CoverWithUI, I
 
     protected void transferFluids() {
         IFluidHandler fluidHandler = coverHolder.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, attachedSide);
+        if (fluidHandler == null) return;
         if (pumpMode == CoverPump.PumpMode.IMPORT) {
             GTTransferUtils.transferFluids(fluidHandler, linkedTank, TRANSFER_RATE, fluidFilter::testFluidStack);
         } else if (pumpMode == CoverPump.PumpMode.EXPORT) {

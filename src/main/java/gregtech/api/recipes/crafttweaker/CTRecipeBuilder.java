@@ -6,11 +6,10 @@ import crafttweaker.api.item.IIngredient;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.liquid.ILiquidStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
-import gregtech.api.recipes.CountableIngredient;
+import crafttweaker.api.oredict.IOreDictEntry;
 import gregtech.api.recipes.RecipeBuilder;
-import gregtech.api.recipes.ingredients.IntCircuitIngredient;
+import gregtech.api.recipes.ingredients.*;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
@@ -46,19 +45,61 @@ public class CTRecipeBuilder {
         return this;
     }
 
+    private static String extractOreDictEntry(IIngredient ingredient) {
+        if (ingredient instanceof IOreDictEntry)
+            return ((IOreDictEntry) ingredient).getName();
+        if (ingredient.getInternal() instanceof IOreDictEntry)
+            return ((IOreDictEntry) ingredient.getInternal()).getName();
+        return null;
+    }
+    
+    private static void checkIfExists(IIngredient ingredient, String oreDict) {
+        if (ingredient == null) {
+            throw new IllegalArgumentException("Invalid ingredient: is null");
+        }
+
+        if (ingredient.getItems().size() == 0) {
+            if (oreDict != null) {
+                throw new IllegalArgumentException("Invalid Ore Dictionary [" + oreDict + "]: contains no items");
+            } else {
+                throw new IllegalArgumentException("Invalid Item [" + ingredient.toString() + "]: item not found");
+            }
+        }
+    }
+
     @ZenMethod
     public CTRecipeBuilder inputs(IIngredient... ingredients) {
-        this.backingBuilder.inputsIngredients(Arrays.stream(ingredients)
-                .map(s -> new CountableIngredient(new CraftTweakerIngredientWrapper(s), s.getAmount()))
-                .collect(Collectors.toList()));
+        for (IIngredient ingredient : ingredients) {
+            String oreDict = extractOreDictEntry(ingredient);
+            checkIfExists(ingredient, oreDict);
+
+            if (oreDict != null) {
+                this.backingBuilder.input(
+                        GTRecipeOreInput.getOrCreate(oreDict, ingredient.getAmount()));
+            } else {
+                this.backingBuilder.input(GTRecipeItemInput.getOrCreate(
+                        new CraftTweakerItemInputWrapper(ingredient), ingredient.getAmount()));
+            }
+        }
         return this;
     }
 
     @ZenMethod
     public CTRecipeBuilder notConsumable(IIngredient... ingredients) {
-        this.backingBuilder.inputsIngredients(Arrays.stream(ingredients)
-                .map(s -> new CountableIngredient(new CraftTweakerIngredientWrapper(s), s.getAmount()).setNonConsumable())
-                .collect(Collectors.toList()));
+        for (IIngredient ingredient : ingredients) {
+            String oreDict = extractOreDictEntry(ingredient);
+            checkIfExists(ingredient, oreDict);
+
+            if (oreDict != null) {
+                this.backingBuilder.input(
+                        GTRecipeOreInput.getOrCreate(oreDict, ingredient.getAmount())
+                                .setNonConsumable());
+            } else {
+                this.backingBuilder.input(GTRecipeItemInput.getOrCreate(
+                                new CraftTweakerItemInputWrapper(ingredient), ingredient.getAmount())
+                        .setNonConsumable());
+            }
+        }
         return this;
     }
 
@@ -80,8 +121,7 @@ public class CTRecipeBuilder {
     @ZenMethod
     public CTRecipeBuilder fluidInputs(ILiquidStack... ingredients) {
         this.backingBuilder.fluidInputs(Arrays.stream(ingredients)
-                .map(CraftTweakerMC::getLiquidStack)
-                .collect(Collectors.toList()));
+                .map(CraftTweakerMC::getLiquidStack).map(fluidStack -> GTRecipeFluidInput.getOrCreate(fluidStack, fluidStack.amount)).collect(Collectors.toList()));
         return this;
     }
 
@@ -184,19 +224,17 @@ public class CTRecipeBuilder {
         return this.backingBuilder.toString();
     }
 
-    public static class CraftTweakerIngredientWrapper extends Ingredient {
+    public static class CraftTweakerItemInputWrapper extends GTRecipeItemInput {
 
         private final IIngredient ingredient;
 
-        public CraftTweakerIngredientWrapper(IIngredient ingredient) {
-            super(ingredient.getItems().stream()
-                    .map(CraftTweakerMC::getItemStack)
-                    .toArray(ItemStack[]::new));
+        public CraftTweakerItemInputWrapper(IIngredient ingredient) {
+            super(CraftTweakerMC.getItemStack(ingredient.getItems().get(0)));
             this.ingredient = ingredient;
         }
 
         @Override
-        public boolean apply(@Nullable ItemStack itemStack) {
+        public boolean acceptsStack(@Nullable ItemStack itemStack) {
             if (itemStack == null) {
                 return false;
             }

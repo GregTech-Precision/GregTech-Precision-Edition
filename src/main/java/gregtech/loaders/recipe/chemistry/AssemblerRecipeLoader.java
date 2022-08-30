@@ -136,7 +136,7 @@ public class AssemblerRecipeLoader {
 
         ASSEMBLER_RECIPES.recipeBuilder().duration(200).EUt(VA[LV])
                 .input(plate, Wood, 3)
-                .circuitMeta(4)
+                .circuitMeta(6)
                 .fluidInputs(Glue.getFluid(20))
                 .output(pipeNormalFluid, Wood)
                 .buildAndRegister();
@@ -146,6 +146,28 @@ public class AssemblerRecipeLoader {
                 .circuitMeta(2)
                 .fluidInputs(Glue.getFluid(10))
                 .output(pipeLargeFluid, Wood)
+                .buildAndRegister();
+				
+        // Treated Wood Pipes
+        ASSEMBLER_RECIPES.recipeBuilder().duration(200).EUt(VA[LV])
+                .input(plate, TreatedWood)
+                .circuitMeta(12)
+                .fluidInputs(Glue.getFluid(50))
+                .output(pipeSmallFluid, TreatedWood)
+                .buildAndRegister();
+
+        ASSEMBLER_RECIPES.recipeBuilder().duration(200).EUt(VA[LV])
+                .input(plate, TreatedWood, 3)
+                .circuitMeta(6)
+                .fluidInputs(Glue.getFluid(20))
+                .output(pipeNormalFluid, TreatedWood)
+                .buildAndRegister();
+
+        ASSEMBLER_RECIPES.recipeBuilder().duration(100).EUt(VA[LV])
+                .input(plate, TreatedWood, 6)
+                .circuitMeta(2)
+                .fluidInputs(Glue.getFluid(10))
+                .output(pipeLargeFluid, TreatedWood)
                 .buildAndRegister();
 
         // Voltage Coils

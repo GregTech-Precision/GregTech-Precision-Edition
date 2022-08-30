@@ -1,5 +1,6 @@
 package gregtech.common.blocks;
 
+import gregtech.api.block.IHeatingCoilBlockStats;
 import gregtech.api.block.VariantActiveBlock;
 import gregtech.api.block.VariantItemBlock;
 import gregtech.api.unification.material.Material;
@@ -54,7 +55,7 @@ public class BlockWireCoil extends VariantActiveBlock<BlockWireCoil.CoilType> {
             lines.add(I18n.format("tile.wire_coil.tooltip_pyro"));
             lines.add(I18n.format("tile.wire_coil.tooltip_speed_pyro", coilTier == 0 ? 75 : 50 * (coilTier + 1)));
             lines.add(I18n.format("tile.wire_coil.tooltip_cracking"));
-            lines.add(I18n.format("tile.wire_coil.tooltip_energy_cracking", 100 - 5 * coilTier));
+            lines.add(I18n.format("tile.wire_coil.tooltip_energy_cracking", 100 - 10 * coilTier));
         } else {
             lines.add(I18n.format("gregtech.tooltip.hold_shift"));
         }
@@ -65,7 +66,7 @@ public class BlockWireCoil extends VariantActiveBlock<BlockWireCoil.CoilType> {
         return false;
     }
 
-    public enum CoilType implements IStringSerializable {
+    public enum CoilType implements IStringSerializable, IHeatingCoilBlockStats {
 
         CUPRONICKEL("cupronickel", 1800, 1, 1, Materials.Cupronickel),
         KANTHAL("kanthal", 2700, 2, 1, Materials.Kanthal),
@@ -98,22 +99,33 @@ public class BlockWireCoil extends VariantActiveBlock<BlockWireCoil.CoilType> {
             return this.name;
         }
 
+        @Override
         public int getCoilTemperature() {
             return coilTemperature;
         }
 
+        @Override
         public int getLevel() {
             return level;
         }
 
+        @Override
         public int getEnergyDiscount() {
             return energyDiscount;
         }
 
+        @Override
+        public int getTier() {
+            return this.ordinal();
+        }
+
+        @Nullable
+        @Override
         public Material getMaterial() {
             return material;
         }
 
+        @Nonnull
         @Override
         public String toString() {
             return getName();

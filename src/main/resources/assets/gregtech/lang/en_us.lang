@@ -11,7 +11,7 @@ death.attack.heat.player=%s was boiled alive by %s
 enchantment.disjunction=Disjunction
 
 gregtech.machine.steam_grinder.name=Steam Grinder
-gregtech.machine.steam_grinder.tooltip=Macerates up to 8 items per craft. Takes 1.5x base duration to process, not affected by number of items. Requires §eSteam Hatches and Buses
+gregtech.machine.steam_grinder.tooltip=Macerates up to 8 items per craft. Takes 1.5x base duration to process, not affected by number of items./nRequires §eSteam Hatches and Buses.
 gregtech.multiblock.steam_grinder.description=A Multiblock Macerator at the Steam Age. Requires at least 14 Bronze Casings to form. Cannot use normal Input/Output busses, nor Fluid Hatches other than the Steam Hatch.
 gregtech.multiblock.steam.low_steam=Not enough Steam to run!
 gregtech.multiblock.steam.steam_stored=Steam: %s / %s mb
@@ -21,37 +21,49 @@ gregtech.machine.steam_import_bus.name=Input Bus (Steam)
 gregtech.machine.steam_export_bus.name=Output Bus (Steam)
 gregtech.machine.steam_bus.tooltip=Does not work with non-steam multiblocks
 gregtech.machine.steam_oven.name=Steam Oven
-gregtech.machine.steam_oven.tooltip=Smelts up to 8 items per craft. Takes 1.5x base duration to process, not affected by number of items. Requires §eSteam Hatches and Buses
+gregtech.machine.steam_oven.tooltip=Smelts up to 8 items per craft. Takes 1.5x base duration to process, not affected by number of items./nRequires §eSteam Hatches and Buses.
 gregtech.multiblock.steam_oven.description=A Multi Smelter at the Steam Age. Requires at least 6 Bronze Casings to form. Cannot use normal Input/Output busses, nor Fluid Hatches other than the Steam Hatch. Steam Hatch must be on the bottom layer, no more than one.
 
-gregtech.top.energy_stored=Energy:
-gregtech.top.progress=Progress:
 gregtech.top.working_disabled=Working Disabled
 
-gregtech.top.energy_consumption=Usage:
-gregtech.top.energy_production=Output:
+gregtech.top.energy_consumption=Using
+gregtech.top.energy_production=Producing
 
 gregtech.top.transform_up=§cStep Up§r
 gregtech.top.transform_down=§aStep Down§r
 gregtech.top.transform_input=§6Input:§r
 gregtech.top.transform_output=§9Output:§r
 
-gregtech.top.convert_eu=§eConverting EU§r
-gregtech.top.convert_fe=§cConverting FE§r
+gregtech.top.convert_eu=Converting §eEU§r -> §cFE§r
+gregtech.top.convert_fe=Converting §cFE§r -> §eEU§r
 
-gregtech.top.fuel_burn=for
-gregtech.top.fuel_time=secs
-gregtech.top.fuel_min_consume=needs
-gregtech.top.fuel_name=Fuel:
+gregtech.top.fuel_min_consume=Needs
 gregtech.top.fuel_none=No fuel
 
-gregtech.top.invalid_structure=§cStructure Incomplete
-gregtech.top.valid_structure=§aStructure Formed
-gregtech.top.obstructed_structure=§cStructure Obstructed
-gregtech.top.maintenance_fixed=§aMaintenance Fine
-gregtech.top.maintenance_broken=§cNeeds Maintenance
+gregtech.top.invalid_structure=Structure Incomplete
+gregtech.top.valid_structure=Structure Formed
+gregtech.top.obstructed_structure=Structure Obstructed
+
+gregtech.top.maintenance_fixed=Maintenance Fine
+gregtech.top.maintenance_broken=Needs Maintenance
+gregtech.top.maintenance.wrench=Pipe is loose
+gregtech.top.maintenance.screwdriver=Screws are loose
+gregtech.top.maintenance.soft_mallet=Something is stuck
+gregtech.top.maintenance.hard_hammer=Plating is dented
+gregtech.top.maintenance.wire_cutter=Wires burned out
+gregtech.top.maintenance.crowbar=That doesn't belong there
 
 gregtech.top.primitive_pump_production=Production:
+
+gregtech.top.filter.label=Filter:
+gregtech.top.link_cover.color=Color:
+
+gregtech.top.mode.export=Exporting
+gregtech.top.mode.import=Importing
+
+gregtech.top.unit.items=Items
+gregtech.top.unit.fluid_milibuckets=L
+gregtech.top.unit.fluid_buckets=kL
 
 gregtech.multiblock.title=Multiblock Pattern
 gregtech.multiblock.primitive_blast_furnace.bronze.description=The Primitive Blast Furnace (PBF) is a multiblock structure used for cooking steel in the early game. Although not very fast, it will provide you with steel for your first setups.
@@ -1075,6 +1087,9 @@ metaitem.nan.certificate.name=Certificate of Not Being a Noob Anymore
 metaitem.nan.certificate.tooltip=Challenge Accepted!
 
 metaitem.fertilizer.name=Fertilizer
+
+metaitem.blacklight.name=Blacklight
+metaitem.blacklight.tooltip=Long-Wave §dUltraviolet§7 light source
 
 gui.widget.incrementButton.default_tooltip=Hold Shift, Ctrl or both to change the amount
 gui.widget.recipeProgressWidget.default_tooltip=Show Recipes
@@ -2267,6 +2282,7 @@ behavior.tricorder.debug_machine_valid= valid
 behavior.tricorder.debug_machine_invalid= invalid!
 behavior.tricorder.debug_machine_invalid_null=invalid! MetaTileEntity == null!
 behavior.tricorder.debug_cpu_load=Average CPU load of ~%sns over %s ticks with worst time of %sns.
+behavior.tricorder.debug_cpu_load_seconds=This is %s seconds.
 behavior.tricorder.debug_lag_count=Caused %s Lag Spike Warnings (anything taking longer than %sms) on the Server.
 
 metaitem.item_magnet.lv.name=Low Voltage Item Magnet
@@ -2394,7 +2410,7 @@ tile.machine_casing.ultra_high_voltage.name=UHV Machine Casing
 tile.machine_casing.ultra_excessive_voltage.name=UEV Machine Casing
 tile.machine_casing.ultra_immense_voltage.name=UIV Machine Casing
 tile.machine_casing.ultra_extreme_voltage.name=UXV Machine Casing
-tile.machine_casing.Ultra Immense_voltage.name=OpV Machine Casing
+tile.machine_casing.overpowered_voltage.name=OpV Machine Casing
 tile.machine_casing.maximum_voltage.name=MAX Machine Casing
 
 # Steam casing blocks
@@ -2438,6 +2454,7 @@ tile.fusion_casing.fusion_casing_mk3.name=Fusion Machine Casing MK III
 tile.transparent_casing.tempered_glass.name=Tempered Glass
 tile.transparent_casing.fusion_glass.name=Fusion Glass
 tile.transparent_casing.laminated_glass.name=Laminated Glass
+tile.transparent_casing.cleanroom_glass.name=Cleanroom Glass
 
 # Creative tabs
 itemGroup.gregtech.main=GregTech
@@ -2491,6 +2508,13 @@ gregtech.multiblock.tank.tooltip=Fill and drain through the controller or tank v
 gregtech.tank_valve.tooltip=Use to fill and drain multiblock tanks. Auto outputs when facing down.
 
 gregtech.machine.clipboard.name=Clipboard
+
+# Cleanroom Casings
+tile.cleanroom_casing.plascrete.name=Plascrete
+tile.cleanroom_casing.filter_casing.name=Filter Casing
+tile.cleanroom_casing.filter_casing_sterile.name=Sterilizing Filter Casing
+tile.cleanroom_casing.filter.tooltip=Creates a §aParticle-Free§7 environment
+tile.cleanroom_casing.filter_sterile.tooltip=Creates a §aSterilized§7 environment
 
 # Asphalt
 tile.asphalt.asphalt.name=Asphalt
@@ -2609,7 +2633,7 @@ tile.stone_bricks_square.concrete_dark.name=Square Dark Concrete Bricks
 
 
 # Steam machines
-gregtech.machine.steam_boiler.tooltip_produces=Produces %,dL of Steam per second
+gregtech.machine.steam_boiler.tooltip_produces=Produces %,dL of Steam per tick
 
 gregtech.machine.steam_boiler_coal_bronze.name=Small Steam Solid Fuel Boiler
 gregtech.machine.steam_boiler_coal_bronze.tooltip=An early way to get Steam Power
@@ -4416,7 +4440,7 @@ gregtech.machine.miner.multi.modes=Has Silk Touch and Chunk Aligned Modes.
 gregtech.machine.miner.multi.tooltip=Max Working Area: §b%dx%d§7 chunks.
 gregtech.machine.miner.multi.production=Produces §b3x§7 more crushed ore than a macerator.
 gregtech.machine.miner.multi.description=A multiblock mining machine that covers a large area and produces huge quantity of ore.
-#Small ores lang: gregtech.machine.miner.multi.production=Produces 3x more crushed ore than a macerator. Small ore Fortune §b%d§7.
+#Small ores lang:gregtech.machine.miner.multi.production=Produces 3x more crushed ore than a macerator. Small ore Fortune §b%d§7.
 gregtech.machine.miner.fluid_usage=Consumes §b%dmb§7 of §e%s§7 per tick. Each overclock doubles the fluid consumption.
 gregtech.machine.miner.overclock=Requires %s§7 power. Overclocks up to %s§7.
 
@@ -4438,6 +4462,22 @@ gregtech.machine.fluid_drilling_rig.depletion=Depletion Rate: §b%s%%§7
 gregtech.machine.fluid_drilling_rig.energy=Requires %s§7 power. Overclocks up to %s§7.
 gregtech.machine.fluid_drilling_rig.overclock=Overclocking increases production by §d50%%§7.
 
+gregtech.machine.cleanroom.name=Cleanroom
+gregtech.machine.cleanroom.tooltip.1=Place machines inside to run cleanroom recipes.
+gregtech.machine.cleanroom.tooltip.2=Uses §a30 EU/t§7 when dirty and §a4 EU/t§7 when clean.
+gregtech.machine.cleanroom.tooltip.3=Overclocking increases cleaning per cycle.
+gregtech.machine.cleanroom.tooltip.4=Can be any size from §b5x5x5§7 to §b15x15x15§7.
+gregtech.machine.cleanroom.tooltip.5=Requires Filter Casings in the ceiling, excluding the edges.
+gregtech.machine.cleanroom.tooltip.6=Accepts up to 4 doors! Remains clean when the door is open.
+gregtech.machine.cleanroom.tooltip.7=Generators, Mufflers, Drills, and Primitive Machines are too dirty for the cleanroom!
+gregtech.machine.cleanroom.tooltip.8=Send power through hulls or diodes in the walls.
+gregtech.machine.cleanroom.tooltip.9=Send items and fluids with Passthrough Hatches in the walls.
+gregtech.machine.cleanroom.tooltip.ae2.channels=Send §a8 AE2 Channels§7 through hulls in the walls.
+gregtech.machine.cleanroom.tooltip.ae2.no_channels=Send §aAE2 Networks§7 through hulls in the walls.
+gregtech.multiblock.cleanroom.clean_state=Status: §aCLEAN
+gregtech.multiblock.cleanroom.dirty_state=Status: §4CONTAMINATED
+gregtech.multiblock.cleanroom.clean_amount=Cleanliness: §a%s%%
+
 gregtech.machine.central_monitor.name=Central Monitor
 gregtech.multiblock.central_monitor.low_power=Low Power
 gregtech.multiblock.central_monitor.height=Screen Height:
@@ -4451,6 +4491,16 @@ gregtech.multiblock.monitor_screen.tooltip.1=The GUI can be opened with a right-
 gregtech.multiblock.monitor_screen.tooltip.2=The proxy mode of Digital Interface Cover can delegate machines' capabilities and GUI. (Yes, you can connect pipes directly on the screen.)
 gregtech.multiblock.monitor_screen.tooltip.3=The screen also supports plugins.
 
+metaitem.cover.digital.mode.proxy.disabled=Click to enable Proxy Mode
+metaitem.cover.digital.mode.proxy.enabled=Proxy Mode enabled
+metaitem.cover.digital.mode.machine.disabled=Click to enable Machine Mode
+metaitem.cover.digital.mode.machine.enabled=Machine Mode enabled
+metaitem.cover.digital.mode.energy.disabled=Click to enable Energy Mode
+metaitem.cover.digital.mode.energy.enabled=Energy Mode enabled
+metaitem.cover.digital.mode.item.disabled=Click to enable Item Mode
+metaitem.cover.digital.mode.item.enabled=Item Mode enabled
+metaitem.cover.digital.mode.fluid.disabled=Click to enable Fluid Mode
+metaitem.cover.digital.mode.fluid.enabled=Fluid Mode enabled
 
 gregtech.machine.monitor_screen.name=Monitor Screen
 
@@ -4603,6 +4653,9 @@ gregtech.machine.maintenance_hatch_configurable.name=Configurable Maintenance Ha
 gregtech.machine.maintenance_hatch_configurable.tooltip=For finer control over Multiblocks/nStarts with no Maintenance problems!
 gregtech.machine.maintenance_hatch_full_auto.name=Automatic Maintenance Hatch
 gregtech.machine.maintenance_hatch_full_auto.tooltip=For automatically maintaining Multiblocks
+gregtech.machine.maintenance_hatch_cleanroom_auto.name=Automatic Filtration Maintenance Hatch
+gregtech.machine.maintenance_hatch_cleanroom_auto.tooltip.1=For automatically maintaining Multiblocks with Cleaning!
+gregtech.machine.maintenance_hatch.cleanroom_auto.tooltip.2=Cleans as:
 gregtech.machine.maintenance_hatch_tool_slot.tooltip=Click slot with empty hand when required tools are in inventory to solve problems
 gregtech.machine.maintenance_hatch_tape_slot.tooltip=Insert Tape to prevent problems
 
@@ -4642,6 +4695,11 @@ gregtech.machine.machine_hatch.locked=Machine Interface Locked
 gregtech.machine.machine_hatch.tooltip=Specialized Access Bus that only holds valid items
 gregtech.machine.machine_hatch.processing_array=When in the §eProcessing Array§7, only holds machines that work in the §eProcessing Array
 
+gregtech.machine.passthrough_hatch_item.name=Item Passthrough Hatch
+gregtech.machine.passthrough_hatch_item.tooltip=Sends Items from one Side to the other
+gregtech.machine.passthrough_hatch_fluid.name=Fluid Passthrough Hatch
+gregtech.machine.passthrough_hatch_fluid.tooltip=Sends Fluids from one Side to the other
+
 
 gregtech.machine.fluid_tank.max_multiblock=Max Multiblock Size: %,dx%,dx%,d
 gregtech.machine.fluid_tank.fluid=Contains %s L of %s
@@ -4660,6 +4718,7 @@ gregtech.universal.tooltip.amperage_out_till=Amperage OUT up to: §e%,d
 gregtech.universal.tooltip.item_storage_capacity=Item Slots: %,d
 gregtech.universal.tooltip.fluid_storage_capacity=Fluid Capacity: %,d L
 gregtech.universal.tooltip.max_voltage_in=Max Voltage IN: §a%,d (§r%s§a)
+gregtech.universal.tooltip.terrain_resist=This Machine will not explode in Rain, Fire, Water or Lava
 
 gregtech.recipe.total=Total: %,d EU
 gregtech.recipe.eu=Usage: %,d EU/t (%s§r)
@@ -4672,6 +4731,9 @@ gregtech.recipe.temperature=Temperature: %,dK (%s)
 gregtech.recipe.explosive=Explosive: %s
 gregtech.recipe.eu_to_start=Energy To Start: %sEU
 gregtech.recipe.dimensions=Dimensions: %s
+gregtech.recipe.cleanroom=Requires %s
+gregtech.recipe.cleanroom.display_name=Cleanroom
+gregtech.recipe.cleanroom_sterile.display_name=Sterile Cleanroom
 
 gregtech.fluid.click_to_fill=§7Click with a Fluid Container to §bfill §7the tank (Shift-click for a full stack).
 gregtech.fluid.click_combined=§7Click with a Fluid Container to §cempty §7or §bfill §7the tank (Shift-click for a full stack).
@@ -4802,6 +4864,7 @@ gregtech.multiblock.pattern.error.limited.1=§cMinimum: %d§r
 gregtech.multiblock.pattern.error.limited.2=§cMaximum: %d per layer§r
 gregtech.multiblock.pattern.error.limited.3=§cMinimum: %d per layer§r
 gregtech.multiblock.pattern.error.coils=§cAll heating coils must be the same§r
+gregtech.multiblock.pattern.error.filters=§cAll filters must be the same§r
 gregtech.multiblock.pattern.clear_amount_1=§6Must have a clear 1x1x1 space in front§r
 gregtech.multiblock.pattern.clear_amount_3=§6Must have a clear 3x3x1 space in front§r
 gregtech.multiblock.pattern.single=§6Only this block can be used§r
