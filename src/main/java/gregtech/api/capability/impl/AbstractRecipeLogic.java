@@ -666,24 +666,6 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         this.fluidOutputs = GTUtility.copyFluidList(recipe.getAllFluidOutputs(metaTileEntity.getFluidOutputLimit()));
         this.itemOutputs = GTUtility.copyStackList(recipe.getResultItemOutputs(GTUtility.getTierByVoltage(recipeEUt), getRecipeMap()));
 
-        if(recipe.hasTimedOutputs()){
-            this.timedOutputs = new HashMap<>();
-            recipe.getTimedOutputs().entrySet().forEach(it -> {
-                int time = Math.max(1, (int) (((double) it.getKey()) / ((double) recipe.getDuration()) * ((double) getMaxProgress())));
-                if (this.timedOutputs.containsKey(time)) this.timedOutputs.get(time).addAll(it.getValue());
-                else this.timedOutputs.put(time, it.getValue());
-            });
-        }
-
-        if(recipe.hasTimedFluidOutputs()){
-            this.timedFluidOutputs = new HashMap<>();
-            recipe.getTimedFluidOutputs().entrySet().forEach(it -> {
-                int time = Math.max(1, (int) (((double) it.getKey()) / ((double) recipe.getDuration()) * ((double) getMaxProgress())));
-                if (this.timedFluidOutputs.containsKey(time)) this.timedFluidOutputs.get(time).addAll(it.getValue());
-                else this.timedFluidOutputs.put(time, it.getValue());
-            });
-        }
-
         if (this.wasActiveAndNeedsUpdate) {
             this.wasActiveAndNeedsUpdate = false;
         } else {

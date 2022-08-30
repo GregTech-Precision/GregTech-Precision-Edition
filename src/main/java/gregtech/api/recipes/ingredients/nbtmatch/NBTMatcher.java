@@ -94,7 +94,7 @@ public interface NBTMatcher {
                 case INT_ARRAY:
                     return tag.getIntArray(condition.nbtKey).equals(condition.value);
                 case LONG_ARRAY:
-                    return ((NBTTagLongArray) tag.getTag(condition.nbtKey)).data.equals(condition.value);
+                    return ((NBTTagLongArray) tag.getTag(condition.nbtKey)).equals(condition.value);
             }
         }
         return false;
@@ -126,7 +126,7 @@ public interface NBTMatcher {
             case INT_ARRAY:
                 return tag.getIntArray(condition.nbtKey).length == 0;
             case LONG_ARRAY:
-                return ((NBTTagLongArray) tag.getTag(condition.nbtKey)).data.length == 0;
+                return ((NBTTagLongArray) tag.getTag(condition.nbtKey)).isEmpty();
         }
         return false;
     };

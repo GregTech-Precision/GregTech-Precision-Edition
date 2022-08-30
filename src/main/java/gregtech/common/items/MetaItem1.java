@@ -5,6 +5,7 @@ import gregtech.api.items.metaitem.*;
 import gregtech.api.items.metaitem.stats.IItemComponent;
 import gregtech.api.items.metaitem.stats.IItemContainerItemProvider;
 import gregtech.api.items.metaitem.stats.ItemFluidContainer;
+import gregtech.api.items.toolitem.LaptopItemStat;
 import gregtech.api.sound.GTSounds;
 import gregtech.api.terminal.hardware.HardwareProvider;
 import gregtech.api.unification.OreDictUnifier;
@@ -662,5 +663,6 @@ public class MetaItem1 extends StandardMetaItem {
         NAN_CERTIFICATE = addItem(1000, "nan.certificate").setRarity(EnumRarity.EPIC);
         FERTILIZER = addItem(1001, "fertilizer").addComponents(new FertilizerBehavior());
         BLACKLIGHT = addItem(1002, "blacklight");
+        LAPTOP = addItem(1003, "laptop").addComponents(new LaptopBehavior(), new LaptopItemStat(), ElectricStats.createElectricItem(1600000L, GTValues.HV));
     }
 }
