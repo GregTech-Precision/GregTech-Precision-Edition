@@ -1,21 +1,37 @@
 package gregtech.api.worldgen.config;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import gregtech.api.GTValues;
 import gregtech.api.util.FileUtility;
 import gregtech.api.util.GTLog;
+import gregtech.common.ConfigHolder;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.terraingen.OreGenEvent;
+import net.minecraftforge.fml.common.IWorldGenerator;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.eventhandler.Event;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.apache.commons.io.IOUtils;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static net.minecraftforge.event.terraingen.OreGenEvent.GenerateMinable.EventType.*;
+import static net.minecraftforge.event.terraingen.OreGenEvent.GenerateMinable.EventType.EMERALD;
 
 public class WorldGenRegistry {
 
@@ -38,10 +54,23 @@ public class WorldGenRegistry {
 
     public void initializeRegistry() {
         GTLog.logger.info("Initializing ore generation registry...");
+        GameRegistry.registerWorldGenerator(WorldGeneratorImpl.INSTANCE, 1);
+        MinecraftForge.ORE_GEN_BUS.register(WorldGeneratorImpl.INSTANCE);
         try {
             reinitializeRegisteredVeins();
         } catch (IOException | RuntimeException exception) {
             GTLog.logger.fatal("Failed to initialize worldgen registry.", exception);
+        }
+        if (Loader.isModLoaded("galacticraftcore")) {
+            try {
+                Class<?> transformerHooksClass = Class.forName("micdoodle8.mods.galacticraft.core.TransformerHooks");
+                Field otherModGeneratorsWhitelistField = transformerHooksClass.getDeclaredField("otherModGeneratorsWhitelist");
+                otherModGeneratorsWhitelistField.setAccessible(true);
+                List<IWorldGenerator> otherModGeneratorsWhitelist = (List<IWorldGenerator>) otherModGeneratorsWhitelistField.get(null);
+                otherModGeneratorsWhitelist.add(WorldGeneratorImpl.INSTANCE);
+            } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+                GTLog.logger.fatal("Failed to inject world generator into Galacticraft's whitelist.", e);
+            }
         }
     }
 
@@ -421,5 +450,28 @@ public class WorldGenRegistry {
 
     public static Map<Integer, String> getNamedDimensions() {
         return INSTANCE.namedDimensions;
+    }
+
+    static class WorldGeneratorImpl implements IWorldGenerator {
+
+        public static final WorldGeneratorImpl INSTANCE = new WorldGeneratorImpl();
+
+        private static final Set<OreGenEvent.GenerateMinable.EventType> ORE_EVENT_TYPES = ImmutableSet.of(COAL, DIAMOND, GOLD, IRON, LAPIS, REDSTONE, QUARTZ, EMERALD);
+
+        private WorldGeneratorImpl() {
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGH)
+        public void onOreGenerate(OreGenEvent.GenerateMinable event) {
+            OreGenEvent.GenerateMinable.EventType eventType = event.getType();
+            if (ConfigHolder.worldgen.disableVanillaOres && ORE_EVENT_TYPES.contains(eventType)) {
+                event.setResult(Event.Result.DENY);
+            }
+        }
+
+        @Override
+        public void generate(Random random, int i, int i1, World world, IChunkGenerator iChunkGenerator, IChunkProvider iChunkProvider) {
+
+        }
     }
 }
