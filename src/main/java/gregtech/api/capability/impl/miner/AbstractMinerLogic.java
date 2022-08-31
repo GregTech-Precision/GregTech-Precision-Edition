@@ -5,15 +5,18 @@ import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
-import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityMiner;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractMinerLogic {
 
@@ -51,7 +54,7 @@ public abstract class AbstractMinerLogic {
     public void performDrilling() {
         if (getMetaTileEntity().getWorld().isRemote) return;
 
-        if(!getMetaTileEntity().getAbilities(MultiblockAbility.DRILL_HANDLER).get(0).hasDrillHead())
+        if(!getMetaTileEntity().getAbilities(MultiblockAbility.DRILL_HOLDER).get(0).hasDrillHead())
             return;
 
         // if we have no Ore, try to get a new one
@@ -70,8 +73,11 @@ public abstract class AbstractMinerLogic {
         if (!checkCanDrain())
             return;
 
-        if(!consumeFluid(true))
+        if(!consumeFluid(true)) {
+            if(this.isActive)
+                setActive(false);
             return;
+        }
 
         // if the inventory is not full, drain energy etc. from the drill
         // the storages have already been checked earlier
@@ -95,13 +101,17 @@ public abstract class AbstractMinerLogic {
             return;
         progressTime = 0;
 
-        ItemStack ore = OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), getOrePerCycle() + getDrillEfficiency());
+        List<ItemStack> outOres = new ArrayList<>();
 
-        if (getMetaTileEntity().fillInventory(ore, true)) {
-            getMetaTileEntity().fillInventory(ore, false);
+        for(Material ore : vein.getDefinition().getStoredOres())
+            if(GTValues.RNG.nextInt(vein.getDefinition().getAllOresWeight()) <= vein.getDefinition().getOreWeight(ore))
+                outOres.add(OreDictUnifier.get(OrePrefix.crushed, ore, getOrePerCycle()));
+
+        if (getMetaTileEntity().fillInventory(outOres, true)) {
+            getMetaTileEntity().fillInventory(outOres, false);
             consumeFluid(false);
-            getMetaTileEntity().getAbilities(MultiblockAbility.DRILL_HANDLER).get(0).applyDrillHeadDamage(1);
-            BedrockOreVeinHandler.depleteVein(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), getLayer(), 0, false);
+            getMetaTileEntity().getDrillHeadHolder().applyDrillHeadDamage(1);
+            BedrockOreVeinHandler.depleteVein(getMetaTileEntity().getWorld(), getChunkX(), getChunkZ(), getLayer(), 1, false);
         } else {
             isInventoryFull = true;
             setActive(false);
@@ -109,13 +119,14 @@ public abstract class AbstractMinerLogic {
         }
     }
 
+    abstract protected boolean checkCanDrain();
+
     abstract protected boolean consumeEnergy(boolean simulate);
 
     /**
      *
      * @return true if the rig is able to drain, else false
      */
-    abstract protected boolean checkCanDrain();
     
     abstract protected boolean consumeFluid(boolean simulate);
 
@@ -124,20 +135,20 @@ public abstract class AbstractMinerLogic {
         return this.vein != null;
     }
 
-    protected int getDrillEfficiency(){
-        return getMetaTileEntity().getAbilities(MultiblockAbility.DRILL_HANDLER).get(0).getDrillEfficiency();
-    }
-
     protected int getOrePerCycle(){
-        return Math.min(vein.getDefinition().getDepletedYield(), vein.getOreYield() * vein.getOperationsRemaining()/BedrockOreVeinHandler.getOperationsPerLayer(vein.getDefinition().getLayer()));
+        return getMetaTileEntity().getDrillHeadHolder().getOrePerCycle();
     }
 
     protected int getChunkX() {
-        return metaTileEntity.getPos().getX() / 16;
+        return getBlockPos().getX() / 16;
     }
 
     protected int getChunkZ() {
-        return metaTileEntity.getPos().getZ() / 16;
+        return getBlockPos().getZ() / 16;
+    }
+
+    protected BlockPos getBlockPos(){
+        return metaTileEntity.getPos();
     }
 
     /**

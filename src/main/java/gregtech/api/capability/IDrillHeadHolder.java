@@ -1,12 +1,10 @@
 package gregtech.api.capability;
 
-import net.minecraft.item.ItemStack;
-
-public interface IDrillHeadHandler {
+public interface IDrillHeadHolder {
 
     boolean hasDrillHead();
 
-    int getDrillEfficiency();
+    int getOrePerCycle();
 
     void applyDrillHeadDamage(int damageApplied);
 }

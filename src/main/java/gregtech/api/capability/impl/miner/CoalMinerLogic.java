@@ -1,9 +1,14 @@
 package gregtech.api.capability.impl.miner;
 
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.MetaTileEntityCoalMiner;
+import net.minecraft.item.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CoalMinerLogic extends AbstractMinerLogic {
 
@@ -39,7 +44,11 @@ public class CoalMinerLogic extends AbstractMinerLogic {
             return false;
         }
 
-        if (getMetaTileEntity().fillInventory(OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 1+getDrillEfficiency()), true)) {
+        List<ItemStack> ores = new ArrayList<>();
+        for(Material ore : vein.getDefinition().getStoredOres())
+            ores.add(OreDictUnifier.get(OrePrefix.crushed, ore, getOrePerCycle()));
+
+        if (getMetaTileEntity().fillInventory(ores, true)) {
             this.isInventoryFull = false;
             return true;
         }

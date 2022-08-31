@@ -27,7 +27,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
-import java.util.Collections;
+import java.util.List;
 
 public class MetaTileEntityCoalMiner extends MetaTileEntityMiner {
 
@@ -70,12 +70,12 @@ public class MetaTileEntityCoalMiner extends MetaTileEntityMiner {
     }
 
     @Override
-    public boolean fillInventory(ItemStack stack, boolean simulate) {
+    public boolean fillInventory(List<ItemStack> items, boolean simulate) {
         TileEntity storage = getWorld().getTileEntity(getPos().offset(EnumFacing.UP));
         if(storage != null && storage.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP)){
-            return GTTransferUtils.addItemsToItemHandler(storage.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP), simulate, Collections.singletonList(stack));
+            return GTTransferUtils.addItemsToItemHandler(storage.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP), simulate, items);
         }
-        return super.fillInventory(stack, simulate);
+        return super.fillInventory(items, simulate);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class MetaTileEntityCoalMiner extends MetaTileEntityMiner {
                 .aisle("##F##", "##F##", "##F##")
                 .where('S', selfPredicate())
                 .where('F', states(MetaBlocks.FRAMES.get(Materials.Steel).getBlock(Materials.Steel)))
-                .where('D', abilities(MultiblockAbility.DRILL_HANDLER))
+                .where('D', abilities(MultiblockAbility.DRILL_HOLDER))
                 .where('#', any())
                 .build();
     }

@@ -1,36 +1,23 @@
 package gregtech.common.metatileentities.multi.electric;
 
-import codechicken.lib.render.CCRenderState;
-import codechicken.lib.render.pipeline.IVertexOperation;
-import codechicken.lib.vec.Matrix4;
-import com.google.common.collect.Lists;
-import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechTileCapabilities;
+import gregtech.api.capability.IDrillHeadHolder;
 import gregtech.api.capability.IWorkable;
-import gregtech.api.capability.impl.FluidDrillLogic;
-import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.miner.AbstractMinerLogic;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.MultiblockWithDisplayBase;
-import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.util.GTTransferUtils;
-import gregtech.client.renderer.ICubeRenderer;
-import gregtech.client.renderer.texture.Textures;
+import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityDrillHeadHolder;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.items.IItemHandlerModifiable;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 
 public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase implements IWorkable {
@@ -55,6 +42,13 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
         return this.layer;
     }
 
+    public IDrillHeadHolder getDrillHeadHolder(){
+        List<IDrillHeadHolder> list = getAbilities(MultiblockAbility.DRILL_HOLDER);
+        if(!list.isEmpty())
+            return list.get(0);
+        return null;
+    }
+
     @Override
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, boolean advanced) {
         super.addInformation(stack, player, tooltip, advanced);
@@ -72,8 +66,8 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
         this.minerLogic.setWorkingEnabled(isActivationAllowed);
     }
 
-    public boolean fillInventory(ItemStack stack, boolean simulate) {
-        return GTTransferUtils.addItemsToItemHandler(exportItems, simulate, Collections.singletonList(stack));
+    public boolean fillInventory(List<ItemStack> items, boolean simulate) {
+        return GTTransferUtils.addItemsToItemHandler(exportItems, simulate, items);
     }
 
     @Override

@@ -1,24 +1,19 @@
 package gregtech.common.metatileentities.multi.electric;
 
-import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
 import com.google.common.collect.Lists;
 import gregtech.api.GTValues;
-import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.capability.impl.EnergyContainerList;
-import gregtech.api.capability.impl.FluidDrillLogic;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
-import gregtech.api.capability.impl.miner.AbstractMinerLogic;
 import gregtech.api.capability.impl.miner.BasicMinerLogic;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.Widget;
 import gregtech.api.gui.widgets.ClickButtonWidget;
-import gregtech.api.gui.widgets.IncrementButtonWidget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
@@ -39,18 +34,14 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.*;
 import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 
 public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
@@ -120,7 +111,7 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
                         .or(autoAbilities(true, false)))
                 .where('C', states(getCasingState()))
                 .where('F', states(MetaBlocks.FRAMES.get(Materials.Steel).getBlock(Materials.Steel)))
-                .where('D', abilities(MultiblockAbility.DRILL_HANDLER))
+                .where('D', abilities(MultiblockAbility.DRILL_HOLDER))
                 .where('#', any())
                 .build();
     }
@@ -197,8 +188,8 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     }
 
     @Override
-    public boolean fillInventory(ItemStack stack, boolean simulate) {
-        return GTTransferUtils.addItemsToItemHandler(outputItemInventory, simulate, Collections.singletonList(stack));
+    public boolean fillInventory(List<ItemStack> items, boolean simulate) {
+        return GTTransferUtils.addItemsToItemHandler(outputItemInventory, simulate, items);
     }
 
     public boolean drainFluid(FluidStack fluid, boolean simulate){

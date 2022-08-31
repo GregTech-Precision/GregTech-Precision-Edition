@@ -1,29 +1,23 @@
 package gregtech.common.metatileentities.multi.multiblockpart;
 
-import gregtech.api.capability.GregtechTileCapabilities;
-import gregtech.api.capability.IDrillHeadHandler;
+import gregtech.api.capability.IDrillHeadHolder;
 import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.IUIHolder;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.common.items.behaviors.DrillHeadBehaviour;
-import gregtech.common.items.behaviors.TurbineRotorBehavior;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart implements IDrillHeadHandler, IMultiblockAbilityPart<IDrillHeadHandler> {
+public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart implements IDrillHeadHolder, IMultiblockAbilityPart<IDrillHeadHolder> {
 
     private final InventoryDrillHandler drillHandler;
 
@@ -51,7 +45,7 @@ public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart 
     }
 
     @Override
-    public int getDrillEfficiency() {
+    public int getOrePerCycle() {
         ItemStack stack = drillHandler.getStackInSlot(0);
         if(stack.isEmpty())
             return 0;
@@ -68,12 +62,12 @@ public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart 
     }
 
     @Override
-    public MultiblockAbility<IDrillHeadHandler> getAbility() {
-        return MultiblockAbility.DRILL_HANDLER;
+    public MultiblockAbility<IDrillHeadHolder> getAbility() {
+        return MultiblockAbility.DRILL_HOLDER;
     }
 
     @Override
-    public void registerAbilities(List<IDrillHeadHandler> abilityList) {
+    public void registerAbilities(List<IDrillHeadHolder> abilityList) {
         abilityList.add(this);
     }
 

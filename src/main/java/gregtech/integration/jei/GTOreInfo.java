@@ -79,22 +79,11 @@ public class GTOreInfo implements IRecipeWrapper {
 
     //Creates a tooltip based on the specific slots
     public void addTooltip(int slotIndex, boolean input, Object ingredient, List<String> tooltip) {
-
-        //Surface Indicator slot
-        if (slotIndex < getOutputCount()) {
-            tooltip.addAll(createOreWeightingTooltip(slotIndex));
-        }
-    }
-
-    public List<String> createOreWeightingTooltip(int slotIndex) {
-        List<String> tooltip = new ArrayList<>();
         tooltip.add(I18n.format("gregtech.jei.ore.ore_weight", getOreWeight(slotIndex)));
-        return tooltip;
     }
 
-    public List<String> addFluidTooltip(int slotIndex, boolean input, Object ingredient, List<String> tooltip){
+    public void addFluidTooltip(int slotIndex, boolean input, Object ingredient, List<String> tooltip){
         tooltip.add("Fluid is consumed every cycle");
-        return tooltip;
     }
 
     public int getOutputCount() {
@@ -115,11 +104,15 @@ public class GTOreInfo implements IRecipeWrapper {
         return weight;
     }
 
+    public FluidStack getFluid(int index){
+        return definition.getSpecialFluids().get(index);
+    }
+
     public BedrockOreDepositDefinition getDefinition() {
         return definition;
     }
 
     public int getOreWeight(int index) {
-        return index >= definition.getStoredOres().size() ? -1 : 100*definition.getOreWeight(definition.getStoredOres().get(index))/ definition.getMaxOresWeight();
+        return index >= definition.getStoredOres().size() ? -1 : 100*definition.getOreWeight(definition.getStoredOres().get(index))/ definition.getAllOresWeight();
     }
 }

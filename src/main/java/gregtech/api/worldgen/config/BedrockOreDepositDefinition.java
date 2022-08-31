@@ -213,15 +213,6 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
 
     public List<FluidStack> getSpecialFluids() { return specialFluids; }
 
-    public Material getNextOre(){
-        for(Material ore : storedOres){
-            if(GTValues.RNG.nextInt(maxOresWeight) <= getOreWeight(ore)){
-                return ore;
-            }
-        }
-        return storedOres.get(0);
-    }
-
     public int getLayer(){
         return layer;
     }
@@ -230,7 +221,7 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         return oreWeights.getOrDefault(ore, 1);
     }
 
-    public int getMaxOresWeight(){
+    public int getAllOresWeight(){
         return maxOresWeight;
     }
 

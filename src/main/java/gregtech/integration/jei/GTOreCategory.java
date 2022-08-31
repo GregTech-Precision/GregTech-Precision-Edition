@@ -88,7 +88,7 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
             int xPos = 94 + (i % NUM_OF_FLUID_SLOTS) * SLOT_WIDTH;
 
             fluidStackGroup.init(i, true,
-                    new FluidStackTextRenderer(50, true, SLOT_WIDTH, SLOT_HEIGHT, fluidSlot),
+                    new FluidStackTextRenderer(0, false, SLOT_WIDTH, SLOT_HEIGHT, fluidSlot),
                     xPos + 1, yPos + 1, 16, 16, 0, 0);
         }
 

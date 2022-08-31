@@ -41,7 +41,7 @@ public class MultiblockAbility<T> {
 
     public static final MultiblockAbility<IFluidHandler> TANK_VALVE = new MultiblockAbility<>("tank_valve");
 
-    public static final MultiblockAbility<IDrillHeadHandler> DRILL_HANDLER = new MultiblockAbility<>("drill_handler");
+    public static final MultiblockAbility<IDrillHeadHolder> DRILL_HOLDER = new MultiblockAbility<>("drill_handler");
 
     public static void registerMultiblockAbility(MultiblockAbility<?> ability, MetaTileEntity part) {
         if (!REGISTRY.containsKey(ability)) {

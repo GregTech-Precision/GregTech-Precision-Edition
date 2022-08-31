@@ -2,10 +2,15 @@ package gregtech.api.capability.impl.miner;
 
 import gregtech.api.GTValues;
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityBasicMiner;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BasicMinerLogic extends AbstractMinerLogic {
 
@@ -29,14 +34,12 @@ public class BasicMinerLogic extends AbstractMinerLogic {
     protected boolean consumeFluid(boolean simulate) {
         if(vein.getDefinition().getSpecialFluids().isEmpty())
             return true;
-        boolean success = true;
         for(FluidStack fluid : vein.getDefinition().getSpecialFluids()){
             if(!getMetaTileEntity().drainFluid(fluid, simulate)){
-                success = false;
-                break;
+                return false;
             }
         }
-        return success;
+        return true;
     }
 
     @Override
@@ -44,6 +47,7 @@ public class BasicMinerLogic extends AbstractMinerLogic {
         return super.isWorking() && !hasNotEnoughEnergy;
     }
 
+    @Override
     protected boolean checkCanDrain() {
         if (!consumeEnergy(true)) {
             if (progressTime >= 2) {
@@ -61,7 +65,11 @@ public class BasicMinerLogic extends AbstractMinerLogic {
             this.hasNotEnoughEnergy = false;
         }
 
-        if (getMetaTileEntity().fillInventory(OreDictUnifier.get(OrePrefix.crushed, vein.getDefinition().getNextOre(), 1+getDrillEfficiency()), true)) {
+        List<ItemStack> ores = new ArrayList<>();
+        for(Material ore : vein.getDefinition().getStoredOres())
+            ores.add(OreDictUnifier.get(OrePrefix.crushed, ore, getOrePerCycle()));
+
+        if (getMetaTileEntity().fillInventory(ores, true)) {
             this.isInventoryFull = false;
             return true;
         }
