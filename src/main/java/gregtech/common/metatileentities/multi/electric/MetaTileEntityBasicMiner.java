@@ -205,7 +205,7 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     }
 
     public boolean drainEnergy(boolean simulate) {
-        long energyToDrain = GTValues.VA[getEnergyTier()];
+        long energyToDrain = 3L * (2L << (getEnergyTier() * 2));
         long resultEnergy = energyContainer.getEnergyStored() - energyToDrain;
         if (resultEnergy >= 0L && resultEnergy <= energyContainer.getEnergyCapacity()) {
             if (!simulate)

@@ -111,7 +111,7 @@ public abstract class MetaTileEntityMiner extends MultiblockWithDisplayBase impl
 
     @Override
     public int getMaxProgress() {
-        return minerLogic.MAX_PROGRESS;
+        return minerLogic.getMaxProgressTime();
     }
 
     @Override

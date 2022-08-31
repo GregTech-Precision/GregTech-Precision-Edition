@@ -20,10 +20,8 @@ import java.util.List;
 
 public abstract class AbstractMinerLogic {
 
-    public static final int MAX_PROGRESS = 200;
-
+    private int MAX_PROGRESS = 200;
     protected int progressTime = 0;
-
     protected final MetaTileEntityMiner metaTileEntity;
 
     protected boolean isActive;
@@ -97,7 +95,7 @@ public abstract class AbstractMinerLogic {
 
         // increase progress
         progressTime++;
-        if (progressTime % MAX_PROGRESS != 0)
+        if (progressTime % getMaxProgressTime() != 0)
             return;
         progressTime = 0;
 
@@ -212,7 +210,11 @@ public abstract class AbstractMinerLogic {
     }
 
     public double getProgressPercent() {
-        return getProgressTime() * 1.0 / MAX_PROGRESS;
+        return getProgressTime() * 1.0 / getMaxProgressTime();
+    }
+
+    public int getMaxProgressTime(){
+        return MAX_PROGRESS;
     }
 
     /**

@@ -81,4 +81,9 @@ public class BasicMinerLogic extends AbstractMinerLogic {
         }
         return false;
     }
+
+    @Override
+    public int getMaxProgressTime() {
+        return (int) Math.max(2, super.getMaxProgressTime() * Math.pow(2, -(getMetaTileEntity().getEnergyTier()-1)));
+    }
 }

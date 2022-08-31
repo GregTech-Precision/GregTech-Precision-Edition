@@ -12,8 +12,6 @@ import java.util.List;
 
 public class CoalMinerLogic extends AbstractMinerLogic {
 
-    private int fuelAmount = 0;
-
     public CoalMinerLogic(MetaTileEntityCoalMiner metaTileEntity) {
         super(metaTileEntity);
     }
