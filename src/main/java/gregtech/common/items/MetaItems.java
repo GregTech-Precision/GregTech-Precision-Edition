@@ -585,6 +585,8 @@ public final class MetaItems {
 
     public static MetaItem<?>.MetaValueItem FERTILIZER;
 
+    public static ToolMetaItem<?>.MetaToolValueItem DRILL_PRIMITIVE;
+
 
     public static MetaOreDictItem CT_OREDICT_ITEM;
 

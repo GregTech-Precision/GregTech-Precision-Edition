@@ -109,7 +109,7 @@ public class WidgetProspectingMap extends Widget {
                     BedrockOreVeinHandler.OreVeinWorldEntry oreStack = BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z, 1);
                     if (oreStack != null && oreStack.getDefinition() != null) {
                         packet.addInfo(3, GTUtility.formatNumbers(100.0 * oreStack.getOperationsRemaining() / BedrockOreVeinHandler.getOperationsPerLayer(1)));
-                        packet.addInfo(2, "" + oreStack.getOreYield());
+                        packet.addInfo(2, "" + oreStack.getOperationsRemaining());
                         packet.addInfo(1, oreStack.getDefinition().getDepositName());
                     }
                     break;

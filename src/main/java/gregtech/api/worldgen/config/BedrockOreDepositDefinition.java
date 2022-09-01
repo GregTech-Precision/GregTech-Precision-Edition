@@ -2,7 +2,6 @@ package gregtech.api.worldgen.config;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
@@ -30,10 +29,9 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
     private int weight; // weight value for determining which vein will appear
     private String assignedName; // vein name for JEI display
     private String description; // vein description for JEI display
-    private final int[] yields = new int[2]; // the [minimum, maximum) yields
+    private final int[] operations = new int[2]; // the [minimum, maximum) yields
     private int depletionAmount; // amount of Ore the vein gets drained by
     private int depletionChance; // the chance [0, 100] that the vein will deplete by 1
-    private int depletedYield; // yield after the vein is depleted
 
     private final List<Material> storedOres = new ArrayList<>(); // the Ore which the vein contains
     private final ConcurrentHashMap<Material, Integer> oreWeights = new ConcurrentHashMap<>();
@@ -54,11 +52,11 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         this.weight = configRoot.get("weight").getAsInt();
         // the [minimum, maximum) yield of the vein
         if(configRoot.has("yield")) {
-            this.yields[0] = configRoot.get("yield").getAsJsonObject().get("min").getAsInt();
-            this.yields[1] = configRoot.get("yield").getAsJsonObject().get("max").getAsInt();
+            this.operations[0] = configRoot.get("yield").getAsJsonObject().get("min").getAsInt();
+            this.operations[1] = configRoot.get("yield").getAsJsonObject().get("max").getAsInt();
         } else {
-            this.yields[0] = 1;
-            this.yields[1] = 1;
+            this.operations[0] = 1;
+            this.operations[1] = 1;
         }
 
         // amount of Ore the vein gets depleted by
@@ -66,12 +64,6 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
             this.depletionAmount = configRoot.get("depletion").getAsJsonObject().get("amount").getAsInt();
             // the chance [0, 100] that the vein will deplete by depletionAmount
             this.depletionChance = Math.max(0, Math.min(100, configRoot.get("depletion").getAsJsonObject().get("chance").getAsInt()));
-            // yield after the vein is depleted
-            if (configRoot.get("depletion").getAsJsonObject().has("depleted_yield")) {
-                this.depletedYield = configRoot.get("depletion").getAsJsonObject().get("depleted_yield").getAsInt();
-            } else {
-                this.depletedYield = 1;
-            }
         } else {
             this.depletionAmount = 1;
             this.depletionChance = 100;
@@ -183,16 +175,16 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
     }
 
     @SuppressWarnings("unused")
-    public int[] getYields() {
-        return yields;
+    public int[] getOperations() {
+        return operations;
     }
 
-    public int getMinimumYield() {
-        return yields[0];
+    public int getMinimumOperations() {
+        return operations[0];
     }
 
-    public int getMaximumYield() {
-        return yields[1];
+    public int getMaximumOperations() {
+        return operations[1];
     }
 
     public int getDepletionAmount() {
@@ -201,10 +193,6 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
 
     public int getDepletionChance() {
         return depletionChance;
-    }
-
-    public int getDepletedYield() {
-        return depletedYield;
     }
 
     public List<Material> getStoredOres() {
@@ -245,9 +233,9 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         BedrockOreDepositDefinition objDeposit = (BedrockOreDepositDefinition) obj;
         if (this.weight != objDeposit.getWeight())
             return false;
-        if (this.getMinimumYield() != objDeposit.getMinimumYield())
+        if (this.getMinimumOperations() != objDeposit.getMinimumOperations())
             return false;
-        if (this.getMaximumYield() != objDeposit.getMaximumYield())
+        if (this.getMaximumOperations() != objDeposit.getMaximumOperations())
             return false;
         if (this.depletionAmount != objDeposit.getDepletionAmount())
             return false;
@@ -268,8 +256,6 @@ public class BedrockOreDepositDefinition implements IWorldgenDefinition {
         if ((this.description == null && objDeposit.getDescription() != null) ||
                 (this.description != null && objDeposit.getDescription() == null) ||
                 (this.description != null && objDeposit.getDescription() != null && !this.description.equals(objDeposit.getDescription())))
-            return false;
-        if (this.depletedYield != objDeposit.getDepletedYield())
             return false;
         if ((this.biomeWeightModifier == null && objDeposit.getBiomeWeightModifier() != null) ||
                 (this.biomeWeightModifier != null && objDeposit.getBiomeWeightModifier() == null) ||

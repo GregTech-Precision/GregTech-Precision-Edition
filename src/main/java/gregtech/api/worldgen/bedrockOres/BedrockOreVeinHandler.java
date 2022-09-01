@@ -31,8 +31,7 @@ public class BedrockOreVeinHandler {
 
     public static final int VEIN_CHUNK_SIZE = 4; // veins are 4x4 chunk squares
 
-    public static final int MAXIMUM_VEIN_OPERATIONS = 200_000;
-    public static final int MAXIMUM_SMALL_VEIN_OPERATIONS = 10_000;
+    public static List<Integer> operationsPerLayer = Arrays.asList(10000, 200000);
 
     /**
      * Gets the OreVeinWorldInfo object associated with the given chunk
@@ -77,14 +76,14 @@ public class BedrockOreVeinHandler {
 
         Random random = new XSTR(31L * 31 * chunkX + chunkZ * 31L + Long.hashCode(world.getSeed()));
 
-        int maximumYield = 0;
+        int operations = 0;
         if (definition != null) {
-            int r = definition.getMaximumYield() - definition.getMinimumYield();
-            maximumYield = (r == 0 ? 0 : random.nextInt(r)) + definition.getMinimumYield();
-            maximumYield = Math.min(maximumYield, definition.getMaximumYield());
+            int r = definition.getMaximumOperations() - definition.getMinimumOperations();
+            operations = (r == 0 ? 0 : random.nextInt(r)) + definition.getMinimumOperations();
+            operations = Math.min(operations, definition.getMaximumOperations());
         }
 
-        worldEntry = new OreVeinWorldEntry(definition, maximumYield ,50 + random.nextInt(getOperationsPerLayer(definition.getLayer()) - 50));
+        worldEntry = new OreVeinWorldEntry(definition, operations);
         veinCache.put(coords, layer, worldEntry);
         return worldEntry;
     }
@@ -161,34 +160,6 @@ public class BedrockOreVeinHandler {
     }
 
     /**
-     * gets the Ore yield in a specific chunk
-     *
-     * @param world  the world to retrieve it from
-     * @param chunkX X coordinate of desired chunk
-     * @param chunkZ Z coordinate of desired chunk
-     * @return yield in the vein
-     */
-    public static int getOreYield(World world, int chunkX, int chunkZ, int layer) {
-        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ, layer);
-        if (info == null) return 0;
-        return info.getOreYield();
-    }
-
-    /**
-     * Gets the yield of Ore in the chunk after the vein is completely depleted
-     *
-     * @param world  The world to test
-     * @param chunkX X coordinate of desired chunk
-     * @param chunkZ Z coordinate of desired chunk
-     * @return yield of Ore post depletion
-     */
-    public static int getDepletedOreYield(World world, int chunkX, int chunkZ, int layer) {
-        OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ, layer);
-        if (info == null || info.getDefinition() == null) return 0;
-        return info.getDefinition().getDepletedYield();
-    }
-
-    /**
      * Gets the current operations remaining in a specific chunk's vein
      *
      * @param world  The world to test
@@ -211,7 +182,7 @@ public class BedrockOreVeinHandler {
      * @return Ore in given chunk
      */
     @Nullable
-    public static List<Material> getOreInChunk(World world, int chunkX, int chunkZ, int layer) {
+    public static List<Material> getOresInChunk(World world, int chunkX, int chunkZ, int layer) {
         OreVeinWorldEntry info = getOreVeinWorldEntry(world, chunkX, chunkZ, layer);
         if (info == null || info.getDefinition() == null) return null;
         return info.getDefinition().getStoredOres();
@@ -253,24 +224,17 @@ public class BedrockOreVeinHandler {
      * @return maximum amount of operations per this vein layer
      */
     public static int getOperationsPerLayer(int layer){
-        switch (layer){
-            case 0:
-                return 10000;
-            case 1:
-                return 200000;
-            default:
-                return 10000;
-        }
+        if(operationsPerLayer.size() <= layer)
+            return -1;
+        return operationsPerLayer.get(layer);
     }
 
     public static class OreVeinWorldEntry {
         private BedrockOreDepositDefinition vein;
-        private int oreYield;
         private int operationsRemaining;
 
-        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int oreYield,int operations) {
+        public OreVeinWorldEntry(BedrockOreDepositDefinition vein, int operations) {
             this.vein = vein;
-            this.oreYield = oreYield;
             this.operationsRemaining = operations;
         }
 
@@ -278,10 +242,6 @@ public class BedrockOreVeinHandler {
 
         public BedrockOreDepositDefinition getDefinition() {
             return this.vein;
-        }
-
-        public int getOreYield() {
-            return this.oreYield;
         }
 
         public int getOperationsRemaining() {
@@ -299,7 +259,6 @@ public class BedrockOreVeinHandler {
 
         public NBTTagCompound writeToNBT() {
             NBTTagCompound tag = new NBTTagCompound();
-            tag.setInteger("oreYield", oreYield);
             tag.setInteger("operationsRemaining", operationsRemaining);
             if (vein != null) {
                 tag.setString("vein", vein.getDepositName());
@@ -310,7 +269,6 @@ public class BedrockOreVeinHandler {
         @Nonnull
         public static OreVeinWorldEntry readFromNBT(@Nonnull NBTTagCompound tag) {
             OreVeinWorldEntry info = new OreVeinWorldEntry();
-            info.oreYield = tag.getInteger("oreYield");
             info.operationsRemaining = tag.getInteger("operationsRemaining");
 
             if (tag.hasKey("vein")) {
