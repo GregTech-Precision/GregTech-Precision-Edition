@@ -17,6 +17,7 @@ public class GuiTextures {
     public static final SteamTexture BACKGROUND_STEAM = SteamTexture.fullImage("textures/gui/base/background_%s.png");
     public static final TextureArea CLIPBOARD_BACKGROUND = TextureArea.fullImage("textures/gui/base/clipboard_background.png");
     public static final TextureArea CLIPBOARD_PAPER_BACKGROUND = TextureArea.fullImage("textures/gui/base/clipboard_paper_background.png");
+    public static final TextureArea DRILL_HOLDER_BACKGROUND = TextureArea.fullImage("textures/gui/base/drill_holder_background.png");
 
     public static final TextureArea BLANK = AdoptableTextureArea.fullImage("textures/gui/base/blank.png", 1, 1, 0, 0);
     public static final TextureArea DISPLAY = TextureArea.fullImage("textures/gui/base/display.png");

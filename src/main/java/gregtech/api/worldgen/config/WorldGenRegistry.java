@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.realmsclient.util.Pair;
 import gregtech.api.GTValues;
 import gregtech.api.util.FileUtility;
 import gregtech.api.util.GTLog;
@@ -31,7 +32,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.minecraftforge.event.terraingen.OreGenEvent.GenerateMinable.EventType.*;
-import static net.minecraftforge.event.terraingen.OreGenEvent.GenerateMinable.EventType.EMERALD;
 
 public class WorldGenRegistry {
 
@@ -44,6 +44,7 @@ public class WorldGenRegistry {
     }
 
     private final Map<Integer, String> namedDimensions = new HashMap<>();
+    private final Map<Integer, Pair<Integer, Integer>> layerOperations = new HashMap<>();
 
     private final List<BedrockFluidDepositDefinition> registeredBedrockVeinDefinitions = new ArrayList<>();
     private final List<BedrockFluidDepositDefinition> addonRegisteredBedrockVeinDefinitions = new ArrayList<>();
@@ -88,6 +89,8 @@ public class WorldGenRegistry {
         Path configPath = Loader.instance().getConfigDir().toPath().resolve(GTValues.MODID);
         // The Path for the file used to name dimensions for the JEI ore gen page
         Path dimensionsFile = configPath.resolve("dimensions.json");
+        // The Path for the file used to get min and max operations for layer
+        Path layersFile = configPath.resolve("layers.json");
         // The folder where worldgen definitions are stored
         Path worldgenRootPath = configPath.resolve("worldgen");
         // Lock file used to determine if the worldgen files need to be regenerated
@@ -114,6 +117,11 @@ public class WorldGenRegistry {
         if (!Files.exists(dimensionsFile)) {
             Files.createFile(dimensionsFile);
             extractJarVeinDefinitions(configPath, dimensionsFile);
+        }
+
+        if (!Files.exists(layersFile)) {
+            Files.createFile(layersFile);
+            extractJarVeinDefinitions(configPath, layersFile);
         }
 
         if (Files.exists(jarFileExtractLock)) {
@@ -156,6 +164,7 @@ public class WorldGenRegistry {
 
         // Read the dimensions name from the dimensions file
         gatherNamedDimensions(dimensionsFile);
+        gatherLayerOperations(layersFile);
 
         // Will always fail when called from initializeRegistry
         // Placed here to delete the file before being gathered and having its definition initialized
@@ -245,6 +254,8 @@ public class WorldGenRegistry {
         Path bedrockFluidVeinRootPath = worldgenRootPath.resolve("fluid");
         // The path of the named dimensions file in the config folder
         Path dimensionsRootPath = configPath.resolve("dimensions.json");
+        // The path of the named dimensions file in the config folder
+        Path layersRootPath = configPath.resolve("layers.json");
         // THe path of the lock file in the config folder
         Path extractLockPath = configPath.resolve("worldgen_extracted.json");
         FileSystem zipFileSystem = null;
@@ -313,6 +324,14 @@ public class WorldGenRegistry {
                 Files.copy(dimensionFile, worldgenPath, StandardCopyOption.REPLACE_EXISTING);
 
                 GTLog.logger.info("Extracted builtin dimension definitions into worldgen folder");
+            } else if (targetPath.compareTo(layersRootPath) == 0){
+                GTLog.logger.info("Attempting extraction of standard layers definitions from {} to {}",
+                        worldgenJarRootPath, layersRootPath);
+
+                Path layersFile = worldgenJarRootPath.resolve("layers.json");
+
+                Path worldgenPath = layersRootPath.resolve(worldgenJarRootPath.relativize(worldgenJarRootPath).toString());
+                Files.copy(layersFile, worldgenPath, StandardCopyOption.REPLACE_EXISTING);
             }
             // Attempts to extract lock txt file
             else if (targetPath.compareTo(extractLockPath) == 0) {
@@ -394,6 +413,29 @@ public class WorldGenRegistry {
     }
 
     /**
+     * Gathers the designated named dimensions from the designated json file
+     *
+     * @param layersFile The Path to the layers.json file
+     */
+    private void gatherLayerOperations(Path layersFile) {
+        JsonObject element = FileUtility.tryExtractFromFile(layersFile);
+        if (element == null) {
+            return;
+        }
+
+        try {
+            JsonArray layers = element.getAsJsonArray("layers");
+            for (JsonElement layer : layers) {
+                int min = layer.getAsJsonObject().get("operations").getAsJsonObject().get("min").getAsInt();
+                int max = layer.getAsJsonObject().get("operations").getAsJsonObject().get("max").getAsInt();
+                layerOperations.put(layer.getAsJsonObject().get("layer").getAsInt(), Pair.of(min, max));
+            }
+        } catch (RuntimeException exception) {
+            GTLog.logger.error("Failed to parse layer operations", exception);
+        }
+    }
+
+    /**
      * Called to remove veins from the list of registered vein definitions
      * Can fail if called on default veins when the veins have been modified by modpack makers
      *
@@ -450,6 +492,10 @@ public class WorldGenRegistry {
 
     public static Map<Integer, String> getNamedDimensions() {
         return INSTANCE.namedDimensions;
+    }
+
+    public static Map<Integer, Pair<Integer, Integer>> getLayerOperations(){
+        return INSTANCE.layerOperations;
     }
 
     static class WorldGeneratorImpl implements IWorldGenerator {

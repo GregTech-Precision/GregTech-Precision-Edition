@@ -2,6 +2,7 @@ package gregtech.api.worldgen.bedrockOres;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import com.mojang.realmsclient.util.Pair;
 import gregtech.api.GTValues;
 import gregtech.api.net.NetworkHandler;
 import gregtech.api.net.packets.CPacketOreVeinList;
@@ -10,6 +11,7 @@ import gregtech.api.util.GTLog;
 import gregtech.api.util.XSTR;
 import gregtech.api.worldgen.bedrockFluids.ChunkPosDimension;
 import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
+import gregtech.api.worldgen.config.WorldGenRegistry;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -30,8 +32,6 @@ public class BedrockOreVeinHandler {
     private static LinkedHashMap<String, BedrockOreDepositDefinition> nameVein = new LinkedHashMap<>();
 
     public static final int VEIN_CHUNK_SIZE = 4; // veins are 4x4 chunk squares
-
-    public static List<Integer> operationsPerLayer = Arrays.asList(10000, 200000);
 
     /**
      * Gets the OreVeinWorldInfo object associated with the given chunk
@@ -78,9 +78,10 @@ public class BedrockOreVeinHandler {
 
         int operations = 0;
         if (definition != null) {
-            int r = definition.getMaximumOperations() - definition.getMinimumOperations();
-            operations = (r == 0 ? 0 : random.nextInt(r)) + definition.getMinimumOperations();
-            operations = Math.min(operations, definition.getMaximumOperations());
+            Pair<Integer, Integer> operationsPerLayer = getOperationsPerLayer(definition.getLayer());
+            int r = operationsPerLayer.second() - operationsPerLayer.first();
+            operations = (r == 0 ? 0 : random.nextInt(r)) + operationsPerLayer.first();
+            operations = Math.min(operations, operationsPerLayer.second());
         }
 
         worldEntry = new OreVeinWorldEntry(definition, operations);
@@ -223,10 +224,8 @@ public class BedrockOreVeinHandler {
      * @param layer
      * @return maximum amount of operations per this vein layer
      */
-    public static int getOperationsPerLayer(int layer){
-        if(operationsPerLayer.size() <= layer)
-            return -1;
-        return operationsPerLayer.get(layer);
+    public static Pair<Integer, Integer> getOperationsPerLayer(int layer) {
+        return WorldGenRegistry.getLayerOperations().getOrDefault(layer, null);
     }
 
     public static class OreVeinWorldEntry {

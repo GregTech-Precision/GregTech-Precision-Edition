@@ -63,7 +63,7 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     @Override
     protected ModularUI.Builder createUITemplate(EntityPlayer entityPlayer) {
         ModularUI.Builder builder = super.createUITemplate(entityPlayer);
-        builder.widget(new ClickButtonWidget(135, 104, 32, 18, "Next Layer", this::nextLayer));
+        builder.widget(new ClickButtonWidget(135, 104, 64, 18, "Next Layer", this::nextLayer));
         return builder;
     }
 
@@ -205,7 +205,7 @@ public class MetaTileEntityBasicMiner extends MetaTileEntityMiner {
     }
 
     public boolean drainEnergy(boolean simulate) {
-        long energyToDrain = 3L * (2L << (getEnergyTier() * 2));
+        long energyToDrain = 3L * (2L << (getEnergyTier() << 1L));
         long resultEnergy = energyContainer.getEnergyStored() - energyToDrain;
         if (resultEnergy >= 0L && resultEnergy <= energyContainer.getEnergyCapacity()) {
             if (!simulate)

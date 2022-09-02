@@ -156,11 +156,14 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
             baseYPos = 91;
         }
 
-        int operations = BedrockOreVeinHandler.getOperationsPerLayer(definition.getLayer());
-        String maxOperations = operations >= 1000 ? operations/1000+"k" : Integer.toString(operations);
+        int maxOperations = BedrockOreVeinHandler.getOperationsPerLayer(definition.getLayer()).second();
+        String maxOperationsStr = maxOperations >= 1000 ? maxOperations/1000+"k" : Integer.toString(maxOperations);
+
+        int minOperations = BedrockOreVeinHandler.getOperationsPerLayer(definition.getLayer()).first();
+        String minOperationsStr = minOperations >= 1000 ? minOperations/1000+"k" : Integer.toString(minOperations);
 
         //Create the Size
-        minecraft.fontRenderer.drawString("Size: " + 50 + " - " + maxOperations, baseXPos, baseYPos, 0x111111);
+        minecraft.fontRenderer.drawString("Size: " + minOperationsStr + " - " + maxOperationsStr, baseXPos, baseYPos, 0x111111);
 
         //Create the Weight
         minecraft.fontRenderer.drawString("Vein Weight: " + weight, baseXPos, baseYPos + FONT_HEIGHT, 0x111111);

@@ -1,5 +1,10 @@
 package gregtech.common.metatileentities.multi.multiblockpart;
 
+import codechicken.lib.CodeChickenLib;
+import codechicken.lib.model.modelbase.CCModelRenderer;
+import codechicken.lib.render.RenderUtils;
+import codechicken.lib.vec.Cuboid6;
+import gregtech.api.GregTechAPI;
 import gregtech.api.capability.IDrillHeadHolder;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
@@ -7,7 +12,14 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
+import gregtech.client.renderer.handler.CCLBlockRenderer;
+import gregtech.client.utils.RenderUtil;
 import gregtech.common.items.behaviors.DrillHeadBehaviour;
+import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -33,8 +45,8 @@ public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart 
 
     @Override
     protected ModularUI createUI(EntityPlayer entityPlayer) {
-        return ModularUI.builder(GuiTextures.BACKGROUND, 176, 166)
-                .slot(this.drillHandler, 0, 18, 18, true, true)
+        return ModularUI.builder(GuiTextures.DRILL_HOLDER_BACKGROUND, 176, 166)
+                .slot(this.drillHandler, 0, 79, 34, true, true)
                 .bindPlayerInventory(entityPlayer.inventory)
                 .build(getHolder(), entityPlayer);
     }
@@ -47,18 +59,16 @@ public class MetaTileEntityDrillHeadHolder extends MetaTileEntityMultiblockPart 
     @Override
     public int getOrePerCycle() {
         ItemStack stack = drillHandler.getStackInSlot(0);
-        if(stack.isEmpty())
-            return 0;
-        return DrillHeadBehaviour.getInstanceFor(stack).getDrillHeadLevel(stack);
+        if(drillHandler.isItemValid(0, stack))
+            return DrillHeadBehaviour.getInstanceFor(stack).getDrillHeadLevel(stack);
+        return 0;
     }
 
     @Override
     public void applyDrillHeadDamage(int damageApplied) {
         ItemStack stack = drillHandler.getStackInSlot(0);
-        if(stack.isEmpty())
-            return;
-
-        DrillHeadBehaviour.getInstanceFor(stack).applyDrillHeadDamage(stack, damageApplied);
+        if(drillHandler.isItemValid(0, stack))
+            DrillHeadBehaviour.getInstanceFor(stack).applyDrillHeadDamage(stack, damageApplied);
     }
 
     @Override
