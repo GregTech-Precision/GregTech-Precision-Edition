@@ -168,7 +168,7 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
                             new FluidStackTextRenderer(fluidAmount, false,
                                     tankWidget.getSize().width - (2 * tankWidget.fluidRenderOffset),
                                     tankWidget.getSize().height - (2 * tankWidget.fluidRenderOffset), null)
-                                    .setOutputTime(recipeWrapper.getFluidOutputTime(importFluids.getFluidTanks().size() + exportIndex - recipeWrapper.getRecipe().getFluidOutputs().size())),
+                                    .setOutputTime(recipeWrapper.getFluidOutputTime(exportIndex - recipeWrapper.getRecipe().getFluidOutputs().size())),
                             tankWidget.getPosition().x + tankWidget.fluidRenderOffset,
                             tankWidget.getPosition().y + tankWidget.fluidRenderOffset,
                             tankWidget.getSize().width - (2 * tankWidget.fluidRenderOffset),
