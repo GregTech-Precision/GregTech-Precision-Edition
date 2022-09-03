@@ -1,5 +1,6 @@
 package gregtech.integration.jei.utils.render;
 
+import gregtech.api.recipes.Recipe.TimeEntryFluid;
 import gregtech.client.utils.RenderUtil;
 import gregtech.api.util.TextFormattingUtil;
 import mezz.jei.api.gui.IDrawable;
@@ -14,6 +15,7 @@ import javax.annotation.Nullable;
 
 public class FluidStackTextRenderer extends FluidStackRenderer {
     private boolean notConsumed;
+    private int outputTime;
 
     public FluidStackTextRenderer(int capacityMb, boolean showCapacity, int width, int height, @Nullable IDrawable overlay) {
         super(capacityMb, showCapacity, width, height, overlay);
@@ -22,6 +24,13 @@ public class FluidStackTextRenderer extends FluidStackRenderer {
 
     public FluidStackTextRenderer setNotConsumed(boolean notConsumed) {
         this.notConsumed = notConsumed;
+        return this;
+    }
+
+    public FluidStackTextRenderer setOutputTime(TimeEntryFluid entry){
+        if(entry != null){
+            this.outputTime = entry.getTime();
+        }
         return this;
     }
 
@@ -44,6 +53,10 @@ public class FluidStackTextRenderer extends FluidStackRenderer {
 
         if (notConsumed) {
             fontRenderer.drawStringWithShadow("NC", (xPosition + 6) * 2 - fontRenderer.getStringWidth("NC") + 19, (yPosition + 1) * 2, 0xFFFFFF);
+        }
+        else if(outputTime > 0){
+            String time = outputTime/20+"s";
+            fontRenderer.drawStringWithShadow(time, (xPosition + 6) * 2 - fontRenderer.getStringWidth(time) + 19, (yPosition + 1) * 2, 0xFFFFFF);
         }
 
         GlStateManager.popMatrix();

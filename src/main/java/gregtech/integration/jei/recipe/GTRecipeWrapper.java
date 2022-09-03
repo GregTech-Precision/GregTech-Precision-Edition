@@ -4,12 +4,13 @@ import gregtech.api.GTValues;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.Recipe.ChanceEntry;
+import gregtech.api.recipes.Recipe.TimeEntryFluid;
+import gregtech.api.recipes.Recipe.TimeEntryItem;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
 import gregtech.api.recipes.recipeproperties.PrimitiveProperty;
 import gregtech.api.recipes.recipeproperties.RecipeProperty;
-import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.util.CTRecipeHelper;
 import gregtech.api.util.ClipboardUtil;
 import gregtech.integration.jei.utils.AdvancedRecipeWrapper;
@@ -23,7 +24,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -72,7 +72,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         }
 
         // Outputs
-        if (!recipe.getOutputs().isEmpty() || !recipe.getChancedOutputs().isEmpty()) {
+        if (!recipe.getOutputs().isEmpty() || !recipe.getChancedOutputs().isEmpty() || !recipe.getTimedOutputs().isEmpty()) {
             List<ItemStack> recipeOutputs = recipe.getOutputs()
                     .stream().map(ItemStack::copy).collect(Collectors.toList());
 
@@ -81,14 +81,29 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
             for (ChanceEntry chancedEntry : chancedOutputs) {
                 recipeOutputs.add(chancedEntry.getItemStackRaw());
             }
+
+            List<Recipe.TimeEntryItem> timedOutputs = recipe.getTimedOutputs();
+            timedOutputs.sort(Comparator.comparingInt(entry -> entry == null ? 0 : entry.getTime()));
+            for(Recipe.TimeEntryItem timeEntry : timedOutputs){
+                recipeOutputs.add(timeEntry.getStackRaw());
+            }
+
             ingredients.setOutputs(VanillaTypes.ITEM, recipeOutputs);
         }
 
         // Fluid Outputs
         if (!recipe.getFluidOutputs().isEmpty()) {
-            ingredients.setOutputs(VanillaTypes.FLUID, recipe.getFluidOutputs().stream()
+            List<FluidStack> recipeFluidOutputs = recipe.getFluidOutputs().stream()
                     .map(FluidStack::copy)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList());
+
+            List<Recipe.TimeEntryFluid> timedFluidOutputs = recipe.getTimedFluidOutputs();
+            timedFluidOutputs.sort(Comparator.comparingInt(entry -> entry == null ? 0 : entry.getTime()));
+            for(Recipe.TimeEntryFluid timeEntryFluid : timedFluidOutputs){
+                recipeFluidOutputs.add(timeEntryFluid.getStackRaw());
+            }
+
+            ingredients.setOutputs(VanillaTypes.FLUID, recipeFluidOutputs);
         }
     }
 
@@ -101,10 +116,18 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
             entry = recipe.getChancedOutputs().get(outputIndex - recipe.getOutputs().size());
         }
 
+        TimeEntryItem timeEntry = null;
+        if (!input && !recipe.getTimedOutputs().isEmpty() && outputIndex >= recipe.getOutputs().size()) {
+            timeEntry = recipe.getTimedOutputs().get(outputIndex - recipe.getOutputs().size() - recipe.getChancedOutputs().size());
+        }
+
         if (entry != null) {
             double chance = entry.getChance() / 100.0;
             double boost = entry.getBoostPerTier() / 100.0;
             tooltip.add(I18n.format("gregtech.recipe.chance", chance, boost));
+        } else if(timeEntry != null) {
+            int time = timeEntry.getTime();
+            tooltip.add(I18n.format("gregtech.recipe.timed", time));
         } else if (notConsumed) {
             tooltip.add(I18n.format("gregtech.recipe.not_consumed"));
         }
@@ -113,7 +136,15 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     public void addFluidTooltip(int slotIndex, boolean input, Object ingredient, List<String> tooltip) {
         boolean notConsumed = input && isNotConsumedFluid(slotIndex);
 
-        if (notConsumed) {
+        TimeEntryFluid timeEntry = null;
+        int outputIndex = slotIndex - recipeMap.getMaxFluidInputs();
+        if (!input && !recipe.getTimedFluidOutputs().isEmpty() && outputIndex >= recipe.getFluidOutputs().size()) {
+            timeEntry = recipe.getTimedFluidOutputs().get(outputIndex - recipe.getFluidOutputs().size());
+        }
+        if(timeEntry != null){
+            int time = timeEntry.getTime();
+            tooltip.add(I18n.format("gregtech.recipe.timed", time));
+        } else if (notConsumed) {
             tooltip.add(I18n.format("gregtech.recipe.not_consumed"));
         }
     }
@@ -167,6 +198,16 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     public boolean isNotConsumedFluid(int slot) {
         if (slot >= recipe.getFluidInputs().size()) return false;
         return recipe.getFluidInputs().get(slot).isNonConsumable();
+    }
+
+    public TimeEntryItem getItemOutputTime(int slot){
+        if (slot >= recipe.getTimedOutputs().size() || slot < 0) return null;
+        return recipe.getTimedOutputs().get(slot);
+    }
+
+    public TimeEntryFluid getFluidOutputTime(int slot){
+        if (slot >= recipe.getTimedFluidOutputs().size() || slot < 0) return null;
+        return recipe.getTimedFluidOutputs().get(slot);
     }
 
     private int getPropertyListHeight() {

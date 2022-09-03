@@ -131,7 +131,8 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
                 } else if (handle.getItemHandler() == exportItems) {
                     //this is output item stack slot widget, so add it to item group
                     itemStackGroup.init(importItems.getSlots() + handle.getSlotIndex(), false,
-                            new ItemStackTextRenderer(recipeWrapper.getOutputChance(handle.getSlotIndex() - recipeWrapper.getRecipe().getOutputs().size())),
+                            new ItemStackTextRenderer(recipeWrapper.getOutputChance(handle.getSlotIndex() - recipeWrapper.getRecipe().getOutputs().size()),
+                            recipeWrapper.getItemOutputTime(handle.getSlotIndex() - recipeWrapper.getRecipe().getOutputs().size() - recipeWrapper.getRecipe().getChancedOutputs().size())),
                             slotWidget.getPosition().x + 1,
                             slotWidget.getPosition().y + 1,
                             slotWidget.getSize().width - 2,
@@ -166,7 +167,8 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
                     fluidStackGroup.init(importFluids.getFluidTanks().size() + exportIndex, false,
                             new FluidStackTextRenderer(fluidAmount, false,
                                     tankWidget.getSize().width - (2 * tankWidget.fluidRenderOffset),
-                                    tankWidget.getSize().height - (2 * tankWidget.fluidRenderOffset), null),
+                                    tankWidget.getSize().height - (2 * tankWidget.fluidRenderOffset), null)
+                                    .setOutputTime(recipeWrapper.getFluidOutputTime(exportIndex - recipeWrapper.getRecipe().getFluidOutputs().size())),
                             tankWidget.getPosition().x + tankWidget.fluidRenderOffset,
                             tankWidget.getPosition().y + tankWidget.fluidRenderOffset,
                             tankWidget.getSize().width - (2 * tankWidget.fluidRenderOffset),

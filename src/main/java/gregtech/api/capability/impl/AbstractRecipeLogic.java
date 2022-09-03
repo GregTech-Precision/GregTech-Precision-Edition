@@ -30,8 +30,8 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import static gregtech.api.recipes.logic.OverclockingLogic.*;
@@ -57,8 +57,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected int recipeEUt;
     protected List<FluidStack> fluidOutputs;
     protected NonNullList<ItemStack> itemOutputs;
-    protected HashMap<Integer, HashSet<ItemStack>> timedOutputs;
-    protected HashMap<Integer, HashSet<FluidStack>> timedFluidOutputs;
+    protected List<Recipe.TimeEntryItem> timedOutputs;
+    protected List<Recipe.TimeEntryFluid> timedFluidOutputs;
 
     protected boolean isActive;
     protected boolean workingEnabled = true;
@@ -227,10 +227,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             drawEnergy(recipeEUt, false);
 
             //try to push timed output
-            if(timedOutputs != null)
+            if(!timedOutputs.isEmpty())
                 timedOutput(progressTime);
 
-            if(timedFluidOutputs != null)
+            if(!timedFluidOutputs.isEmpty())
                 timedFluidOutput(progressTime);
 
             //as recipe starts with progress on 1 this has to be > only not => to compensate for it
@@ -256,13 +256,25 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     protected void timedOutput(int time){
-        if (timedOutputs.containsKey(time))
-            GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, new ArrayList<>(timedOutputs.get(time)));
+        Iterator<Recipe.TimeEntryItem> it = timedOutputs.iterator();
+        while(it.hasNext()){
+            Recipe.TimeEntryItem entry = it.next();
+            if(time == entry.getTime()){
+                GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, Collections.singletonList(entry.getStack()));
+                it.remove();
+            }
+        }
     }
 
     protected void timedFluidOutput(int time){
-        if (timedFluidOutputs.containsKey(time))
-            GTTransferUtils.addFluidsToFluidHandler(getOutputTank(), false, new ArrayList<>(timedFluidOutputs.get(time)));
+        Iterator<Recipe.TimeEntryFluid> it = timedFluidOutputs.iterator();
+        while(it.hasNext()){
+            Recipe.TimeEntryFluid entry = it.next();
+            if(time == entry.getTime()){
+                GTTransferUtils.addFluidsToFluidHandler(getOutputTank(), false, Collections.singletonList(entry.getStack()));
+                it.remove();
+            }
+        }
     }
 
     /**
@@ -464,7 +476,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         }
 
         // We have already trimmed fluid outputs at this time
-        if (!metaTileEntity.canVoidRecipeFluidOutputs() && exportFluids.getTanks() > 0 && !GTTransferUtils.addFluidsToFluidHandler(exportFluids, true, recipe.getFluidOutputs())) {
+        if (!metaTileEntity.canVoidRecipeFluidOutputs() && exportFluids.getTanks() > 0 && !GTTransferUtils.addFluidsToFluidHandler(exportFluids, true, recipe.getAllFluidOutputs())) {
             this.isOutputsFull = true;
             return false;
         }
@@ -663,8 +675,14 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         this.progressTime = 1;
         setMaxProgress(overclockResults[1]);
         this.recipeEUt = overclockResults[0];
-        this.fluidOutputs = GTUtility.copyFluidList(recipe.getAllFluidOutputs(metaTileEntity.getFluidOutputLimit()));
+        this.fluidOutputs = GTUtility.copyFluidList(recipe.getFluidOutputs());
         this.itemOutputs = GTUtility.copyStackList(recipe.getResultItemOutputs(GTUtility.getTierByVoltage(recipeEUt), getRecipeMap()));
+        this.timedOutputs = new ArrayList<>(recipe.getTimedOutputs());
+        this.timedFluidOutputs = new ArrayList<>(recipe.getTimedFluidOutputs());
+        float OC = (float) recipe.getDuration() / (float) getMaxProgress();
+
+        this.timedOutputs.forEach(entry -> entry.setOC(OC));
+        this.timedFluidOutputs.forEach(entry -> entry.setOC(OC));
 
         if (this.wasActiveAndNeedsUpdate) {
             this.wasActiveAndNeedsUpdate = false;
@@ -867,8 +885,18 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             for (FluidStack fluidOutput : fluidOutputs) {
                 fluidOutputsList.appendTag(fluidOutput.writeToNBT(new NBTTagCompound()));
             }
+            NBTTagList timedItemOutputsList = new NBTTagList();
+            for (Recipe.TimeEntryItem entry : timedOutputs) {
+                timedItemOutputsList.appendTag(entry.writeToNBT(new NBTTagCompound()));
+            }
+            NBTTagList timedFluidOutputsList = new NBTTagList();
+            for (Recipe.TimeEntryFluid entry : timedFluidOutputs) {
+                timedFluidOutputsList.appendTag(entry.writeToNBT(new NBTTagCompound()));
+            }
             compound.setTag("ItemOutputs", itemOutputsList);
             compound.setTag("FluidOutputs", fluidOutputsList);
+            compound.setTag("TimedItemOutputs", timedItemOutputsList);
+            compound.setTag("TimedFluidOutputs", timedFluidOutputsList);
         }
         return compound;
     }
@@ -894,6 +922,16 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             this.fluidOutputs = new ArrayList<>();
             for (int i = 0; i < fluidOutputsList.tagCount(); i++) {
                 this.fluidOutputs.add(FluidStack.loadFluidStackFromNBT(fluidOutputsList.getCompoundTagAt(i)));
+            }
+            NBTTagList timedItemOutputsList = compound.getTagList("TimedItemOutputs", Constants.NBT.TAG_COMPOUND);
+            this.timedOutputs = new ArrayList<>();
+            for (int i = 0; i < timedItemOutputsList.tagCount(); i++) {
+                this.timedOutputs.add(Recipe.TimeEntryItem.loadFromNBT(timedItemOutputsList.getCompoundTagAt(i)));
+            }
+            NBTTagList timedFluidOutputsList = compound.getTagList("TimedFluidOutputs", Constants.NBT.TAG_COMPOUND);
+            this.timedFluidOutputs = new ArrayList<>();
+            for (int i = 0; i < timedFluidOutputsList.tagCount(); i++) {
+                this.timedFluidOutputs.add(Recipe.TimeEntryFluid.loadFromNBT(timedFluidOutputsList.getCompoundTagAt(i)));
             }
         }
     }
