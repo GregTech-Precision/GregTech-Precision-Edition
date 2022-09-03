@@ -3,6 +3,8 @@ package gregtech.integration.jei.recipe;
 import gregtech.api.GTValues;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.recipes.Recipe;
+import gregtech.api.recipes.Recipe.TimeEntryFluid;
+import gregtech.api.recipes.Recipe.TimeEntryItem;
 import gregtech.api.recipes.Recipe.ChanceEntry;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMaps;
@@ -72,7 +74,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         }
 
         // Outputs
-        if (!recipe.getOutputs().isEmpty() || !recipe.getChancedOutputs().isEmpty()) {
+        if (!recipe.getOutputs().isEmpty() || !recipe.getChancedOutputs().isEmpty() || !recipe.getTimedOutputs().isEmpty()) {
             List<ItemStack> recipeOutputs = recipe.getOutputs()
                     .stream().map(ItemStack::copy).collect(Collectors.toList());
 
@@ -81,14 +83,29 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
             for (ChanceEntry chancedEntry : chancedOutputs) {
                 recipeOutputs.add(chancedEntry.getItemStackRaw());
             }
+
+            List<Recipe.TimeEntryItem> timedOutputs = recipe.getTimedOutputs();
+            timedOutputs.sort(Comparator.comparingInt(entry -> entry == null ? 0 : entry.getTime()));
+            for(Recipe.TimeEntryItem timeEntry : timedOutputs){
+                recipeOutputs.add(timeEntry.getStackRaw());
+            }
+
             ingredients.setOutputs(VanillaTypes.ITEM, recipeOutputs);
         }
 
         // Fluid Outputs
         if (!recipe.getFluidOutputs().isEmpty()) {
-            ingredients.setOutputs(VanillaTypes.FLUID, recipe.getFluidOutputs().stream()
+            List<FluidStack> recipeFluidOutputs = recipe.getFluidOutputs().stream()
                     .map(FluidStack::copy)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList());
+
+            List<Recipe.TimeEntryFluid> timedFluidOutputs = recipe.getTimedFluidOutputs();
+            timedFluidOutputs.sort(Comparator.comparingInt(entry -> entry == null ? 0 : entry.getTime()));
+            for(Recipe.TimeEntryFluid timeEntryFluid : timedFluidOutputs){
+                recipeFluidOutputs.add(timeEntryFluid.getStackRaw());
+            }
+
+            ingredients.setOutputs(VanillaTypes.FLUID, recipeFluidOutputs);
         }
     }
 
@@ -167,6 +184,16 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     public boolean isNotConsumedFluid(int slot) {
         if (slot >= recipe.getFluidInputs().size()) return false;
         return recipe.getFluidInputs().get(slot).isNonConsumable();
+    }
+
+    public TimeEntryItem getItemOutputTime(int slot){
+        if (slot >= recipe.getTimedOutputs().size() || slot < 0) return null;
+        return recipe.getTimedOutputs().get(slot);
+    }
+
+    public TimeEntryFluid getFluidOutputTime(int slot){
+        if (slot >= recipe.getTimedFluidOutputs().size() || slot < 0) return null;
+        return recipe.getTimedFluidOutputs().get(slot);
     }
 
     private int getPropertyListHeight() {

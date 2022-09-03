@@ -67,7 +67,7 @@ public class ParallelLogic {
         }
 
         // Check both normal item outputs and chanced item outputs
-        if (recipe.getOutputs().size() > 0 || recipe.getChancedOutputs().size() > 0) {
+        if (recipe.getOutputs().size() > 0 || recipe.getChancedOutputs().size() > 0 || recipe.getTimedOutputs().size() > 0) {
             // If we are voiding items, reset the item limit to the maximum number of parallels
             if(voidItems) {
                 modifiedItemParallelAmount = parallelAmount;
@@ -83,7 +83,7 @@ public class ParallelLogic {
         }
 
         // TODO, check both regular and chanced fluid outputs when fluid outputs are implemented
-        if (recipe.getFluidOutputs().size() > 0) {
+        if (recipe.getFluidOutputs().size() > 0 || recipe.getTimedFluidOutputs().size() > 0) {
             // If we are voiding fluids, reset the fluid limit to the maximum number of parallels
             if(voidFluids) {
                 modifiedFluidParallelAmount = parallelAmount;
