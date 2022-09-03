@@ -715,89 +715,93 @@ public class Recipe {
     ///////////////////////////////////////////////////////////
     //                   Timed Output                        //
     ///////////////////////////////////////////////////////////
-    public static abstract class TimeEntry<T> {
-        protected T stack;
-        protected int time;
-        protected float OC = 1;
 
-        public T getStackRaw() {
-            return stack;
-        }
+    public static class TimeEntryItem {
 
-        public int getTime() {
-            return (int) Math.max(1, Math.floor((float)time/OC));
-        }
-
-        public void setOC(float OC){
-            this.OC = OC;
-        }
-
-        public abstract T getStack();
-
-        public abstract TimeEntry<T> copy();
-
-        public abstract NBTTagCompound writeToNBT(NBTTagCompound nbt);
-
-        public abstract TimeEntry<T> loadFromNBT(NBTTagCompound nbt);
-    }
-
-    public static class TimeEntryItem extends TimeEntry<ItemStack> {
+        private final ItemStack stack;
+        private final int time;
+        private float OC = 1;
 
         public TimeEntryItem(ItemStack stack, int time){
             this.stack = stack;
             this.time = time;
         }
 
-        @Override
+        public int getTime() {
+            return (int) Math.max(1, Math.floor((float)time/OC));
+        }
+
+        public TimeEntryItem setOC(float OC){
+            this.OC = OC;
+            return this;
+        }
+
+        public ItemStack getStackRaw() {
+            return stack;
+        }
+
         public ItemStack getStack() {
             return stack.copy();
         }
 
-        @Override
         public TimeEntryItem copy() {
             return new TimeEntryItem(stack, time);
         }
 
-        @Override
         public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-            stack.writeToNBT(nbt);
             nbt.setInteger("OutputTime", this.time);
+            nbt.setFloat("OC", this.OC);
+            stack.writeToNBT(nbt);
             return nbt;
         }
 
-        @Override
-        public TimeEntryItem loadFromNBT(NBTTagCompound nbt) {
-            return new TimeEntryItem(new ItemStack(nbt), nbt.getInteger("OutputTime"));
+        public static TimeEntryItem loadFromNBT(NBTTagCompound nbt) {
+            return new TimeEntryItem(new ItemStack(nbt), nbt.getInteger("OutputTime")).setOC(nbt.getInteger("OC"));
         }
     }
 
-    public static class TimeEntryFluid extends TimeEntry<FluidStack> {
+    public static class TimeEntryFluid {
+
+        private final FluidStack stack;
+        private final int time;
+        private float OC = 1;
+
+        public int getTime() {
+            return (int) Math.max(1, Math.floor((float)time/OC));
+        }
+
 
         public TimeEntryFluid(FluidStack stack, int time){
             this.stack = stack;
             this.time = time;
         }
 
-        @Override
+        public TimeEntryFluid setOC(float OC){
+            this.OC = OC;
+            return this;
+        }
+
+        public FluidStack getStackRaw() {
+            return stack;
+        }
+
         public FluidStack getStack() {
             return stack.copy();
         }
 
-        @Override
         public TimeEntryFluid copy() {
             return new TimeEntryFluid(stack, time);
         }
 
-        @Override
         public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-            stack.writeToNBT(nbt);
             nbt.setInteger("OutputTime", this.time);
+            nbt.setFloat("OC", this.OC);
+            stack.writeToNBT(nbt);
             return nbt;
         }
 
-        @Override
-        public TimeEntryFluid loadFromNBT(NBTTagCompound nbt) {
-            return new TimeEntryFluid(FluidStack.loadFluidStackFromNBT(nbt), nbt.getInteger("OutputTime"));
+        public static TimeEntryFluid loadFromNBT(NBTTagCompound nbt) {
+            return new TimeEntryFluid(FluidStack.loadFluidStackFromNBT(nbt), nbt.getInteger("OutputTime")).setOC(nbt.getInteger("OC"));
         }
     }
 }

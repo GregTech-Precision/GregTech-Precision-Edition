@@ -885,8 +885,18 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             for (FluidStack fluidOutput : fluidOutputs) {
                 fluidOutputsList.appendTag(fluidOutput.writeToNBT(new NBTTagCompound()));
             }
+            NBTTagList timedItemOutputsList = new NBTTagList();
+            for (Recipe.TimeEntryItem entry : timedOutputs) {
+                timedItemOutputsList.appendTag(entry.writeToNBT(new NBTTagCompound()));
+            }
+            NBTTagList timedFluidOutputsList = new NBTTagList();
+            for (Recipe.TimeEntryFluid entry : timedFluidOutputs) {
+                timedFluidOutputsList.appendTag(entry.writeToNBT(new NBTTagCompound()));
+            }
             compound.setTag("ItemOutputs", itemOutputsList);
             compound.setTag("FluidOutputs", fluidOutputsList);
+            compound.setTag("TimedItemOutputs", timedItemOutputsList);
+            compound.setTag("TimedFluidOutputs", timedFluidOutputsList);
         }
         return compound;
     }
@@ -913,9 +923,16 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             for (int i = 0; i < fluidOutputsList.tagCount(); i++) {
                 this.fluidOutputs.add(FluidStack.loadFluidStackFromNBT(fluidOutputsList.getCompoundTagAt(i)));
             }
-            // TODO: add timed outputs progress saving
+            NBTTagList timedItemOutputsList = compound.getTagList("TimedItemOutputs", Constants.NBT.TAG_COMPOUND);
             this.timedOutputs = new ArrayList<>();
+            for (int i = 0; i < timedItemOutputsList.tagCount(); i++) {
+                this.timedOutputs.add(Recipe.TimeEntryItem.loadFromNBT(timedItemOutputsList.getCompoundTagAt(i)));
+            }
+            NBTTagList timedFluidOutputsList = compound.getTagList("TimedFluidOutputs", Constants.NBT.TAG_COMPOUND);
             this.timedFluidOutputs = new ArrayList<>();
+            for (int i = 0; i < timedFluidOutputsList.tagCount(); i++) {
+                this.timedFluidOutputs.add(Recipe.TimeEntryFluid.loadFromNBT(timedFluidOutputsList.getCompoundTagAt(i)));
+            }
         }
     }
 
