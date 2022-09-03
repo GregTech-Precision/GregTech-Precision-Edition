@@ -727,8 +727,12 @@ public class Recipe {
             this.time = time;
         }
 
-        public int getTime() {
+        public int getTimeOC() {
             return (int) Math.max(1, Math.floor((float)time/OC));
+        }
+
+        public int getTime(){
+            return this.time;
         }
 
         public TimeEntryItem setOC(float OC){
@@ -766,8 +770,12 @@ public class Recipe {
         private final int time;
         private float OC = 1;
 
-        public int getTime() {
+        public int getTimeOC() {
             return (int) Math.max(1, Math.floor((float)time/OC));
+        }
+
+        public int getTime(){
+            return this.time;
         }
 
 

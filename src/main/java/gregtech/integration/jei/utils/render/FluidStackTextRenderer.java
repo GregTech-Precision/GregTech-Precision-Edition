@@ -1,8 +1,8 @@
 package gregtech.integration.jei.utils.render;
 
 import gregtech.api.recipes.Recipe.TimeEntryFluid;
-import gregtech.client.utils.RenderUtil;
 import gregtech.api.util.TextFormattingUtil;
+import gregtech.client.utils.RenderUtil;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.plugins.vanilla.ingredients.fluid.FluidStackRenderer;
 import net.minecraft.client.Minecraft;

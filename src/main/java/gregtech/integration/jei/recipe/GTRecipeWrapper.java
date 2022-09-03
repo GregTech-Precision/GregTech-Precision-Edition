@@ -83,7 +83,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
             }
 
             List<Recipe.TimeEntryItem> timedOutputs = recipe.getTimedOutputs();
-            timedOutputs.sort(Comparator.comparingInt(entry -> entry == null ? 0 : entry.getTime()));
+            timedOutputs.sort(Comparator.comparingInt(entry -> entry == null ? 0 : entry.getTimeOC()));
             for(Recipe.TimeEntryItem timeEntry : timedOutputs){
                 recipeOutputs.add(timeEntry.getStackRaw());
             }
@@ -98,7 +98,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                     .collect(Collectors.toList());
 
             List<Recipe.TimeEntryFluid> timedFluidOutputs = recipe.getTimedFluidOutputs();
-            timedFluidOutputs.sort(Comparator.comparingInt(entry -> entry == null ? 0 : entry.getTime()));
+            timedFluidOutputs.sort(Comparator.comparingInt(entry -> entry == null ? 0 : entry.getTimeOC()));
             for(Recipe.TimeEntryFluid timeEntryFluid : timedFluidOutputs){
                 recipeFluidOutputs.add(timeEntryFluid.getStackRaw());
             }

@@ -572,7 +572,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     public void timedOutputsMultiply(Recipe timedOutputsFrom, int numberOfOperations) {
         for (Recipe.TimeEntryItem entry : timedOutputsFrom.getTimedOutputs()) {
-            int time = entry.getTime();
+            int time = entry.getTimeOC();
 
             // Add individual chanced outputs per number of parallel operations performed, to mimic regular recipes.
             // This is done instead of simply batching the chanced outputs by the number of parallel operations performed
@@ -584,7 +584,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     public void timedFluidOutputsMultiply(Recipe timedFluidOutputsFrom, int numberOfOperations) {
         for (Recipe.TimeEntryFluid entry : timedFluidOutputsFrom.getTimedFluidOutputs()) {
-            int time = entry.getTime();
+            int time = entry.getTimeOC();
 
             // Add individual chanced outputs per number of parallel operations performed, to mimic regular recipes.
             // This is done instead of simply batching the chanced outputs by the number of parallel operations performed

@@ -259,7 +259,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         Iterator<Recipe.TimeEntryItem> it = timedOutputs.iterator();
         while(it.hasNext()){
             Recipe.TimeEntryItem entry = it.next();
-            if(time == entry.getTime()){
+            if(time == entry.getTimeOC()){
                 GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, Collections.singletonList(entry.getStack()));
                 it.remove();
             }
@@ -270,7 +270,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         Iterator<Recipe.TimeEntryFluid> it = timedFluidOutputs.iterator();
         while(it.hasNext()){
             Recipe.TimeEntryFluid entry = it.next();
-            if(time == entry.getTime()){
+            if(time == entry.getTimeOC()){
                 GTTransferUtils.addFluidsToFluidHandler(getOutputTank(), false, Collections.singletonList(entry.getStack()));
                 it.remove();
             }
