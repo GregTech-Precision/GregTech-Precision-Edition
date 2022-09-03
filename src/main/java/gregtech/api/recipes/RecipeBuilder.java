@@ -12,7 +12,10 @@ import gregtech.api.recipes.ingredients.GTRecipeItemInput;
 import gregtech.api.recipes.ingredients.GTRecipeOreInput;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTCondition;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTMatcher;
-import gregtech.api.recipes.recipeproperties.*;
+import gregtech.api.recipes.recipeproperties.CleanroomProperty;
+import gregtech.api.recipes.recipeproperties.IRecipePropertyStorage;
+import gregtech.api.recipes.recipeproperties.RecipeProperty;
+import gregtech.api.recipes.recipeproperties.RecipePropertyStorage;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
@@ -52,6 +55,9 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     protected final List<GTRecipeInput> fluidInputs;
     protected final List<FluidStack> fluidOutputs;
 
+    protected final List<Recipe.TimeEntryItem> timedOutputs;
+    protected final List<Recipe.TimeEntryFluid> timedFluidOutputs;
+
     protected int duration, EUt;
     protected boolean hidden = false;
     protected boolean isCTRecipe = false;
@@ -67,6 +73,8 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         this.chancedOutputs = new ArrayList<>();
         this.fluidInputs = new ArrayList<>();
         this.fluidOutputs = new ArrayList<>();
+        this.timedOutputs = new ArrayList<>();
+        this.timedFluidOutputs = new ArrayList<>();
     }
 
     public RecipeBuilder(Recipe recipe, RecipeMap<R> recipeMap) {
@@ -78,6 +86,8 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         this.chancedOutputs = new ArrayList<>(recipe.getChancedOutputs());
         this.fluidInputs = new ArrayList<>(recipe.getFluidInputs());
         this.fluidOutputs = GTUtility.copyFluidList(recipe.getFluidOutputs());
+        this.timedOutputs = new ArrayList<>(recipe.getTimedOutputs());
+        this.timedFluidOutputs = new ArrayList<>(recipe.getTimedFluidOutputs());
         this.duration = recipe.getDuration();
         this.EUt = recipe.getEUt();
         this.hidden = recipe.isHidden();
@@ -94,9 +104,11 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         this.inputs.addAll(recipeBuilder.getInputs());
         this.outputs = NonNullList.create();
         this.outputs.addAll(GTUtility.copyStackList(recipeBuilder.getOutputs()));
-        this.chancedOutputs = new ArrayList<>(recipeBuilder.chancedOutputs);
+        this.chancedOutputs = new ArrayList<>(recipeBuilder.getChancedOutputs());
         this.fluidInputs = new ArrayList<>(recipeBuilder.getFluidInputs());
         this.fluidOutputs = GTUtility.copyFluidList(recipeBuilder.getFluidOutputs());
+        this.timedOutputs = new ArrayList<>(recipeBuilder.getTimedOutputs());
+        this.timedFluidOutputs = new ArrayList<>(recipeBuilder.getTimedFluidOutputs());
         this.duration = recipeBuilder.duration;
         this.EUt = recipeBuilder.EUt;
         this.hidden = recipeBuilder.hidden;
@@ -558,6 +570,30 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         }
     }
 
+    public void timedOutputsMultiply(Recipe timedOutputsFrom, int numberOfOperations) {
+        for (Recipe.TimeEntryItem entry : timedOutputsFrom.getTimedOutputs()) {
+            int time = entry.getTime();
+
+            // Add individual chanced outputs per number of parallel operations performed, to mimic regular recipes.
+            // This is done instead of simply batching the chanced outputs by the number of parallel operations performed
+            IntStream.range(0, numberOfOperations).forEach(value -> {
+                this.timedOutputs(entry.getStack(), time);
+            });
+        }
+    }
+
+    public void timedFluidOutputsMultiply(Recipe timedFluidOutputsFrom, int numberOfOperations) {
+        for (Recipe.TimeEntryFluid entry : timedFluidOutputsFrom.getTimedFluidOutputs()) {
+            int time = entry.getTime();
+
+            // Add individual chanced outputs per number of parallel operations performed, to mimic regular recipes.
+            // This is done instead of simply batching the chanced outputs by the number of parallel operations performed
+            IntStream.range(0, numberOfOperations).forEach(value -> {
+                this.timedFluidOutput(entry.getStack(), time);
+            });
+        }
+    }
+
     /**
      * Appends the passed {@link Recipe} onto the inputs and outputs, multiplied by the amount specified by multiplier
      * The duration of the multiplied {@link Recipe} is also added to the current duration
@@ -588,6 +624,8 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
         this.outputs(outputItems);
         chancedOutputsMultiply(recipe, multiplier);
+        timedOutputsMultiply(recipe, multiplier);
+        timedFluidOutputsMultiply(recipe, multiplier);
 
         this.fluidOutputs(outputFluids);
 
@@ -680,7 +718,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     public ValidationResult<Recipe> build() {
         return ValidationResult.newResult(finalizeAndValidate(), new Recipe(inputs, outputs, chancedOutputs,
-                fluidInputs, fluidOutputs, duration, EUt, hidden, isCTRecipe, recipePropertyStorage));
+                fluidInputs, fluidOutputs, timedOutputs, timedFluidOutputs, duration, EUt, hidden, isCTRecipe, recipePropertyStorage));
     }
 
     protected EnumValidationResult validate() {
@@ -746,10 +784,16 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
      *
      * @return A List of ItemStacks composed of the recipe outputs and chanced outputs
      */
+    /**
+     * Similar to {@link Recipe#getAllItemOutputs()}, returns the recipe outputs and all chanced outputs
+     *
+     * @return A List of ItemStacks composed of the recipe outputs and chanced outputs
+     */
     public List<ItemStack> getAllItemOutputs() {
         List<ItemStack> stacks = new ArrayList<>(getOutputs());
 
         stacks.addAll(getChancedOutputs().stream().map(ChanceEntry::getItemStack).collect(Collectors.toList()));
+        stacks.addAll(getTimedOutputs().stream().map(Recipe.TimeEntryItem::getStack).collect(Collectors.toList()));
 
         return stacks;
     }
@@ -785,11 +829,106 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
                 .append("chancedOutputs", chancedOutputs)
                 .append("fluidInputs", fluidInputs)
                 .append("fluidOutputs", fluidOutputs)
+                .append("timedOutputs", timedOutputs)
+                .append("timedFluidOutputs", timedFluidOutputs)
                 .append("duration", duration)
                 .append("EUt", EUt)
                 .append("hidden", hidden)
                 .append("cleanroom", getCleanroom())
                 .append("recipeStatus", recipeStatus)
                 .toString();
+    }
+
+    //TIMED OUTPUTS
+
+    public R timedOutput(OrePrefix orePrefix, Material material, int tick) {
+        return timedOutput(orePrefix, material, 1, tick);
+    }
+
+    public R timedOutput(OrePrefix orePrefix, Material material, int count, int tick) {
+        return timedOutputs(OreDictUnifier.get(orePrefix, material, count), tick);
+    }
+
+    public R timedOutput(Item item, int tick) {
+        return timedOutput(item, 1, tick);
+    }
+
+    public R timedOutput(Item item, int count, int tick) {
+        return timedOutputs(new ItemStack(item, count), tick);
+    }
+
+    public R timedOutput(Item item, int count, int meta, int tick) {
+        return timedOutputs(new ItemStack(item, count, meta), tick);
+    }
+
+    public R timedOutput(Block item, int tick) {
+        return timedOutput(item, 1, tick);
+    }
+
+    public R timedOutput(Block item, int count, int tick) {
+        return timedOutputs(new ItemStack(item, count), tick);
+    }
+
+    public R timedOutput(MetaItem<?>.MetaValueItem item, int count, int tick) {
+        return timedOutputs(item.getStackForm(count), tick);
+    }
+
+    public R timedOutput(MetaItem<?>.MetaValueItem item, int tick) {
+        return timedOutput(item, 1, tick);
+    }
+
+    public R timedOutput(MetaTileEntity mte, int tick) {
+        return timedOutput(mte, 1, tick);
+    }
+
+    public R timedOutput(MetaTileEntity mte, int count, int tick) {
+        return timedOutputs(mte.getStackForm(count), tick);
+    }
+
+    protected R timedOutputs(ItemStack item, int tick) {
+        if(tick < 0){
+            GTLog.logger.error("Timed output can't use values less than zero");
+            GTLog.logger.error("Stacktrace: ", new IllegalArgumentException());
+        }
+        else {
+            timedOutputs.add(new Recipe.TimeEntryItem(item, tick));
+        }
+        return (R) this;
+    }
+
+    public void timedOutputs(List<Recipe.TimeEntryItem> addTimedOutputs) {
+        timedOutputs.addAll(addTimedOutputs);
+    }
+
+    public R clearTimedOutputs(){
+        this.timedOutputs.clear();
+        return (R) this;
+    }
+
+    public R timedFluidOutput(FluidStack fluid, int tick){
+        if(tick < 0){
+            GTLog.logger.error("Timed output can't use values less than zero");
+            GTLog.logger.error("Stacktrace: ", new IllegalArgumentException());
+        }else {
+            timedFluidOutputs.add(new Recipe.TimeEntryFluid(fluid, tick));
+        }
+        return (R) this;
+    }
+
+    public R clearTimedFluidOutputs(){
+        this.timedFluidOutputs.clear();
+        return (R) this;
+    }
+
+    public List<Recipe.TimeEntryItem> getTimedOutputs() {
+        return timedOutputs;
+    }
+
+    public List<Recipe.TimeEntryFluid> getTimedFluidOutputs() {
+        return timedFluidOutputs;
+    }
+
+    public void timedFluidOutputs(List<Recipe.TimeEntryFluid> addTimedFluidOutputs) {
+        timedFluidOutputs.addAll(addTimedFluidOutputs);
     }
 }
