@@ -208,7 +208,7 @@ public class MetaTool extends ToolMetaItem<ToolMetaItem<?>.MetaToolValueItem> {
                 .addComponents(ElectricStats.createElectricItem(100000L, 1L))
                 .setSound(GTSounds.CHAINSAW_TOOL);
 
-        DRILL_PRIMITIVE = addItem(33, "tool.drill.primitive").addComponents(new PrimitiveDrillBehavior(40));
+        DRILL_PRIMITIVE = addItem(33, "tool.drill.primitive").addComponents(new PrimitiveDrillBehavior(20));
     }
 
 }

@@ -950,6 +950,7 @@ metaitem.turbine_rotor.tooltip=Turbine Rotors for your power station
 metaitem.clipboard.name=Clipboard
 metaitem.clipboard.tooltip=Can be written on (without any writing Instrument). Right-click on Wall to place, and Shift-Right-Click to remove
 
+metaitem.drill.primitive.uses=Uses Remaining: %s
 metaitem.drill.mode.three_cube=3x3x3 Cube
 metaitem.drill.mode.five_cube=5x5x5 Cube
 metaitem.drill.mode.seven_cube=7x7x7 Cube
