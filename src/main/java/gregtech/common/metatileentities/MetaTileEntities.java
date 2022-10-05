@@ -99,7 +99,6 @@ public class MetaTileEntities {
     //public static final SimpleMachineMetaTileEntity[] SCANNER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
     public static final SimpleMachineMetaTileEntity[] GAS_COLLECTOR = new MetaTileEntityGasCollector[GTValues.V.length - 1];
     public static final MetaTileEntityRockBreaker[] ROCK_BREAKER = new MetaTileEntityRockBreaker[GTValues.V.length - 1];
-    public static final MetaTileEntityMiner[] MINER = new MetaTileEntityMiner[GTValues.V.length - 1];
     //GENERATORS SECTION
     public static final SimpleGeneratorMetaTileEntity[] COMBUSTION_GENERATOR = new SimpleGeneratorMetaTileEntity[4];
     public static final SimpleGeneratorMetaTileEntity[] STEAM_TURBINE = new SimpleGeneratorMetaTileEntity[4];
@@ -119,6 +118,8 @@ public class MetaTileEntities {
     public static final MetaTileEntityEnergyHatch[] ENERGY_OUTPUT_HATCH_16A = new MetaTileEntityEnergyHatch[5]; // IV, LuV, ZPM, UV, UHV
     public static final MetaTileEntityRotorHolder[] ROTOR_HOLDER = new MetaTileEntityRotorHolder[6]; //HV, EV, IV, LuV, ZPM, UV
     public static final MetaTileEntityMufflerHatch[] MUFFLER_HATCH = new MetaTileEntityMufflerHatch[GTValues.UV]; // LV-UV
+
+    public static MetaTileEntityDrillHeadHolder DRILL_HOLDER;
     public static final MetaTileEntityFusionReactor[] FUSION_REACTOR = new MetaTileEntityFusionReactor[3];
     public static final MetaTileEntityQuantumChest[] QUANTUM_CHEST = new MetaTileEntityQuantumChest[10];
     public static final MetaTileEntityQuantumTank[] QUANTUM_TANK = new MetaTileEntityQuantumTank[10];
@@ -129,8 +130,6 @@ public class MetaTileEntities {
     public static final MetaTileEntityFisher[] FISHER = new MetaTileEntityFisher[4];
     public static final MetaTileEntityWorldAccelerator[] WORLD_ACCELERATOR = new MetaTileEntityWorldAccelerator[8]; // no ULV, no MAX
     public static MetaTileEntityMachineHatch MACHINE_HATCH;
-    public static MetaTileEntityPassthroughHatchItem PASSTHROUGH_HATCH_ITEM;
-    public static MetaTileEntityPassthroughHatchFluid PASSTHROUGH_HATCH_FLUID;
     // Used for addons if they wish to disable certain tiers of machines
     private static final Map<String, Boolean> MID_TIER = new HashMap<>();
     private static final Map<String, Boolean> HIGH_TIER = new HashMap<>();
@@ -155,7 +154,6 @@ public class MetaTileEntities {
     public static SteamAlloySmelter STEAM_ALLOY_SMELTER_STEEL;
     public static SteamRockBreaker STEAM_ROCK_BREAKER_BRONZE;
     public static SteamRockBreaker STEAM_ROCK_BREAKER_STEEL;
-    public static SteamMiner STEAM_MINER;
     public static MetaTileEntityPumpHatch PUMP_OUTPUT_HATCH;
     public static MetaTileEntityPrimitiveWaterPump PRIMITIVE_WATER_PUMP;
     public static MetaTileEntityMagicEnergyAbsorber MAGIC_ENERGY_ABSORBER;
@@ -166,7 +164,7 @@ public class MetaTileEntities {
     public static MetaTileEntityMaintenanceHatch MAINTENANCE_HATCH;
     public static MetaTileEntityMaintenanceHatch CONFIGURABLE_MAINTENANCE_HATCH;
     public static MetaTileEntityAutoMaintenanceHatch AUTO_MAINTENANCE_HATCH;
-    public static MetaTileEntityCleaningMaintenanceHatch CLEANING_MAINTENANCE_HATCH;
+
     //MULTIBLOCKS SECTION
     public static MetaTileEntityPrimitiveBlastFurnace PRIMITIVE_BLAST_FURNACE;
     public static MetaTileEntityCokeOven COKE_OVEN;
@@ -190,15 +188,14 @@ public class MetaTileEntities {
     public static MetaTileEntityLargeChemicalReactor LARGE_CHEMICAL_REACTOR;
     public static MetaTileEntitySteamOven STEAM_OVEN;
     public static MetaTileEntitySteamGrinder STEAM_GRINDER;
-    public static MetaTileEntityLargeMiner BASIC_LARGE_MINER;
-    public static MetaTileEntityLargeMiner LARGE_MINER;
-    public static MetaTileEntityLargeMiner ADVANCED_LARGE_MINER;
     public static MetaTileEntityProcessingArray PROCESSING_ARRAY;
     public static MetaTileEntityProcessingArray ADVANCED_PROCESSING_ARRAY;
     public static MetaTileEntityFluidDrill BASIC_FLUID_DRILLING_RIG;
     public static MetaTileEntityFluidDrill FLUID_DRILLING_RIG;
     public static MetaTileEntityFluidDrill ADVANCED_FLUID_DRILLING_RIG;
-    public static MetaTileEntityCleanroom CLEANROOM;
+    public static MetaTileEntityCoalMiner COAL_ORE_DRILLING_RIG;
+    public static MetaTileEntityBasicMiner BASIC_ORE_DRILLING_RIG;
+    public static MetaTileEntityBasicMiner ADVANCED_ORE_DRILLING_RIG;
     //STORAGE SECTION
     public static MetaTileEntityLockedSafe LOCKED_SAFE;
     public static MetaTileEntityTankValve WOODEN_TANK_VALVE;
@@ -260,8 +257,6 @@ public class MetaTileEntities {
 
         STEAM_ROCK_BREAKER_BRONZE = registerMetaTileEntity(19, new SteamRockBreaker(gregtechId("steam_rock_breaker_bronze"), false));
         STEAM_ROCK_BREAKER_STEEL = registerMetaTileEntity(20, new SteamRockBreaker(gregtechId("steam_rock_breaker_steel"), true));
-
-        STEAM_MINER = registerMetaTileEntity(21, new SteamMiner(gregtechId("steam_miner"), 320, 4, 0));
 
         // Electric Furnace, IDs 50-64
         registerSimpleMetaTileEntity(ELECTRIC_FURNACE, 50, "electric_furnace", RecipeMaps.FURNACE_RECIPES, Textures.ELECTRIC_FURNACE_OVERLAY, true);
@@ -434,11 +429,14 @@ public class MetaTileEntities {
 
         // Space left for these just in case
 
-        // Chunk Miner, IDs 920-934
+        // Chunk Miner, IDs 920-922
 
-        MINER[0] = registerMetaTileEntity(920, new MetaTileEntityMiner(gregtechId("miner.lv"), 1, 160, 8, 1));
-        MINER[1] = registerMetaTileEntity(921, new MetaTileEntityMiner(gregtechId("miner.mv"), 2, 80, 16, 2));
-        MINER[2] = registerMetaTileEntity(922, new MetaTileEntityMiner(gregtechId("miner.hv"), 3, 40, 24, 3));
+        COAL_ORE_DRILLING_RIG = registerMetaTileEntity(920, new MetaTileEntityCoalMiner(gregtechId("drill.coal")));
+        BASIC_ORE_DRILLING_RIG = registerMetaTileEntity(921, new MetaTileEntityBasicMiner(gregtechId("drill.basic")));
+
+        // Drill Head Hatch = 923
+
+        DRILL_HOLDER = registerMetaTileEntity(923, new MetaTileEntityDrillHeadHolder(gregtechId("drill_holder")));
 
         // Diesel Generator, IDs 935-949
         COMBUSTION_GENERATOR[0] = registerMetaTileEntity(935, new SimpleGeneratorMetaTileEntity(gregtechId("combustion_generator.lv"), RecipeMaps.COMBUSTION_GENERATOR_FUELS, Textures.COMBUSTION_GENERATOR_OVERLAY, 1, GTUtility.genericGeneratorTankSizeFunction));
@@ -503,10 +501,6 @@ public class MetaTileEntities {
         STEAM_OVEN = registerMetaTileEntity(1024, new MetaTileEntitySteamOven(gregtechId("steam_oven")));
         STEAM_GRINDER = registerMetaTileEntity(1025, new MetaTileEntitySteamGrinder(gregtechId("steam_grinder")));
 
-        BASIC_LARGE_MINER = registerMetaTileEntity(1026, new MetaTileEntityLargeMiner(gregtechId("large_miner.ev"), GTValues.EV, 16, 3, 4, Materials.Steel, 8));
-        LARGE_MINER = registerMetaTileEntity(1027, new MetaTileEntityLargeMiner(gregtechId("large_miner.iv"), GTValues.IV, 4, 5, 5, Materials.Titanium, 16));
-        ADVANCED_LARGE_MINER = registerMetaTileEntity(1028, new MetaTileEntityLargeMiner(gregtechId("large_miner.luv"), GTValues.LuV, 1, 7, 6, Materials.TungstenSteel, 32));
-
         CENTRAL_MONITOR = registerMetaTileEntity(1029, new MetaTileEntityCentralMonitor(gregtechId("central_monitor")));
 
         PROCESSING_ARRAY = registerMetaTileEntity(1030, new MetaTileEntityProcessingArray(gregtechId("processing_array"), 0));
@@ -515,8 +509,6 @@ public class MetaTileEntities {
         BASIC_FLUID_DRILLING_RIG = registerMetaTileEntity(1032, new MetaTileEntityFluidDrill(gregtechId("fluid_drilling_rig.mv"), 2));
         FLUID_DRILLING_RIG = registerMetaTileEntity(1033, new MetaTileEntityFluidDrill(gregtechId("fluid_drilling_rig.hv"), 3));
         ADVANCED_FLUID_DRILLING_RIG = registerMetaTileEntity(1034, new MetaTileEntityFluidDrill(gregtechId("fluid_drilling_rig.ev"), 4));
-
-        CLEANROOM = registerMetaTileEntity(1035, new MetaTileEntityCleanroom(gregtechId("cleanroom")));
 
         // MISC MTE's START: IDs 1150-2000
 
@@ -610,11 +602,8 @@ public class MetaTileEntities {
         MACHINE_HATCH = registerMetaTileEntity(1398, new MetaTileEntityMachineHatch(gregtechId("machine_hatch"), 5));
 
         // 1399 and 1400 are taken by the EV 4A hatches, and are grouped near the other registration rather than here
-        // 1401 is taken by the Cleanroom Maintenance hatches, and is grouped with the maintenance hatch registrtation rather than here
 
-        PASSTHROUGH_HATCH_ITEM = registerMetaTileEntity(1402, new MetaTileEntityPassthroughHatchItem(gregtechId("passthrough_hatch_item"), 3));
-        PASSTHROUGH_HATCH_FLUID = registerMetaTileEntity(1403, new MetaTileEntityPassthroughHatchFluid(gregtechId("passthrough_hatch_fluid"), 3));
-        // Free Range: 1404-1509
+        // Free Range: 1405-1509
 
         // Buffers, IDs 1510-1512
         BUFFER[0] = registerMetaTileEntity(1510, new MetaTileEntityBuffer(gregtechId("buffer.lv"), 1));
@@ -717,7 +706,6 @@ public class MetaTileEntities {
         MAINTENANCE_HATCH = registerMetaTileEntity(1654, new MetaTileEntityMaintenanceHatch(gregtechId("maintenance_hatch"), false));
         CONFIGURABLE_MAINTENANCE_HATCH = registerMetaTileEntity(1655, new MetaTileEntityMaintenanceHatch(gregtechId("maintenance_hatch_configurable"), true));
         AUTO_MAINTENANCE_HATCH = registerMetaTileEntity(1656, new MetaTileEntityAutoMaintenanceHatch(gregtechId("maintenance_hatch_full_auto")));
-        CLEANING_MAINTENANCE_HATCH = registerMetaTileEntity(1401, new MetaTileEntityCleaningMaintenanceHatch(gregtechId("maintenance_hatch_cleanroom_auto")));
 
         // Muffler Hatches, IDs 1657-
         for (int i = 0; i < MUFFLER_HATCH.length; i++) {
@@ -736,7 +724,7 @@ public class MetaTileEntities {
         CREATIVE_TANK = registerMetaTileEntity(1669, new MetaTileEntityCreativeTank(gregtechId("creative_tank")));
 
         // Energy Converter, IDs 1670-1729
-        endPos = GTValues.HT ? ENERGY_CONVERTER[0].length - 1 : Math.min(ENERGY_CONVERTER[0].length - 1, GTValues.UHV + 1);
+        endPos = GTValues.HT ? ENERGY_CONVERTER[0].length - 1 : Math.min(ENERGY_CONVERTER[0].length - 1, GTValues.UV + 1);
         int[] amps = {1, 4, 8, 16};
         for(int i = 0; i < endPos; i++) {
             for(int j = 0; j < 4; j++) {

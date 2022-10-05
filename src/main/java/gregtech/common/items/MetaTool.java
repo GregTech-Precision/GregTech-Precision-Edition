@@ -6,7 +6,7 @@ import gregtech.api.items.metaitem.ElectricStats;
 import gregtech.api.items.toolitem.*;
 import gregtech.api.sound.GTSounds;
 import gregtech.common.ConfigHolder;
-import gregtech.common.items.behaviors.LaptopBehavior;
+import gregtech.common.items.behaviors.PrimitiveDrillBehavior;
 import gregtech.common.tools.*;
 import gregtech.common.tools.largedrills.ToolDrills;
 import net.minecraft.init.SoundEvents;
@@ -207,6 +207,8 @@ public class MetaTool extends ToolMetaItem<ToolMetaItem<?>.MetaToolValueItem> {
                 .addOreDict(ToolDictNames.craftingToolSaw)
                 .addComponents(ElectricStats.createElectricItem(100000L, 1L))
                 .setSound(GTSounds.CHAINSAW_TOOL);
+
+        DRILL_PRIMITIVE = addItem(33, "tool.drill.primitive").addComponents(new PrimitiveDrillBehavior(20));
     }
 
 }

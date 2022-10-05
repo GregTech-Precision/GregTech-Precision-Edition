@@ -4,22 +4,21 @@ import gregtech.api.gui.IRenderContext;
 import gregtech.api.gui.Widget;
 import gregtech.api.net.packets.PacketProspecting;
 import gregtech.api.unification.OreDictUnifier;
-import gregtech.api.unification.ore.OrePrefix;
-import gregtech.api.unification.ore.StoneType;
-import gregtech.api.unification.stack.MaterialStack;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.Position;
 import gregtech.api.util.Size;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import gregtech.common.terminal.app.prospector.ProspectingTexture;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.Block;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -107,50 +106,20 @@ public class WidgetProspectingMap extends Widget {
 
             switch (mode) {
                 case ORE_PROSPECTING_MODE:
-                    BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-                    for (int x = 0; x < 16; x++) {
-                        for (int z = 0; z < 16; z++) {
-                            int ySize = chunk.getHeightValue(x, z);
-                            for (int y = 1; y < ySize; y++) {
-                                pos.setPos(x, y, z);
-                                IBlockState state = chunk.getBlockState(pos);
-                                ItemStack itemBlock = GTUtility.toItem(state);
-                                if (GTUtility.isOre(itemBlock)) {
-                                    boolean added = false;
-                                    String oreDictString = OreDictUnifier.getOreDictionaryNames(itemBlock).stream().findFirst().get();
-                                    OrePrefix prefix = OreDictUnifier.getPrefix(itemBlock);
-                                    for(StoneType type : StoneType.STONE_TYPE_REGISTRY) {
-                                        if(type.processingPrefix == prefix && type.shouldBeDroppedAsItem) {
-                                            packet.addBlock(x, y, z, oreDictString);
-                                            added = true;
-                                            break;
-                                        }
-                                        else if(type.processingPrefix == prefix) {
-                                            MaterialStack materialStack = OreDictUnifier.getMaterial(itemBlock);
-                                            if(materialStack != null) {
-                                                packet.addBlock(x, y, z, "ore" + materialStack.material.getLocalizedName());
-                                                added = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    // Probably other mod's ores
-                                    if(!added) {
-                                        // Fallback
-                                        packet.addBlock(x, y, z, oreDictString);
-                                    }
-                                }
-                            }
-                        }
+                    BedrockOreVeinHandler.OreVeinWorldEntry oreStack = BedrockOreVeinHandler.getOreVeinWorldEntry(world, chunk.x, chunk.z, 1);
+                    if (oreStack != null && oreStack.getDefinition() != null) {
+                        packet.addInfo(3, GTUtility.formatNumbers(100.0 * oreStack.getOperationsRemaining() / BedrockOreVeinHandler.getOperationsPerLayer(1).second()));
+                        packet.addInfo(2, "" + oreStack.getOperationsRemaining());
+                        packet.addInfo(1, oreStack.getDefinition().getDepositName());
                     }
                     break;
                 case FLUID_PROSPECTING_MODE:
                     BedrockFluidVeinHandler.FluidVeinWorldEntry fStack = BedrockFluidVeinHandler.getFluidVeinWorldEntry(world, chunk.x, chunk.z);
                     if (fStack != null && fStack.getDefinition() != null) {
-                        packet.addBlock(0, 3, 0, GTUtility.formatNumbers(100.0 * BedrockFluidVeinHandler.getOperationsRemaining(world, chunk.x, chunk.z)
+                        packet.addInfo(3, GTUtility.formatNumbers(100.0 * BedrockFluidVeinHandler.getOperationsRemaining(world, chunk.x, chunk.z)
                                 / BedrockFluidVeinHandler.MAXIMUM_VEIN_OPERATIONS));
-                        packet.addBlock(0, 2, 0, "" + BedrockFluidVeinHandler.getFluidYield(world, chunk.x, chunk.z));
-                        packet.addBlock(0, 1, 0, BedrockFluidVeinHandler.getFluidInChunk(world, chunk.x, chunk.z).getName());
+                        packet.addInfo(2, "" + BedrockFluidVeinHandler.getFluidYield(world, chunk.x, chunk.z));
+                        packet.addInfo(1, BedrockFluidVeinHandler.getFluidInChunk(world, chunk.x, chunk.z).getName());
                     }
                     break;
                 default:
@@ -229,20 +198,24 @@ public class WidgetProspectingMap extends Widget {
                     new Color(0x4B6C6C6C, true).getRGB());
             if (this.mode == 0) { // draw ore
                 tooltips.add(I18n.format("terminal.prospector.ore"));
-                HashMap<String, Integer> oreInfo = new HashMap<>();
-                for (int i = 0; i < 16; i++) {
-                    for (int j = 0; j < 16; j++) {
-                        if (texture.map[cX * 16 + i][cZ * 16 + j] != null) {
-                            texture.map[cX * 16 + i][cZ * 16 + j].values().forEach(dict -> {
-                                String name = OreDictUnifier.get(dict).getDisplayName();
-                                if (texture.getSelected().equals("[all]") || texture.getSelected().equals(dict)) {
-                                    oreInfo.put(name, oreInfo.getOrDefault(name, 0) + 1);
-                                }
-                            });
+                if (texture.map[cX][cZ] != null && !texture.map[cX][cZ].isEmpty()) {
+                    if (texture.getSelected().equals("[all]") || texture.getSelected().equals(texture.map[cX][cZ].get((byte) 1))) {
+                        BedrockOreDepositDefinition definition = BedrockOreVeinHandler.getDepositByName(texture.map[cX][cZ].get((byte) 1));
+                        if(definition != null) {
+                            String yieldSize = texture.map[cX][cZ].get((byte) 2);
+                            if(Integer.parseInt(yieldSize) > 1) {
+                                tooltips.add(I18n.format("terminal.prospector.ore.info_yield",
+                                        definition.getAssignedName(),
+                                        yieldSize,
+                                        texture.map[cX][cZ].get((byte) 3)));
+                            } else {
+                                tooltips.add(I18n.format("terminal.prospector.ore.info",
+                                        definition.getAssignedName(),
+                                        texture.map[cX][cZ].get((byte) 3)));
+                            }
                         }
                     }
                 }
-                oreInfo.forEach((name, count)->tooltips.add(name + " --- " + count));
             } else if(this.mode == 1){
                 tooltips.add(I18n.format("terminal.prospector.fluid"));
                 if (texture.map[cX][cZ] != null && !texture.map[cX][cZ].isEmpty()) {

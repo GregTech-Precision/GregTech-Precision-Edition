@@ -1,9 +1,6 @@
 package gregtech.api.metatileentity.multiblock;
 
-import gregtech.api.capability.IEnergyContainer;
-import gregtech.api.capability.IMaintenanceHatch;
-import gregtech.api.capability.IMufflerHatch;
-import gregtech.api.capability.IRotorHolder;
+import gregtech.api.capability.*;
 import gregtech.api.metatileentity.MetaTileEntity;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraftforge.fluids.IFluidTank;
@@ -45,6 +42,8 @@ public class MultiblockAbility<T> {
     public static final MultiblockAbility<IFluidHandler> TANK_VALVE = new MultiblockAbility<>("tank_valve");
 
     public static final MultiblockAbility<IPassthroughHatch> PASSTHROUGH_HATCH = new MultiblockAbility<>("passthrough_hatch");
+    
+    public static final MultiblockAbility<IDrillHeadHolder> DRILL_HOLDER = new MultiblockAbility<>("drill_handler");
 
     public static void registerMultiblockAbility(MultiblockAbility<?> ability, MetaTileEntity part) {
         if (!REGISTRY.containsKey(ability)) {

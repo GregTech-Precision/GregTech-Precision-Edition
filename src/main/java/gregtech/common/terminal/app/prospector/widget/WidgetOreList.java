@@ -2,6 +2,7 @@ package gregtech.common.terminal.app.prospector.widget;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import gregtech.api.GregTechAPI;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.IRenderContext;
 import gregtech.api.gui.Widget;
@@ -10,8 +11,13 @@ import gregtech.api.gui.widgets.*;
 import gregtech.api.terminal.gui.widgets.DraggableScrollableWidgetGroup;
 import gregtech.api.terminal.os.TerminalTheme;
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.material.Material;
+import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.MaterialStack;
+import gregtech.api.util.GTLog;
 import gregtech.api.util.Position;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
@@ -67,15 +73,21 @@ public class WidgetOreList extends DraggableScrollableWidgetGroup {
         if (ores.containsKey(orePrefix)) {
             return;
         }
-        ItemStack itemStack = OreDictUnifier.get(orePrefix);
+
+        BedrockOreDepositDefinition vein = BedrockOreVeinHandler.getDepositByName(orePrefix);
+
+        if(vein == null)
+            return;
+
+        ores.put(orePrefix, vein.getAssignedName());
+        ItemStack itemStack = OreDictUnifier.get(OrePrefix.crushed, vein.getStoredOres().get(0));
         if (itemStack == null || itemStack.isEmpty()) return;
-        ores.put(orePrefix, itemStack.getDisplayName());
-        MaterialStack materialStack = OreDictUnifier.getMaterial(OreDictUnifier.get(orePrefix));
+        MaterialStack materialStack = OreDictUnifier.getMaterial(itemStack);
         ItemStackHandler itemStackHandler = new ItemStackHandler(1);
         itemStackHandler.insertItem(0, itemStack, false);
         WidgetGroup widgetGroup = new WidgetGroup(0, 0, getSize().width - 5, 18);
         widgetGroup.addWidget(new SlotWidget(itemStackHandler, 0, 0, 0, false, false));
-        widgetGroup.addWidget(new LabelWidget(20, 5, itemStack.getDisplayName(), materialStack==null? orePrefix.hashCode():materialStack.material.getMaterialRGB() | 0XFF000000));
+        widgetGroup.addWidget(new LabelWidget(20, 5, vein.getAssignedName(), materialStack==null? orePrefix.hashCode():materialStack.material.getMaterialRGB() | 0XFF000000));
         addOrePrefix(orePrefix, widgetGroup);
     }
 
@@ -164,14 +176,13 @@ public class WidgetOreList extends DraggableScrollableWidgetGroup {
                     Widget widget1 = ((WidgetGroup) widget).getContainedWidgets(true).get(0);
                     if (widget1 instanceof SlotWidget){
                         SlotWidget slotWidget = (SlotWidget) widget1;
-                        List<ItemStack> list = OreDictUnifier.getAllWithOreDictionaryName(widgetMap.get(widget));
-                        if (list.size() > 0 ) {
+                        BedrockOreDepositDefinition definition = BedrockOreVeinHandler.getDepositByName(widgetMap.get(widget));
+                        if(definition != null){
                             slotWidget.getHandle().decrStackSize(64);
-                            slotWidget.getHandle().putStack(list.get(Math.floorMod(tickCounter / 20, list.size())));
+                            slotWidget.getHandle().putStack(OreDictUnifier.get(OrePrefix.crushed, definition.getStoredOres().get(Math.floorMod(tickCounter / 20, definition.getStoredOres().size()))));
                         }
                     }
                 }
-
             });
         }
     }

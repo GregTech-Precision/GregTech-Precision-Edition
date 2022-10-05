@@ -962,6 +962,7 @@ metaitem.turbine_rotor.tooltip=Turbine Rotors for your power station
 metaitem.clipboard.name=Clipboard
 metaitem.clipboard.tooltip=Can be written on (without any writing Instrument). Right-click on Wall to place, and Shift-Right-Click to remove
 
+metaitem.drill.primitive.uses=Uses Remaining: %s
 metaitem.drill.mode.three_cube=3x3x3 Cube
 metaitem.drill.mode.five_cube=5x5x5 Cube
 metaitem.drill.mode.seven_cube=7x7x7 Cube
@@ -2245,6 +2246,7 @@ metaitem.prospector.mode.fluid=§bFluid Prospection Mode
 metaitem.prospector.tooltip.ores=Scans Ores in a %s Chunk Radius
 metaitem.prospector.tooltip.fluids=Scans Ores and Fluids in a %s Chunk Radius
 behavior.prospector.not_enough_energy=Not Enough Energy!
+behavior.prospector.not_moving=You Shouldn't Move Before Scanning!
 
 metaitem.tricorder_scanner.name=Portable Scanner
 metaitem.tricorder_scanner.tooltip=Tricorder
@@ -5111,6 +5113,8 @@ terminal.recipe_chart.tier.3=cache of 8 pages
 terminal.prospector.vis_mode=switching color mode
 terminal.prospector.list=All Resources
 terminal.prospector.ore=Ore Data
+terminal.prospector.ore.info=%s - %s%%
+terminal.prospector.ore.info_yield=%s %s - %s%%
 terminal.prospector.fluid=Fluid Deposit Data
 terminal.prospector.fluid.info=%s %s - %s%%
 

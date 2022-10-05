@@ -558,42 +558,6 @@ public class MetaTileEntityMachineRecipeLoader {
 
         // Multiblock Miners
 
-        ASSEMBLER_RECIPES.recipeBuilder()
-                .input(HULL[EV])
-                .input(frameGt, Titanium, 4)
-                .input(circuit, Tier.EV, 4)
-                .input(ELECTRIC_MOTOR_EV, 4)
-                .input(ELECTRIC_PUMP_EV, 4)
-                .input(CONVEYOR_MODULE_EV, 4)
-                .input(gear, Tungsten, 4)
-                .circuitMeta(2)
-                .output(BASIC_LARGE_MINER)
-                .duration(400).EUt(VA[EV]).buildAndRegister();
-
-        ASSEMBLER_RECIPES.recipeBuilder()
-                .input(HULL[IV])
-                .input(frameGt, TungstenSteel, 4)
-                .input(circuit, Tier.IV, 4)
-                .input(ELECTRIC_MOTOR_IV, 4)
-                .input(ELECTRIC_PUMP_IV, 4)
-                .input(CONVEYOR_MODULE_IV, 4)
-                .input(gear, Iridium, 4)
-                .circuitMeta(2)
-                .output(LARGE_MINER)
-                .duration(400).EUt(VA[IV]).buildAndRegister();
-
-        ASSEMBLER_RECIPES.recipeBuilder()
-                .input(HULL[LuV])
-                .input(frameGt, HSSS, 4)
-                .input(circuit, Tier.LuV, 4)
-                .input(ELECTRIC_MOTOR_LuV, 4)
-                .input(ELECTRIC_PUMP_LuV, 4)
-                .input(CONVEYOR_MODULE_LuV, 4)
-                .input(gear, Ruridit, 4)
-                .circuitMeta(2)
-                .output(ADVANCED_LARGE_MINER)
-                .duration(400).EUt(VA[LuV]).buildAndRegister();
-
         // Multiblock Fluid Drills
 
         ASSEMBLER_RECIPES.recipeBuilder()

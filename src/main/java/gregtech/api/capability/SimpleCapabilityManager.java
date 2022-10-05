@@ -5,7 +5,6 @@ import gregtech.api.capability.tool.*;
 import gregtech.api.cover.ICoverable;
 import gregtech.api.metatileentity.multiblock.IMaintenance;
 import gregtech.api.terminal.hardware.HardwareProvider;
-import gregtech.api.worldgen.generator.GTWorldGenCapability;
 import gregtech.common.metatileentities.converter.ConverterTrait;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.util.EnumFacing;

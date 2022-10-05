@@ -37,6 +37,7 @@ public class NetworkHandler {
         registerPacket(CPacketRecoverMTE.class);
         registerPacket(CPacketKeysPressed.class);
         registerPacket(CPacketFluidVeinList.class);
+        registerPacket(CPacketOreVeinList.class);
         registerPacket(SPacketNotifyCapeChange.class);
         registerPacket(SPacketReloadShaders.class);
 
@@ -63,6 +64,7 @@ public class NetworkHandler {
         registerClientExecutor(SPacketBlockParticle.class);
         registerClientExecutor(SPacketClipboard.class);
         registerClientExecutor(CPacketFluidVeinList.class);
+        registerClientExecutor(CPacketOreVeinList.class);
         registerClientExecutor(SPacketNotifyCapeChange.class);
         registerClientExecutor(SPacketReloadShaders.class);
     }

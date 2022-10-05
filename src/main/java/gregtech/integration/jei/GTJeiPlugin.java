@@ -16,7 +16,7 @@ import gregtech.api.recipes.ingredients.IntCircuitIngredient;
 import gregtech.api.recipes.machines.RecipeMapFurnace;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.properties.PropertyKey;
-import gregtech.api.worldgen.config.OreDepositDefinition;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.gui.widget.craftingstation.CraftingSlotWidget;
@@ -46,7 +46,9 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -83,7 +85,9 @@ public class GTJeiPlugin implements IModPlugin {
             }
         }
         registry.addRecipeCategories(new OreByProductCategory(registry.getJeiHelpers().getGuiHelper()));
-        registry.addRecipeCategories(new GTOreCategory(registry.getJeiHelpers().getGuiHelper()));
+        for(int i = 0; i<2;i++) {
+            registry.addRecipeCategories(new GTOreCategory(i, registry.getJeiHelpers().getGuiHelper()));
+        }
         registry.addRecipeCategories(new MaterialTreeCategory(registry.getJeiHelpers().getGuiHelper()));
     }
 
@@ -181,19 +185,23 @@ public class GTJeiPlugin implements IModPlugin {
         registry.addRecipes(materialTreeList, GTValues.MODID + ":" + "material_tree");
 
         //Ore Veins
-        List<OreDepositDefinition> oreVeins = WorldGenRegistry.getOreDeposits();
-        List<GTOreInfo> oreInfoList = new CopyOnWriteArrayList<>();
-        for (OreDepositDefinition vein : oreVeins) {
-            oreInfoList.add(new GTOreInfo(vein));
+        Map<Integer, List<GTOreInfo>> oreInfoList = new HashMap<>();
+        for (BedrockOreDepositDefinition vein : WorldGenRegistry.getBedrockOreVeinDeposit()) {
+            if(!oreInfoList.containsKey(vein.getLayer())){
+                oreInfoList.put(vein.getLayer(), new CopyOnWriteArrayList<>());
+            }
+            oreInfoList.get(vein.getLayer()).add(new GTOreInfo(vein));
         }
 
-        String oreSpawnID = GTValues.MODID + ":" + "ore_spawn_location";
-        registry.addRecipes(oreInfoList, oreSpawnID);
-        registry.addRecipeCatalyst(MetaItems.PROSPECTOR_LV.getStackForm(), oreSpawnID);
-        registry.addRecipeCatalyst(MetaItems.PROSPECTOR_HV.getStackForm(), oreSpawnID);
-        registry.addRecipeCatalyst(MetaItems.PROSPECTOR_LUV.getStackForm(), oreSpawnID);
-        //Ore Veins End
+        oreInfoList.forEach((layer, list) -> {
+            String oreSpawnID = GTValues.MODID + ":" + "ore_spawn_location_"+layer;
 
+            registry.addRecipes(list, oreSpawnID);
+            registry.addRecipeCatalyst(MetaItems.PROSPECTOR_LV.getStackForm(), oreSpawnID);
+            registry.addRecipeCatalyst(MetaItems.PROSPECTOR_HV.getStackForm(), oreSpawnID);
+            registry.addRecipeCatalyst(MetaItems.PROSPECTOR_LUV.getStackForm(), oreSpawnID);
+        });
+        //Ore Veins End
 
         ingredientRegistry = registry.getIngredientRegistry();
         for (int i = 0; i <= IntCircuitIngredient.CIRCUIT_MAX; i++) {

@@ -2,7 +2,10 @@ package gregtech.common.terminal.app.prospector;
 
 import gregtech.api.net.packets.PacketProspecting;
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.MaterialStack;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import gregtech.client.utils.RenderUtil;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
@@ -37,10 +40,7 @@ public class ProspectingTexture extends AbstractTexture {
         this.darkMode = darkMode;
         this.radius = radius;
         this.mode = mode;
-        if (this.mode == 1)
-            map = new HashMap[(radius * 2 - 1)][(radius * 2 - 1)];
-        else
-            map = new HashMap[(radius * 2 - 1) * 16][(radius * 2 - 1) * 16];
+        this.map = new HashMap[(radius * 2 - 1)][(radius * 2 - 1)];
     }
 
     public void updateTexture(PacketProspecting packet) {
@@ -48,17 +48,7 @@ public class ProspectingTexture extends AbstractTexture {
         int playerChunkZ = packet.posZ >> 4;
         playerI = packet.posX - (playerChunkX - this.radius + 1) * 16 - 1;
         playerJ = packet.posZ - (playerChunkZ - this.radius + 1) * 16 - 1;
-        if (this.mode == 1) {
-            map[packet.chunkX - (playerChunkX - radius + 1)][packet.chunkZ - (playerChunkZ - radius + 1)] = packet.map[0][0] == null ?
-                    emptyTag : packet.map[0][0];
-        } else {
-            for (int x = 0; x < 16; x++) {
-                for (int z = 0; z < 16; z++) {
-                    map[x + (packet.chunkX - (playerChunkX - radius) - 1) * 16][z + (packet.chunkZ - (playerChunkZ - radius) - 1) * 16] = packet.map[x][z] == null ?
-                            emptyTag : packet.map[x][z];
-                }
-            }
-        }
+        map[packet.chunkX - (playerChunkX - radius + 1)][packet.chunkZ - (playerChunkZ - radius + 1)] = packet.map == null ? emptyTag : packet.map;
         loadTexture(null);
     }
 
@@ -69,16 +59,18 @@ public class ProspectingTexture extends AbstractTexture {
 
         for (int i = 0; i < wh; i++){
             for (int j = 0; j < wh; j++) {
-                HashMap<Byte, String> data = this.map[this.mode == 0 ? i : i / 16][this.mode == 0 ? j : j / 16];
+                HashMap<Byte, String> data = this.map[i / 16][j / 16];
                 // draw bg
                 image.setRGB(i, j, ((data == null) ^ darkMode) ? Color.darkGray.getRGB(): Color.WHITE.getRGB());
                 //draw ore
                 if (this.mode == 0 && data != null) {
                     for (String orePrefix : data.values()) {
                         if (!selected.equals("[all]") && !selected.equals(orePrefix)) continue;
-                        MaterialStack mterialStack = OreDictUnifier.getMaterial(OreDictUnifier.get(orePrefix));
-                        image.setRGB(i, j, mterialStack==null? orePrefix.hashCode():mterialStack.material.getMaterialRGB() | 0XFF000000);
-                        break;
+                        BedrockOreDepositDefinition definition = BedrockOreVeinHandler.getDepositByName(orePrefix);
+                        if(definition != null) {
+                            MaterialStack mterialStack = OreDictUnifier.getMaterial(OreDictUnifier.get(OrePrefix.crushed, definition.getStoredOres().get(0)));
+                            image.setRGB(i, j, mterialStack == null ? orePrefix.hashCode() : mterialStack.material.getMaterialRGB() | 0XFF000000);
+                        }
                     }
                 }
                 // draw player pos

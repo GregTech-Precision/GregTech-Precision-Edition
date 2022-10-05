@@ -1,28 +1,24 @@
 package gregtech.api.worldgen.config;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.realmsclient.util.Pair;
 import gregtech.api.GTValues;
 import gregtech.api.util.FileUtility;
 import gregtech.api.util.GTLog;
-import gregtech.api.worldgen.filler.BlacklistedBlockFiller;
-import gregtech.api.worldgen.filler.BlockFiller;
-import gregtech.api.worldgen.filler.LayeredBlockFiller;
-import gregtech.api.worldgen.filler.SimpleBlockFiller;
-import gregtech.api.worldgen.generator.WorldGeneratorImpl;
-import gregtech.api.worldgen.populator.FluidSpringPopulator;
-import gregtech.api.worldgen.populator.IVeinPopulator;
-import gregtech.api.worldgen.populator.SurfaceBlockPopulator;
-import gregtech.api.worldgen.populator.SurfaceRockPopulator;
-import gregtech.api.worldgen.shape.*;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.biome.Biome;
+import gregtech.common.ConfigHolder;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.terraingen.OreGenEvent;
 import net.minecraftforge.fml.common.IWorldGenerator;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.eventhandler.Event;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.apache.commons.io.IOUtils;
 
@@ -32,79 +28,33 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
-import java.util.Map.Entry;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static net.minecraftforge.event.terraingen.OreGenEvent.GenerateMinable.EventType.*;
 
 public class WorldGenRegistry {
 
     public static final WorldGenRegistry INSTANCE = new WorldGenRegistry();
 
     private static final int FLUID_VEIN_VERSION = 2;
-    private static final int ORE_VEIN_VERSION = 1;
+    private static final int ORE_VEIN_VERSION = 2;
 
     private WorldGenRegistry() {
     }
 
-    private final Map<String, Supplier<ShapeGenerator>> shapeGeneratorRegistry = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    private final Map<String, Supplier<BlockFiller>> blockFillerRegistry = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    private final Map<String, Supplier<IVeinPopulator>> veinPopulatorRegistry = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final Map<Integer, String> namedDimensions = new HashMap<>();
+    private final Map<Integer, Pair<Integer, Integer>> layerOperations = new HashMap<>();
 
-    private final List<OreDepositDefinition> registeredVeinDefinitions = new ArrayList<>();
     private final List<BedrockFluidDepositDefinition> registeredBedrockVeinDefinitions = new ArrayList<>();
-    private final List<OreDepositDefinition> addonRegisteredDefinitions = new ArrayList<>();
     private final List<BedrockFluidDepositDefinition> addonRegisteredBedrockVeinDefinitions = new ArrayList<>();
-    private List<OreDepositDefinition> removedVeinDefinitions = new ArrayList<>();
     private List<BedrockFluidDepositDefinition> removedBedrockVeinDefinitions = new ArrayList<>();
-    private final Map<WorldProvider, WorldOreVeinCache> oreVeinCache = new WeakHashMap<>();
-
-    private class WorldOreVeinCache {
-        private final List<OreDepositDefinition> worldVeins;
-        private final Map<Biome, List<Entry<Integer, OreDepositDefinition>>> biomeVeins = new HashMap<>();
-
-        public WorldOreVeinCache(WorldProvider worldProvider) {
-            this.worldVeins = registeredVeinDefinitions.stream()
-                    .filter(definition -> definition.getDimensionFilter().test(worldProvider))
-                    .collect(Collectors.toList());
-        }
-
-        private List<Entry<Integer, OreDepositDefinition>> getBiomeEntry(Biome biome) {
-            if (biomeVeins.containsKey(biome))
-                return biomeVeins.get(biome);
-            List<Entry<Integer, OreDepositDefinition>> result = worldVeins.stream()
-                    .map(vein -> new SimpleEntry<>(vein.getWeight() + vein.getBiomeWeightModifier().apply(biome), vein))
-                    .filter(entry -> entry.getKey() > 0)
-                    .collect(Collectors.toList());
-            biomeVeins.put(biome, result);
-            return result;
-        }
-    }
-
-    public List<Entry<Integer, OreDepositDefinition>> getCachedBiomeVeins(WorldProvider provider, Biome biome) {
-        if (oreVeinCache.containsKey(provider))
-            return oreVeinCache.get(provider).getBiomeEntry(biome);
-        WorldOreVeinCache worldOreVeinCache = new WorldOreVeinCache(provider);
-        oreVeinCache.put(provider, worldOreVeinCache);
-        return worldOreVeinCache.getBiomeEntry(biome);
-    }
+    private final List<BedrockOreDepositDefinition> registeredBedrockOreVeinDefinitions = new ArrayList<>();
+    private final List<BedrockOreDepositDefinition> addonRegisteredBedrockOreVeinDefinitions = new ArrayList<>();
+    private List<BedrockOreDepositDefinition> removedBedrockOreVeinDefinitions = new ArrayList<>();
 
     public void initializeRegistry() {
         GTLog.logger.info("Initializing ore generation registry...");
-        registerShapeGenerator("ellipsoid", EllipsoidGenerator::new);
-        registerShapeGenerator("sphere", SphereGenerator::new);
-        registerShapeGenerator("plate", PlateGenerator::new);
-        registerShapeGenerator("single", SingleBlockGenerator::new);
-        registerShapeGenerator("layered", LayeredGenerator::new);
-        registerBlockFiller("simple", SimpleBlockFiller::new);
-        registerBlockFiller("layered", LayeredBlockFiller::new);
-        registerBlockFiller("ignore_bedrock", () -> new BlacklistedBlockFiller(Lists.newArrayList(Blocks.BEDROCK.getDefaultState())));
-        registerVeinPopulator("surface_rock", SurfaceRockPopulator::new);
-        registerVeinPopulator("fluid_spring", FluidSpringPopulator::new);
-        registerVeinPopulator("surface_block", SurfaceBlockPopulator::new);
-
         GameRegistry.registerWorldGenerator(WorldGeneratorImpl.INSTANCE, 1);
         MinecraftForge.ORE_GEN_BUS.register(WorldGeneratorImpl.INSTANCE);
         try {
@@ -135,12 +85,12 @@ public class WorldGenRegistry {
      */
     public void reinitializeRegisteredVeins() throws IOException {
         GTLog.logger.info("Reloading ore generation files from config...");
-        registeredVeinDefinitions.clear();
         registeredBedrockVeinDefinitions.clear();
-        oreVeinCache.clear();
         Path configPath = Loader.instance().getConfigDir().toPath().resolve(GTValues.MODID);
         // The Path for the file used to name dimensions for the JEI ore gen page
         Path dimensionsFile = configPath.resolve("dimensions.json");
+        // The Path for the file used to get min and max operations for layer
+        Path layersFile = configPath.resolve("layers.json");
         // The folder where worldgen definitions are stored
         Path worldgenRootPath = configPath.resolve("worldgen");
         // Lock file used to determine if the worldgen files need to be regenerated
@@ -167,6 +117,11 @@ public class WorldGenRegistry {
         if (!Files.exists(dimensionsFile)) {
             Files.createFile(dimensionsFile);
             extractJarVeinDefinitions(configPath, dimensionsFile);
+        }
+
+        if (!Files.exists(layersFile)) {
+            Files.createFile(layersFile);
+            extractJarVeinDefinitions(configPath, layersFile);
         }
 
         if (Files.exists(jarFileExtractLock)) {
@@ -209,14 +164,15 @@ public class WorldGenRegistry {
 
         // Read the dimensions name from the dimensions file
         gatherNamedDimensions(dimensionsFile);
+        gatherLayerOperations(layersFile);
 
         // Will always fail when called from initializeRegistry
         // Placed here to delete the file before being gathered and having its definition initialized
-        if(!removedVeinDefinitions.isEmpty()) {
-            removeExistingFiles(veinPath, removedVeinDefinitions);
-        }
         if(!removedBedrockVeinDefinitions.isEmpty()) {
             removeExistingFiles(bedrockVeinPath, removedBedrockVeinDefinitions);
+        }
+        if(!removedBedrockOreVeinDefinitions.isEmpty()){
+            removeExistingFiles(veinPath, removedBedrockOreVeinDefinitions);
         }
 
         // Gather the worldgen vein files from the various folders in the config
@@ -233,20 +189,19 @@ public class WorldGenRegistry {
                 break;
             }
 
-            // Finds the file name to create the Definition with
             String depositName = veinPath.relativize(worldgenDefinition).toString();
 
             try {
-                // Creates the deposit definition and initializes various components based on the json entries in the file
-                OreDepositDefinition deposit = new OreDepositDefinition(depositName);
-                deposit.initializeFromConfig(element);
-                // Adds the registered definition to the list of all registered definitions
-                registeredVeinDefinitions.add(deposit);
-            } catch (RuntimeException exception) {
+                BedrockOreDepositDefinition deposit = new BedrockOreDepositDefinition(depositName);
+
+                if (deposit.initializeFromConfig(element)) {
+                    registeredBedrockOreVeinDefinitions.add(deposit);
+                }
+            } catch (RuntimeException exception){
                 GTLog.logger.error("Failed to parse worldgen definition {} on path {}", depositName, worldgenDefinition, exception);
             }
+
         }
-        GTLog.logger.info("Loaded {} vein worldgen definitions", registeredVeinDefinitions.size());
 
         // Gather the worldgen vein files from the various folders in the config
         List<Path> bedrockFluidVeinFiles = Files.walk(bedrockVeinPath)
@@ -277,14 +232,10 @@ public class WorldGenRegistry {
             }
         }
 
-        addAddonFiles(worldgenRootPath, addonRegisteredDefinitions, registeredVeinDefinitions);
         addAddonFiles(worldgenRootPath, addonRegisteredBedrockVeinDefinitions, registeredBedrockVeinDefinitions);
 
         GTLog.logger.info("Loaded {} bedrock worldgen definitions", registeredBedrockVeinDefinitions.size());
-        GTLog.logger.info("Loaded {} worldgen definitions from addon mods", addonRegisteredDefinitions.size());
         GTLog.logger.info("Loaded {} bedrock worldgen definitions from addon mods", addonRegisteredBedrockVeinDefinitions.size());
-        GTLog.logger.info("Loaded {} total worldgen definitions", registeredVeinDefinitions.size() + registeredBedrockVeinDefinitions.size());
-
     }
 
     /**
@@ -303,6 +254,8 @@ public class WorldGenRegistry {
         Path bedrockFluidVeinRootPath = worldgenRootPath.resolve("fluid");
         // The path of the named dimensions file in the config folder
         Path dimensionsRootPath = configPath.resolve("dimensions.json");
+        // The path of the named dimensions file in the config folder
+        Path layersRootPath = configPath.resolve("layers.json");
         // THe path of the lock file in the config folder
         Path extractLockPath = configPath.resolve("worldgen_extracted.json");
         FileSystem zipFileSystem = null;
@@ -371,6 +324,14 @@ public class WorldGenRegistry {
                 Files.copy(dimensionFile, worldgenPath, StandardCopyOption.REPLACE_EXISTING);
 
                 GTLog.logger.info("Extracted builtin dimension definitions into worldgen folder");
+            } else if (targetPath.compareTo(layersRootPath) == 0){
+                GTLog.logger.info("Attempting extraction of standard layers definitions from {} to {}",
+                        worldgenJarRootPath, layersRootPath);
+
+                Path layersFile = worldgenJarRootPath.resolve("layers.json");
+
+                Path worldgenPath = layersRootPath.resolve(worldgenJarRootPath.relativize(worldgenJarRootPath).toString());
+                Files.copy(layersFile, worldgenPath, StandardCopyOption.REPLACE_EXISTING);
             }
             // Attempts to extract lock txt file
             else if (targetPath.compareTo(extractLockPath) == 0) {
@@ -452,51 +413,52 @@ public class WorldGenRegistry {
     }
 
     /**
+     * Gathers the designated named dimensions from the designated json file
+     *
+     * @param layersFile The Path to the layers.json file
+     */
+    private void gatherLayerOperations(Path layersFile) {
+        JsonObject element = FileUtility.tryExtractFromFile(layersFile);
+        if (element == null) {
+            return;
+        }
+
+        try {
+            JsonArray layers = element.getAsJsonArray("layers");
+            for (JsonElement layer : layers) {
+                int min = layer.getAsJsonObject().get("operations").getAsJsonObject().get("min").getAsInt();
+                int max = layer.getAsJsonObject().get("operations").getAsJsonObject().get("max").getAsInt();
+                layerOperations.put(layer.getAsJsonObject().get("layer").getAsInt(), Pair.of(min, max));
+            }
+        } catch (RuntimeException exception) {
+            GTLog.logger.error("Failed to parse layer operations", exception);
+        }
+    }
+
+    /**
      * Called to remove veins from the list of registered vein definitions
      * Can fail if called on default veins when the veins have been modified by modpack makers
      *
      * After removing all desired veins, call {@link WorldGenRegistry#reinitializeRegisteredVeins()} to delete the existing files
      *
-     * @param definition The {@link OreDepositDefinition} to remove
+     *
      */
     @SuppressWarnings("unused")
     public void removeVeinDefinitions(IWorldgenDefinition definition) {
-        if (definition instanceof OreDepositDefinition) {
-
-            if (registeredVeinDefinitions.contains(definition)) {
-                registeredVeinDefinitions.remove(definition);
-                removedVeinDefinitions.add((OreDepositDefinition) definition);
-            } else {
-                GTLog.logger.error("Failed to remove OreDepositDefinition at {}. Deposit was not in list of registered veins.", definition.getDepositName());
-            }
-        } else if (definition instanceof BedrockFluidDepositDefinition) {
+        if (definition instanceof BedrockFluidDepositDefinition) {
             if (registeredBedrockVeinDefinitions.contains(definition)) {
                 registeredBedrockVeinDefinitions.remove(definition);
                 removedBedrockVeinDefinitions.add((BedrockFluidDepositDefinition) definition);
             } else {
                 GTLog.logger.error("Failed to remove BedrockFluidDepositDefinition at {}. Deposit was not in list of registered veins.", definition.getDepositName());
             }
-
-        }
-    }
-
-    /**
-     * Adds the provided OreDepositionDefinition to the list and Map of registered definitions
-     * Will not create an entry if a file already exists for the provided definition
-     *
-     * After adding all veins, call {@link WorldGenRegistry#reinitializeRegisteredVeins()} to initialize the new veins
-     * Or, register veins before {@link WorldGenRegistry#initializeRegistry()} is called, and the veins will be loaded with the
-     * default veins
-     *
-     * @param definition The OreDepositDefinition to add to the list of registered veins
-     */
-    @SuppressWarnings("unused")
-    public void addVeinDefinitions(OreDepositDefinition definition) {
-        if(!registeredVeinDefinitions.contains(definition)) {
-            addonRegisteredDefinitions.add(definition);
-        }
-        else {
-            GTLog.logger.error("Failed to add ore vein definition at {}. Definition already exists", definition.getDepositName());
+        } else if(definition instanceof BedrockOreDepositDefinition) {
+            if (registeredBedrockOreVeinDefinitions.contains(definition)) {
+                registeredBedrockOreVeinDefinitions.remove(definition);
+                removedBedrockOreVeinDefinitions.add((BedrockOreDepositDefinition) definition);
+            } else {
+                GTLog.logger.error("Failed to remove BedrockOreDepositDefinition at {}. Deposit was not in list of registered veins.", definition.getDepositName());
+            }
         }
     }
 
@@ -520,60 +482,42 @@ public class WorldGenRegistry {
         }
     }
 
-    public void registerShapeGenerator(String identifier, Supplier<ShapeGenerator> shapeGeneratorSupplier) {
-        if (shapeGeneratorRegistry.containsKey(identifier))
-            throw new IllegalArgumentException("Identifier already occupied:" + identifier);
-        shapeGeneratorRegistry.put(identifier, shapeGeneratorSupplier);
-    }
-
-    public void registerBlockFiller(String identifier, Supplier<BlockFiller> blockFillerSupplier) {
-        if (blockFillerRegistry.containsKey(identifier))
-            throw new IllegalArgumentException("Identifier already occupied:" + identifier);
-        blockFillerRegistry.put(identifier, blockFillerSupplier);
-    }
-
-    public void registerVeinPopulator(String identifier, Supplier<IVeinPopulator> veinPopulatorSupplier) {
-        if (veinPopulatorRegistry.containsKey(identifier))
-            throw new IllegalArgumentException("Identifier already occupied:" + identifier);
-        veinPopulatorRegistry.put(identifier, veinPopulatorSupplier);
-    }
-
-    public ShapeGenerator createShapeGenerator(JsonObject object) {
-        String identifier = object.get("type").getAsString();
-        if (!shapeGeneratorRegistry.containsKey(identifier))
-            throw new IllegalArgumentException("No shape generator found for type " + identifier);
-        ShapeGenerator shapeGenerator = shapeGeneratorRegistry.get(identifier).get();
-        shapeGenerator.loadFromConfig(object);
-        return shapeGenerator;
-    }
-
-    public BlockFiller createBlockFiller(JsonObject object) {
-        String identifier = object.get("type").getAsString();
-        if (!blockFillerRegistry.containsKey(identifier))
-            throw new IllegalArgumentException("No block filler found for type " + identifier);
-        BlockFiller blockFiller = blockFillerRegistry.get(identifier).get();
-        blockFiller.loadFromConfig(object);
-        return blockFiller;
-    }
-
-    public IVeinPopulator createVeinPopulator(JsonObject object) {
-        String identifier = object.get("type").getAsString();
-        if (!veinPopulatorRegistry.containsKey(identifier))
-            throw new IllegalArgumentException("No vein populator found for type " + identifier);
-        IVeinPopulator veinPopulator = veinPopulatorRegistry.get(identifier).get();
-        veinPopulator.loadFromConfig(object);
-        return veinPopulator;
-    }
-
-    public static List<OreDepositDefinition> getOreDeposits() {
-        return Collections.unmodifiableList(INSTANCE.registeredVeinDefinitions);
-    }
-
     public static List<BedrockFluidDepositDefinition> getBedrockVeinDeposits() {
         return Collections.unmodifiableList(INSTANCE.registeredBedrockVeinDefinitions);
     }
 
+    public static List<BedrockOreDepositDefinition> getBedrockOreVeinDeposit() {
+        return Collections.unmodifiableList(INSTANCE.registeredBedrockOreVeinDefinitions);
+    }
+
     public static Map<Integer, String> getNamedDimensions() {
         return INSTANCE.namedDimensions;
+    }
+
+    public static Map<Integer, Pair<Integer, Integer>> getLayerOperations(){
+        return INSTANCE.layerOperations;
+    }
+
+    static class WorldGeneratorImpl implements IWorldGenerator {
+
+        public static final WorldGeneratorImpl INSTANCE = new WorldGeneratorImpl();
+
+        private static final Set<OreGenEvent.GenerateMinable.EventType> ORE_EVENT_TYPES = ImmutableSet.of(COAL, DIAMOND, GOLD, IRON, LAPIS, REDSTONE, QUARTZ, EMERALD);
+
+        private WorldGeneratorImpl() {
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGH)
+        public void onOreGenerate(OreGenEvent.GenerateMinable event) {
+            OreGenEvent.GenerateMinable.EventType eventType = event.getType();
+            if (ConfigHolder.worldgen.disableVanillaOres && ORE_EVENT_TYPES.contains(eventType)) {
+                event.setResult(Event.Result.DENY);
+            }
+        }
+
+        @Override
+        public void generate(Random random, int i, int i1, World world, IChunkGenerator iChunkGenerator, IChunkProvider iChunkProvider) {
+
+        }
     }
 }

@@ -1,6 +1,7 @@
 package gregtech.loaders.recipe.handlers;
 
 import gregtech.api.GTValues;
+import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.items.metaitem.MetaItem.MetaValueItem;
 import gregtech.api.items.toolitem.ToolMetaItem.MetaToolValueItem;
@@ -16,6 +17,8 @@ import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.common.ConfigHolder;
 import gregtech.common.items.MetaItems;
+import gregtech.common.items.behaviors.DrillHeadBehaviour;
+import gregtech.common.items.behaviors.TurbineRotorBehavior;
 import net.minecraft.init.Enchantments;
 import net.minecraft.init.Items;
 import net.minecraft.item.EnumDyeColor;
@@ -24,11 +27,12 @@ import net.minecraft.item.crafting.Ingredient;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 import static gregtech.api.GTValues.*;
 import static gregtech.api.unification.material.info.MaterialFlags.*;
-import static gregtech.api.unification.material.properties.PropertyKey.GEM;
+import static gregtech.api.unification.material.properties.PropertyKey.*;
 import static gregtech.common.items.MetaItems.*;
 
 public class ToolRecipeHandler {
@@ -45,7 +49,6 @@ public class ToolRecipeHandler {
         OrePrefix.toolHeadSaw.addProcessingHandler(PropertyKey.TOOL, ToolRecipeHandler::processSawHead);
         OrePrefix.toolHeadChainsaw.addProcessingHandler(PropertyKey.TOOL, ToolRecipeHandler::processChainSawHead);
         OrePrefix.toolHeadDrill.addProcessingHandler(PropertyKey.TOOL, ToolRecipeHandler::processDrillHead);
-
         OrePrefix.toolHeadSense.addProcessingHandler(PropertyKey.TOOL, ToolRecipeHandler::processSenseHead);
         OrePrefix.toolHeadWrench.addProcessingHandler(PropertyKey.TOOL, ToolRecipeHandler::processWrenchHead);
         OrePrefix.toolHeadBuzzSaw.addProcessingHandler(PropertyKey.TOOL, ToolRecipeHandler::processBuzzSawHead);
@@ -73,6 +76,23 @@ public class ToolRecipeHandler {
                 {MetaItems.BATTERY_LUV_VANADIUM, MetaItems.ENERGY_LAPOTRONIC_ORB_CLUSTER},
                 {MetaItems.BATTERY_ZPM_NAQUADRIA, MetaItems.ENERGY_MODULE},
                 {MetaItems.BATTERY_UV_NAQUADRIA, MetaItems.ENERGY_CLUSTER}};
+    }
+
+    public static void registerDrillHeadRecipes(){
+        List<Material> materials = GregTechAPI.MaterialRegistry.getAllMaterials();
+        for(Material material : materials){
+            if(!material.hasProperty(TOOL) || !material.hasFlags(GENERATE_LONG_ROD, GENERATE_PLATE, GENERATE_ROD))
+                continue;
+            ItemStack drillHeadStack = DRILL_HEAD.getStackForm();
+            DrillHeadBehaviour.getInstanceFor(drillHeadStack).setPartMaterial(drillHeadStack, material);
+            RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder()
+                    .input(OrePrefix.plate, material, 5)
+                    .input(OrePrefix.stickLong, Materials.Steel)
+                    .input(OrePrefix.ring, Materials.Steel)
+                    .outputs(drillHeadStack)
+                    .duration(200).EUt(32)
+                    .buildAndRegister();
+        }
     }
 
     public static void registerPowerUnitRecipes() {

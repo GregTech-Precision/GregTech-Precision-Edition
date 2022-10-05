@@ -17,6 +17,7 @@ import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 import gregtech.common.items.MetaItems;
+import gregtech.common.items.behaviors.DrillHeadBehaviour;
 import gregtech.common.items.behaviors.TurbineRotorBehavior;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
@@ -505,6 +506,21 @@ public class PartsRecipeHandler {
                         .buildAndRegister();
             }
         }
+    }
+
+    public static void processDrillHead(OrePrefix toolPrefix, Material material, IngotProperty property) {
+        ItemStack drillHeadStack = MetaItems.DRILL_HEAD.getStackForm();
+        //noinspection ConstantConditions
+        DrillHeadBehaviour.getInstanceFor(drillHeadStack).setPartMaterial(drillHeadStack, material);
+
+        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder()
+                .input(OrePrefix.plate, material, 8)
+                .input(OrePrefix.plateDouble, Materials.Steel, 4)
+                .input(OrePrefix.stickLong, material, 1)
+                .outputs(drillHeadStack)
+                .duration(200)
+                .EUt(400)
+                .buildAndRegister();
     }
 
     public static void processTurbine(OrePrefix toolPrefix, Material material, IngotProperty property) {

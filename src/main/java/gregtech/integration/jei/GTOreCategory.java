@@ -2,21 +2,26 @@ package gregtech.integration.jei;
 
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.util.GTLog;
-import gregtech.api.worldgen.config.OreDepositDefinition;
+import gregtech.api.worldgen.bedrockOres.BedrockOreVeinHandler;
+import gregtech.api.worldgen.config.BedrockOreDepositDefinition;
 import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.integration.jei.recipe.primitive.BasicRecipeCategory;
+import gregtech.integration.jei.utils.render.FluidStackTextRenderer;
 import gregtech.integration.jei.utils.render.ItemStackTextRenderer;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
+import mezz.jei.api.gui.IGuiFluidStackGroup;
 import mezz.jei.api.gui.IGuiItemStackGroup;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeWrapper;
+import mezz.jei.plugins.vanilla.ingredients.fluid.FluidStackRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.world.DimensionType;
 import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
 
 import javax.annotation.Nonnull;
@@ -28,58 +33,74 @@ import static gregtech.api.GTValues.MODID_AR;
 public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
 
     protected final IDrawable slot;
-    protected OreDepositDefinition definition;
+    protected  final IDrawable fluidSlot;
+    protected BedrockOreDepositDefinition definition;
     protected String veinName;
-    protected int minHeight;
-    protected int maxHeight;
+    protected int layer;
     protected int outputCount;
+    protected int inputFluidCount;
     protected int weight;
     protected List<Integer> dimensionIDs;
     protected final int FONT_HEIGHT = Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT;
     protected final Map<Integer, String> namedDimensions = WorldGenRegistry.getNamedDimensions();
     private final Supplier<List<Integer>> dimension = this::getAllRegisteredDimensions;
-    private final int NUM_OF_SLOTS = 5;
+    private final int NUM_OF_SLOTS = 3;
+    private final int NUM_OF_FLUID_SLOTS = 2;
     private final int SLOT_WIDTH = 18;
     private final int SLOT_HEIGHT = 18;
 
-    public GTOreCategory(IGuiHelper guiHelper) {
-        super("ore_spawn_location",
+    public GTOreCategory(int layer, IGuiHelper guiHelper) {
+        super("ore_spawn_location_" + layer,
                 "ore.spawnlocation.name",
                 guiHelper.createBlankDrawable(176, 166),
                 guiHelper);
 
+        this.layer = layer;
         this.slot = guiHelper.drawableBuilder(GuiTextures.SLOT.imageLocation, 0, 0, 18, 18).setTextureSize(18, 18).build();
+        this.fluidSlot = guiHelper.drawableBuilder(GuiTextures.FLUID_SLOT.imageLocation, 0, 0, 18, 18).setTextureSize(18, 18).build();
     }
 
+    @Nonnull
+    @Override
+    public String getTitle() {
+        return super.getTitle() + "(Layer: "+layer+")";
+    }
 
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, GTOreInfo recipeWrapper, @Nonnull IIngredients ingredients) {
 
         IGuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
-        int baseYPos = 19;
-
-        //The ore selected from JEI
-        itemStackGroup.init(0, true, 22, baseYPos);
-        //The Surface Identifier
-        itemStackGroup.init(1, true, 22, 73);
+        IGuiFluidStackGroup fluidStackGroup = recipeLayout.getFluidStacks();
+        int baseYPos = 37;
 
 
         for (int i = 0; i < recipeWrapper.getOutputCount(); i++) {
             int yPos = baseYPos + (i / NUM_OF_SLOTS) * SLOT_HEIGHT;
-            int xPos = 70 + (i % NUM_OF_SLOTS) * SLOT_WIDTH;
+            int xPos = 22 + (i % NUM_OF_SLOTS) * SLOT_WIDTH;
 
-            itemStackGroup.init(i + 2, false,
+            itemStackGroup.init(i, false,
                     new ItemStackTextRenderer(recipeWrapper.getOreWeight(i) * 100, -1),
                     xPos + 1, yPos + 1, 16, 16, 0, 0);
         }
 
+        for (int i = 0; i < recipeWrapper.getFluidInputCount(); i++) {
+            int yPos = baseYPos + (i / NUM_OF_FLUID_SLOTS) * SLOT_HEIGHT;
+            int xPos = 94 + (i % NUM_OF_FLUID_SLOTS) * SLOT_WIDTH;
+
+            fluidStackGroup.init(i, true,
+                    new FluidStackTextRenderer(0, false, SLOT_WIDTH, SLOT_HEIGHT, fluidSlot),
+                    xPos + 1, yPos + 1, 16, 16, 0, 0);
+        }
+
         itemStackGroup.addTooltipCallback(recipeWrapper::addTooltip);
+        fluidStackGroup.addTooltipCallback(recipeWrapper::addFluidTooltip);
         itemStackGroup.set(ingredients);
-        veinName = recipeWrapper.getVeinName();
-        minHeight = recipeWrapper.getMinHeight();
-        maxHeight = recipeWrapper.getMaxHeight();
-        outputCount = recipeWrapper.getOutputCount();
+        fluidStackGroup.set(ingredients);
+        layer = recipeWrapper.getLayer();
         weight = recipeWrapper.getWeight();
+        veinName = recipeWrapper.getVeinName();
+        outputCount = recipeWrapper.getOutputCount();
+        inputFluidCount = recipeWrapper.getFluidInputCount();
         definition = recipeWrapper.getDefinition();
     }
 
@@ -92,48 +113,63 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
     @Override
     public void drawExtras(@Nonnull Minecraft minecraft) {
 
-        int baseXPos = 70;
+        int baseXPos = 22;
+        int baseFluidXPos = 94;
         int baseYPos = 19;
-        int dimDisplayPos = 70;
+        int dimDisplayPos = 80;
         int dimDisplayLength;
         String dimName;
         String fullDimName;
 
         //Selected Ore
-        this.slot.draw(minecraft, 22, baseYPos);
-        //Surface Identifier
-        this.slot.draw(minecraft, 22, SLOT_HEIGHT * (NUM_OF_SLOTS - 1) + 1);
-
         int yPos = 0;
         for (int i = 0; i < outputCount; i++) {
-            yPos = baseYPos + (i / NUM_OF_SLOTS) * SLOT_HEIGHT;
+            yPos = baseYPos + SLOT_HEIGHT + (i / NUM_OF_SLOTS) * SLOT_HEIGHT;
             int xPos = baseXPos + (i % NUM_OF_SLOTS) * SLOT_WIDTH;
 
             this.slot.draw(minecraft, xPos, yPos);
         }
 
+        //Special Fluid
+        for (int i = 0; i < inputFluidCount; i++) {
+            yPos = baseYPos + SLOT_HEIGHT + (i / NUM_OF_FLUID_SLOTS) * SLOT_HEIGHT;
+            int xPos = baseFluidXPos + (i % NUM_OF_FLUID_SLOTS) * SLOT_WIDTH;
+
+            this.fluidSlot.draw(minecraft, xPos, yPos);
+        }
+
+        minecraft.fontRenderer.drawString("Ores:", baseXPos, baseYPos, 0x111111);
+        if(inputFluidCount > 0) {
+            minecraft.fontRenderer.drawString("Fluids:", baseFluidXPos, baseYPos, 0x111111);
+        }
+
         //base positions set to position of last rendered slot for later use.
         //Must account for the fact that yPos is the top corner of the slot, so add in another slot height
-        baseYPos = yPos + SLOT_HEIGHT;
+        baseYPos = yPos + SLOT_HEIGHT*2;
 
         drawVeinName(minecraft.fontRenderer);
 
         //Begin Drawing information, depending on how many rows of ore outputs were created
         //Give room for 5 lines of 5 ores each, so 25 unique ores in the vein
         //73 is SLOT_HEIGHT * (NUM_OF_SLOTS - 1) + 1
-        if (baseYPos >= SLOT_HEIGHT * NUM_OF_SLOTS) {
-            minecraft.fontRenderer.drawString("Spawn Range: " + minHeight + "-" + maxHeight, 70, baseYPos + 1, 0x111111);
-        } else {
-            minecraft.fontRenderer.drawString("Spawn Range: " + minHeight + "-" + maxHeight, 70, SLOT_HEIGHT * (NUM_OF_SLOTS - 1) + 1, 0x111111);
-            //Update the position at which the spawn information ends
-            baseYPos = 73;
+        if (baseYPos < SLOT_HEIGHT * NUM_OF_SLOTS) {
+            baseYPos = 91;
         }
 
+        int maxOperations = BedrockOreVeinHandler.getOperationsPerLayer(definition.getLayer()).second();
+        String maxOperationsStr = maxOperations >= 1000 ? maxOperations/1000+"k" : Integer.toString(maxOperations);
+
+        int minOperations = BedrockOreVeinHandler.getOperationsPerLayer(definition.getLayer()).first();
+        String minOperationsStr = minOperations >= 1000 ? minOperations/1000+"k" : Integer.toString(minOperations);
+
+        //Create the Size
+        minecraft.fontRenderer.drawString("Size: " + minOperationsStr + " - " + maxOperationsStr, baseXPos, baseYPos, 0x111111);
+
         //Create the Weight
-        minecraft.fontRenderer.drawString("Vein Weight: " + weight, 70, baseYPos + FONT_HEIGHT, 0x111111);
+        minecraft.fontRenderer.drawString("Vein Weight: " + weight, baseXPos, baseYPos + FONT_HEIGHT, 0x111111);
 
         //Create the Dimensions
-        minecraft.fontRenderer.drawString("Dimensions: ", 70, baseYPos + (2 * FONT_HEIGHT), 0x111111);
+        minecraft.fontRenderer.drawString("Dimensions: ", baseXPos, baseYPos + (2 * FONT_HEIGHT), 0x111111);
 
         dimensionIDs = dimension.get();
 
@@ -145,12 +181,10 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
             if (namedDimensions.containsKey(dimensionIDs.get(i))) {
                 dimName = namedDimensions.get(dimensionIDs.get(i));
                 fullDimName = i == dimensionIDs.size() - 1 ?
-                        dimensionIDs.get(i) + " (" + dimName + ")" :
-                        dimensionIDs.get(i) + " (" + dimName + "), ";
+                        dimName : dimName + ", ";
             }
             //If the dimension name is not included, just add the dimension number
             else {
-
                 fullDimName = i == dimensionIDs.size() - 1 ?
                         Integer.toString(dimensionIDs.get(i)) :
                         dimensionIDs.get(i) + ", ";
@@ -162,18 +196,14 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
             //If the length of the string would go off the edge of screen, instead increment the y position
             if (dimDisplayLength > (176 - dimDisplayPos)) {
                 baseYPos = baseYPos + FONT_HEIGHT;
-                dimDisplayPos = 70;
+                dimDisplayPos = 80;
             }
 
-            minecraft.fontRenderer.drawString(fullDimName, dimDisplayPos, baseYPos + (3 * FONT_HEIGHT), 0x111111);
+            minecraft.fontRenderer.drawString(fullDimName, dimDisplayPos, baseYPos + (2 * FONT_HEIGHT), 0x111111);
 
             //Increment the dimension name display position
             dimDisplayPos = dimDisplayPos + dimDisplayLength;
         }
-
-
-        //Label the Surface Identifier
-        minecraft.fontRenderer.drawSplitString("SurfaceMaterial", 15, 92, minecraft.fontRenderer.getStringWidth("Surface"), 0x111111);
 
     }
 
@@ -195,10 +225,10 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
 
     public List<Integer> getAllRegisteredDimensions() {
         List<Integer> dims = new ArrayList<>();
-        /*
-        Gather the registered dimensions here instead of at the top of the class to catch very late registered dimensions
-        such as Advanced Rocketry
-         */
+         /*
+         Gather the registered dimensions here instead of at the top of the class to catch very late registered dimensions
+         such as Advanced Rocketry
+          */
         Map<DimensionType, IntSortedSet> dimMap = DimensionManager.getRegisteredDimensions();
         dimMap.values().stream()
                 .flatMap(Collection::stream)

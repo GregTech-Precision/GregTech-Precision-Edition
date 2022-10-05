@@ -664,5 +664,7 @@ public class MetaItem1 extends StandardMetaItem {
         FERTILIZER = addItem(1001, "fertilizer").addComponents(new FertilizerBehavior());
         BLACKLIGHT = addItem(1002, "blacklight");
         LAPTOP = addItem(1003, "laptop").addComponents(new LaptopBehavior(), new LaptopItemStat(), ElectricStats.createElectricItem(1600000L, GTValues.HV));
+
+        DRILL_HEAD = addItem(1004, "drill_head").addComponents(new DrillHeadBehaviour());
     }
 }
