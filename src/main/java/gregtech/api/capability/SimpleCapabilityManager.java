@@ -53,8 +53,5 @@ public class SimpleCapabilityManager {
         registerCapabilityWithNoDefault(IScrewdriverItem.class);
         registerCapabilityWithNoDefault(ISoftHammerItem.class);
         registerCapabilityWithNoDefault(ILaptopItem.class);
-
-        //internal capabilities
-        CapabilityManager.INSTANCE.register(GTWorldGenCapability.class, GTWorldGenCapability.STORAGE, GTWorldGenCapability.FACTORY);
     }
 }

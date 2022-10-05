@@ -403,7 +403,7 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase implement
         if (metaTileEntity instanceof IMufflerHatch) return true;
         if (metaTileEntity instanceof SimpleGeneratorMetaTileEntity) return true;
         if (metaTileEntity instanceof FuelMultiblockController) return true;
-        if (metaTileEntity instanceof MetaTileEntityLargeMiner) return true;
+        if (metaTileEntity instanceof MetaTileEntityMiner) return true;
         if (metaTileEntity instanceof MetaTileEntityFluidDrill) return true;
         if (metaTileEntity instanceof MetaTileEntityCentralMonitor) return true;
         if (metaTileEntity instanceof MetaTileEntityCleanroom) return true;
